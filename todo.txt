@@ -1,0 +1,10 @@
+implementations:
+- cluster merging
+- select points
+- display number of points in each cluster
+- display mean waveform
+- show Xcorr between clusters
+- show isi
+    - show pair of waveforms with minimum ISI
+- compare waveforms
+    - compare real and fake waveforms
