@@ -14,6 +14,7 @@
 @synthesize dim2;
 @synthesize dim3;
 @synthesize Clusters;
+@synthesize ClusterOptions;
 
 -(void)awakeFromNib
 {
@@ -55,8 +56,9 @@
     int i;
     NSMutableArray *tempArray = [NSMutableArray arrayWithCapacity:cids[0]];
     //count the number of points in each cluster
-    int *npoints;
-    npoints = calloc(cids[0],sizeof(int));
+    unsigned int *npoints;
+    npoints = calloc(cids[0],sizeof(unsigned int));
+    float *cluster_colors = malloc(rows*3*sizeof(float));
     for(i=0;i<rows;i++)
     {
         npoints[cids[i+1]]+=1;
@@ -67,7 +69,14 @@
         Cluster *cluster = [[Cluster alloc] init];
         cluster.name = [NSString stringWithFormat: @"%d",i];
         cluster.active = 1;
-        cluster.npoints = [NSNumber numberWithInt: npoints[i]];
+        cluster.npoints = [NSNumber numberWithUnsignedInt: npoints[i]];
+        cluster.indices = [NSMutableIndexSet indexSet];
+        //set color
+        float color[3];
+        color[0] = ((float)rand())/RAND_MAX;
+        color[1] = ((float)rand())/RAND_MAX;
+        color[2] = ((float)rand())/RAND_MAX;
+        cluster.color = [NSData dataWithBytes: color length:3*sizeof(float)];
         unsigned int *points = malloc(npoints[i]*sizeof(unsigned int));
         int k = 0;
         for(j=0;j<rows;j++)
@@ -76,6 +85,12 @@
             {
                 points[k] = j;
                 k+=1;
+                //set the colors at the same time
+                cluster_colors[3*j] = color[0];
+                cluster_colors[3*j+1] = color[1];
+                cluster_colors[3*j+2] = color[2];
+                [[cluster indices] addIndex: (NSUInteger)j];
+                
             }
             
         }
@@ -85,9 +100,13 @@
     }
     free(cids);
     free(npoints);
-    
-    
+    //tell the view to change the colors
+    [fw setClusterColors: cluster_colors forIndices: NULL length: 1];
+    //since colors are now ccopied, we can free it
+    free(cluster_colors);
     [self setClusters:tempArray];
+    [self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",nil]];
+    
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(ClusterStateChanged:)
                                                  name:@"ClusterStateChanged" object:nil];
@@ -109,6 +128,27 @@
 -(NSArray*)Clusters {
     return Clusters;
 }
+
+-(void)setClusterOptions:(NSMutableArray *)a
+{
+    ClusterOptions = a;
+}
+
+-(NSArray*)ClusterOptions
+{
+    return ClusterOptions;
+}
+
+-(void)insertObject:(NSString*)p inClusterOptionsAtIndex:(NSUInteger)index
+{
+ [ClusterOptions insertObject:p atIndex:index];   
+}
+
+-(void)removeObjectFromClusterOptionsAtIndex:(NSUInteger)index
+{
+    [ClusterOptions removeObjectAtIndex:index];
+}
+
 
 -(void)ClusterStateChanged:(NSNotification*)notification
 {
@@ -144,6 +184,43 @@
     
     [Clusters makeObjectsPerformSelector:@selector(setActive:) withObject: (NSInteger*)state];
     
+}
+
+- (IBAction) performClusterOption: (id)sender
+{
+    NSString *selection = [sender titleOfSelectedItem];
+    if( [selection isEqualToString:@"Merge"] )
+    {
+        //get all selected clusters
+        NSPredicate *testForTrue =
+        [NSPredicate predicateWithFormat:@"active == YES"];
+        NSArray *candidates = [Clusters filteredArrayUsingPredicate:testForTrue];
+        if( [candidates count] ==2 )
+        {
+            [self mergeCluster: [candidates objectAtIndex: 0] withCluster: [candidates objectAtIndex: 1]];
+        }
+    }
+             
+}
+
+
+-(void)mergeCluster: (Cluster *)cluster1 withCluster: (Cluster*)cluster2
+{
+    Cluster *new_cluster = [[Cluster alloc] init];
+    new_cluster.name = [[cluster1.name stringByAppendingString: @"+"] stringByAppendingString:cluster2.name];
+    new_cluster.active = NO;
+    new_cluster.npoints = [NSNumber numberWithUnsignedInt: [[cluster1 npoints] unsignedIntValue] + [[cluster2 npoints] unsignedIntValue]];
+    NSMutableData *points = [NSMutableData dataWithCapacity:[[new_cluster npoints] unsignedIntValue]*sizeof(unsigned int)];
+    [points appendData:cluster1.points];
+    [points appendData:cluster2.points];
+    new_cluster.points = points;
+    //set the new cluster color to that of the first cluster
+    new_cluster.color = [NSData dataWithData: cluster1.color];
+    //new_cluster.color[0] = cluster1.color[0];
+    //new_cluster.color[0] = cluster1.color[0];
+    //add the cluster to the list of clusters
+    
+    [self insertObject:new_cluster inClustersAtIndex:0];
 }
 - (void)keyDown:(NSEvent *)theEvent
 {

@@ -1,5 +1,6 @@
 implementations:
 - cluster merging
+    - works in a certain fashion. Left to do: make system take colors from the cluster and not the initial load
 - select points
 - display number of points in each cluster
 - display mean waveform
@@ -8,3 +9,10 @@ implementations:
     - show pair of waveforms with minimum ISI
 - compare waveforms
     - compare real and fake waveforms
+
+(- Fix problem with glMapBuffer returning NULL. Could be related to low system memory, but could also be something else. The only thing I changed
+was to change cluster indexing from normal GLUint arrays to NSIndexSet. The reason for this is that it will make things like intersection and
+set differences easier.) FIXED (Cause: I wasn't unmapping the buffer if new_size==0)
+
+- 
+

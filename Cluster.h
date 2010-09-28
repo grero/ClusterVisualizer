@@ -15,6 +15,8 @@
     NSData *points;
     NSNumber *npoints;
     NSInteger active;
+    NSData *color;
+    NSMutableIndexSet *indices;
 
 }
 
@@ -22,5 +24,8 @@
 @property(retain,readwrite) NSData *points;
 @property(assign, readwrite) NSInteger active;
 @property(retain,readwrite) NSNumber *npoints;
+@property(retain,readwrite) NSMutableIndexSet *indices;
+@property(assign,readwrite) NSData *color;
+
 
 @end

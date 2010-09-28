@@ -10,6 +10,8 @@
 
 @implementation FeatureView
 
+@synthesize indexset;
+
 -(BOOL) acceptsFirstResponder
 {
     return YES;
@@ -47,18 +49,22 @@
     //cluster indices
     cids = malloc((rows+1)*sizeof(unsigned int));
     cids = readClusterIds("../../a101g0001waveforms.clu.1", cids);
-    use_colors = malloc(cids[0]*3*sizeof(GLfloat));
+    //use_colors = malloc(cids[0]*3*sizeof(GLfloat));
     //create colors to use; highly simplistic, need to change this, but let's use it for now
-    
+    /*
     for(c=0;c<cids[0];c++)
     {
         use_colors[3*c] = ((float)rand())/RAND_MAX;
         use_colors[3*c + 1] = ((float)rand())/RAND_MAX;
         use_colors[3*c + 2] = ((float)rand())/RAND_MAX;
     }
-    
+    */
     ndraw_dims = 3;
     nindices = rows;
+    NSRange range;
+    range.location = 0;
+    range.length = rows;
+    indexset = [[NSMutableIndexSet indexSetWithIndexesInRange:range] retain];
     use_vertices = malloc(rows*ndraw_dims*sizeof(GLfloat));
     indices = malloc(nindices*sizeof(GLuint));
     colors = malloc(nindices*3*sizeof(GLfloat));
@@ -110,58 +116,84 @@
     int i;
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
     GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
-    unsigned int *points = (unsigned int*)[[cluster points] bytes];
-    int new_size = [[cluster npoints] intValue];
-    //tmp_indices = realloc(tmp_indices, new_size*sizeof(GLuint));
-    int j = 0;
-    /*for(i=0;i<rows;i++)
+    if(tmp_indices!=NULL)
     {
-        if(cids[i+1]==cid)
+        unsigned int *points = (unsigned int*)[[cluster points] bytes];
+        int new_size = [[cluster npoints] intValue];
+        //new_size = [cluster.indices count];
+        //tmp_indices = realloc(tmp_indices, new_size*sizeof(GLuint));
+        int j = 0;
+        /*for(i=0;i<rows;i++)
         {
-            tmp_indices[j] = i;
-            j+=1;
+            if(cids[i+1]==cid)
+            {
+                tmp_indices[j] = i;
+                j+=1;
+            }
+        }*/
+        for(j=0;j<new_size;j++)
+        {
+            tmp_indices[nindices+j] = points[j];
+        
         }
-    }*/
-    for(j=0;j<new_size;j++)
-    {
-        tmp_indices[nindices+j] = points[j];
+        [indexset addIndexes: [cluster indices]];
+        //this does not work for a 64 bit application, as NSUInteger is then 64 bit, while the tm_indices is 32 bit.
+        //int count = [indexset getIndexes:(NSUInteger*)tmp_indices maxCount:nindices+new_size inIndexRange:nil];
+        nindices += new_size;
+        //glBufferData(GL_ELEMENT_ARRAY_BUFFER, new_size*sizeof(GLuint), tmp_indices, GL_DYNAMIC_DRAW);
+        glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+        [self setNeedsDisplay:YES];
     }
-    nindices += new_size;
-    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, new_size*sizeof(GLuint), tmp_indices, GL_DYNAMIC_DRAW);
-    glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-    [self setNeedsDisplay:YES];
 }
 
 -(void) hideCluster: (Cluster *)cluster
 {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
     GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
-    unsigned int *points = (unsigned int*)[[cluster points] bytes];
-    int new_size = [[cluster npoints] intValue];
-    int i,j,k,found;
-    i = 0;
-    //TODO: The following is a very naiv way of doing intersection. Should fix this 
-    for(j=0;j<nindices;j++)
+    if(tmp_indices != NULL)
     {
-        found = 0;
-        for(k=0;k<new_size;k++)
+        unsigned int *points = (unsigned int*)[[cluster points] bytes];
+        int new_size = [[cluster npoints] intValue];
+        //new_size = [[cluster indices] count];
+        if(new_size>0)
         {
-            if(tmp_indices[j]==points[k])
+            int i,j,k,found;
+            i = 0;
+            //TODO: The following is a very naiv way of doing intersection. Should fix this 
+            //      One way to fix make it more efficient is to make sure the indices are sorted. This can
+            //      be done by maintaining a heap, for instance. 
+            for(j=0;j<nindices;j++)
             {
-                found=1;
-                //once we've found a match, abort
-                break;
+                found = 0;
+                for(k=0;k<new_size;k++)
+                {
+                    if(tmp_indices[j]==points[k])
+                    {
+                        found=1;
+                        //once we've found a match, abort
+                        break;
+                    }
+                }
+                if(found==0)
+                {
+                    tmp_indices[i] = tmp_indices[j];
+                    i+=1;
+                }
             }
+            //alternative to the above: Use IndexSets
+            //NSMutableIndexSet *tmp = [NSMutableIndexSet 
+            int count = [indexset count];
+            [indexset removeIndexes: [cluster indices]];
+            NSRange range;
+            range.location = 0;
+            range.length =nindices;
+            //count = [indexset getIndexes: tmp_indices maxCount: nindices-new_size inIndexRange: nil];
+            nindices-=new_size;
         }
-        if(found==0)
-        {
-            tmp_indices[i] = tmp_indices[j];
-            i+=1;
-        }
+        glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+        [self setNeedsDisplay:YES];
+
     }
-    nindices-=new_size;
-    glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-    [self setNeedsDisplay:YES];
 }
 
 -(void) rotateY
@@ -181,6 +213,35 @@
     glRotated(5, 0, 0, 1);
     [self setNeedsDisplay:YES];
 }
+
+-(void) setClusterColors: (GLfloat*)cluster_colors forIndices: (GLuint*)cluster_indices length:(NSUInteger)length
+{
+    glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+    GLfloat *tmp_colors = glMapBuffer(GL_ARRAY_BUFFER,GL_WRITE_ONLY);
+    int i;
+    if( cluster_indices != NULL)
+        for(i=0;i<length;i++)
+        {
+            tmp_colors[3*cluster_indices[i]] = cluster_colors[3*i];
+            tmp_colors[3*cluster_indices[i]+1] = cluster_colors[3*i+1];
+            tmp_colors[3*cluster_indices[i]+2] = cluster_colors[3*i+2];
+        }
+    else 
+    {
+        //if cluster_indices is NULL, assume we are changing everthing
+        for(i=0;i<rows;i++)
+        {
+            tmp_colors[3*i] = cluster_colors[3*i];
+            tmp_colors[3*i+1] = cluster_colors[3*i+1];
+            tmp_colors[3*i+2] = cluster_colors[3*i+2];
+        }
+    }
+
+    //make sure we give the buffer back
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+    [self setNeedsDisplay:YES];
+}
+ 
 
 static void modifyVertices(GLfloat *vertex_data)
 {
@@ -220,9 +281,9 @@ static void modifyColors(GLfloat *color_data)
     int i;
     for(i=0;i<rows;i++)
     {
-        color_data[3*i] = use_colors[3*cids[i+1]];
-        color_data[3*i+1] = use_colors[3*cids[i+1]+1];
-        color_data[3*i+2] = use_colors[3*cids[i+1]+2];
+        color_data[3*i] = 1.0f;//use_colors[3*cids[i+1]];
+        color_data[3*i+1] = 0.85f;//use_colors[3*cids[i+1]+1];
+        color_data[3*i+2] = 0.35f;//use_colors[3*cids[i+1]+2];
     }
 }
 
@@ -377,6 +438,7 @@ static void drawAnObject()
     free(colors);
     free(cids);
     free(use_colors);
+    free(indexset);
     [super dealloc];
 }
 

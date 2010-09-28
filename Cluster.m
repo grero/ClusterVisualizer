@@ -15,6 +15,8 @@
 @synthesize points;
 //@synthesize active;
 @synthesize npoints;
+@synthesize color;
+@synthesize indices;
 
 -(void)setActive:(NSInteger)value
 {
@@ -29,12 +31,18 @@
     return active;
 }
 
+-(NSIndexSet*)indices
+{
+    return indices;
+}
+
 -(void) dealloc
 {
     [name release];
     [points release];
     [npoints release];
     [active release];
+    [indices release];
     [super dealloc];
 }
 @end

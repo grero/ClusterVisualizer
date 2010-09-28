@@ -34,14 +34,16 @@ static BOOL dataloaded;
 
 @interface FeatureView : NSOpenGLView {
 
-
+    NSMutableIndexSet *indexset;
     
 }
 
+@property (retain,readwrite) NSMutableIndexSet *indexset;
 -(void) loadVertices;
 -(void) selectDimensions:(NSDictionary*)dims;
 -(void) showCluster: (Cluster *)cluster;
 -(void) hideCluster: (Cluster *)cluster;
+-(void) setClusterColors: (GLfloat*)cluster_colors forIndices: (GLuint*)cluster_indices length:(NSUInteger)length;
 -(void) rotateY;
 -(void) rotateX;
 -(void) rotateZ;
