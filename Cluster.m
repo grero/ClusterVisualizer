@@ -17,6 +17,7 @@
 @synthesize npoints;
 @synthesize color;
 @synthesize indices;
+@synthesize valid;
 
 -(void)setActive:(NSInteger)value
 {

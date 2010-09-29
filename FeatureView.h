@@ -8,6 +8,7 @@
 #import <Cocoa/Cocoa.h>
 #import "Cluster.h"
 
+
 static GLuint vertexBuffer;
 static GLuint indexBuffer;
 static GLuint colorBuffer;
@@ -39,7 +40,8 @@ static BOOL dataloaded;
 }
 
 @property (retain,readwrite) NSMutableIndexSet *indexset;
--(void) loadVertices;
+- (void) loadVertices: (NSURL*)url;
+-(void) createVertices: (NSData*)vertex_data withRows: (NSUInteger)r andColumns: (NSUInteger)c;
 -(void) selectDimensions:(NSDictionary*)dims;
 -(void) showCluster: (Cluster *)cluster;
 -(void) hideCluster: (Cluster *)cluster;

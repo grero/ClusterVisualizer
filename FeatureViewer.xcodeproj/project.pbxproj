@@ -313,7 +313,7 @@
 				HEADER_SEARCH_PATHS = /usr/local/hdf5/include;
 				LIBRARY_SEARCH_PATHS = /usr/local/hdf5/lib;
 				PREBINDING = NO;
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx10.5;
 			};
 			name = Release;
 		};

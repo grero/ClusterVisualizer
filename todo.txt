@@ -14,5 +14,15 @@ implementations:
 was to change cluster indexing from normal GLUint arrays to NSIndexSet. The reason for this is that it will make things like intersection and
 set differences easier.) FIXED (Cause: I wasn't unmapping the buffer if new_size==0)
 
-- 
+- Change Array Controller such that only valid clusters are drawn. This amounts to given each cluster an additional boolean property indicating 
+whether the cluster is valid or not. To get the Array Controller to only display valid clusters, we can create a predicate which checks the valid
+property of each cluster, filters the clusters accordingly.
+    - Something a bit strange.. apparently, I can't merge clusters that are already merged..
+    
+    
+
+- In the process of rewriting the feature loading to be more general. Make sure a single group is selected, by explicitly selecting the file, rather than just the directory
+
+
+
 

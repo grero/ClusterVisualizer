@@ -19,7 +19,7 @@ header *readFeatureHeader(char *fname, header *H)
     char dset_name[100];
     size_t name_size;
     file_id = H5Fopen (fname, H5F_ACC_RDONLY, H5P_DEFAULT);
-    status = H5LTget_dataset_info(file_id,"/data",dims,NULL,NULL);
+    status = H5LTget_dataset_info(file_id,"/FeatureData",dims,NULL,NULL);
     status = H5Gget_num_objs(file_id,&nsets);
     H->rows = dims[0];
     H->cols = dims[1];
@@ -61,6 +61,31 @@ float *readFeatureFile(char *fname,float *data)
     
     return data;
 }
+
+float *readFeatureData(char *fname,float *data)
+{
+    hid_t file_id;
+    herr_t status;
+    hsize_t nsets;
+    hsize_t dims[2] = {0,0};
+    file_id = H5Fopen (fname, H5F_ACC_RDONLY, H5P_DEFAULT);
+    status = H5LTread_dataset_float(file_id,"/FeatureData",data);
+    
+    return data;
+    
+}
+
+char *readFeatureNames(char *fname, char *data)
+{
+    hid_t file_id;
+    herr_t status;
+    hsize_t nsets;
+    hsize_t dims[2] = {0,0};
+    file_id = H5Fopen (fname, H5F_ACC_RDONLY, H5P_DEFAULT);
+    status = H5LTread_dataset_float(file_id,"/FeatureNames",data);
+    return data;
+}
+
 float *getMinMax(float *minmax, float *data, int nrows,int ncols)
 {
     float temp;

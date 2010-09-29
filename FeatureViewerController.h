@@ -14,6 +14,9 @@
     
     NSMutableArray *Clusters;
     NSMutableArray *ClusterOptions;
+    NSPredicate *isValidCluster;
+    NSData *vertex_data;
+    header params;
 }
 -(void)insertObject:(Cluster *)p inClustersAtIndex:(NSUInteger)index;
 -(void)removeObjectFromClustersAtIndex:(NSUInteger)index;
@@ -46,4 +49,5 @@
 @property (assign) IBOutlet NSComboBox *dim3;
 @property (retain,readwrite) NSMutableArray *Clusters;
 @property (retain,readwrite) NSMutableArray *ClusterOptions;
+@property (retain, readwrite) NSPredicate *isValidCluster;
 @end

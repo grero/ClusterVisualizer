@@ -27,12 +27,15 @@
     minmax[5] = 1;
 }
 
-- (void) loadVertices
+- (void) loadVertices: (NSURL*)url
 {
-   header H;
-    H = *readFeatureHeader("../../test2.hdf5", &H);
+    char *path = [[url path] cStringUsingEncoding:NSASCIIStringEncoding];
+    header H;
+    //H = *readFeatureHeader("../../test2.hdf5", &H);
+    H = *readFeatureHeader(path, &H);
     vertices = malloc(H.rows*H.cols*sizeof(GLfloat));
-    vertices = readFeatureFile("../../test2.hdf5", vertices);
+    //vertices = readFeatureFile("../../test2.hdf5", vertices);
+    vertices = readFeatureFile(path, vertices);
     minmax = realloc(minmax,2*H.cols*sizeof(float));
     int c;
     for(c=0;c<H.cols;c++)
@@ -47,8 +50,8 @@
     rows = H.rows;
     cols = H.cols;
     //cluster indices
-    cids = malloc((rows+1)*sizeof(unsigned int));
-    cids = readClusterIds("../../a101g0001waveforms.clu.1", cids);
+    //cids = malloc((rows+1)*sizeof(unsigned int));
+    ///cids = readClusterIds("../../a101g0001waveforms.clu.1", cids);
     //use_colors = malloc(cids[0]*3*sizeof(GLfloat));
     //create colors to use; highly simplistic, need to change this, but let's use it for now
     /*
@@ -77,6 +80,37 @@
     pushVertices();
     [self setNeedsDisplay:YES];
     //[self selectDimensions];
+}
+
+-(void) createVertices: (NSData*)vertex_data withRows: (NSUInteger)r andColumns: (NSUInteger)c
+{
+    rows = r;
+    cols = c;
+    nindices = rows;
+    vertices = malloc(rows*cols*sizeof(GLfloat));
+    [vertex_data getBytes:vertices length: rows*cols*sizeof(float)];
+    minmax = realloc(minmax,2*cols*sizeof(float));
+    int cl;
+    for(cl=0;cl<cols;cl++)
+    {
+        minmax[2*cl] = 0;
+        minmax[2*cl+1] = 0;
+    }
+    minmax = getMinMax(minmax, vertices, rows, cols);
+    draw_dims[0] = 0;
+    draw_dims[1] = 1;
+    draw_dims[2] = 3;
+    ndraw_dims = 3;
+    use_vertices = malloc(rows*ndraw_dims*sizeof(GLfloat));
+    indices = malloc(nindices*sizeof(GLuint));
+    colors = malloc(nindices*3*sizeof(GLfloat));
+    glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
+    modifyVertices(use_vertices);
+    modifyIndices(indices);
+    modifyColors(colors);
+    pushVertices();
+    [self setNeedsDisplay:YES];
+    
 }
 
 
@@ -222,9 +256,9 @@
     if( cluster_indices != NULL)
         for(i=0;i<length;i++)
         {
-            tmp_colors[3*cluster_indices[i]] = cluster_colors[3*i];
-            tmp_colors[3*cluster_indices[i]+1] = cluster_colors[3*i+1];
-            tmp_colors[3*cluster_indices[i]+2] = cluster_colors[3*i+2];
+            tmp_colors[3*cluster_indices[i]] = cluster_colors[0];//[3*i];
+            tmp_colors[3*cluster_indices[i]+1] = cluster_colors[1];//[3*i+1];
+            tmp_colors[3*cluster_indices[i]+2] = cluster_colors[2];//[3*i+2];
         }
     else 
     {
@@ -385,9 +419,9 @@ static void drawAnObject()
     //reshape the view
     NSRect bounds = [self bounds];
     glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
+    //glMatrixMode(GL_PROJECTION);
+    //glLoadIdentity();
+    //glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
     [self setNeedsDisplay:YES];    
 }
 
@@ -436,7 +470,7 @@ static void drawAnObject()
     free(indices);
     free(minmax);
     free(colors);
-    free(cids);
+    //free(cids);
     free(use_colors);
     free(indexset);
     [super dealloc];

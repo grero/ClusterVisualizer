@@ -17,6 +17,8 @@ typedef struct {
 
 header *readFeatureHeader(char *fname, header *H);
 float *readFeatureFile(char *fname,float *data);
+float *readFeatureData(char *fname,float *data);
+char *readFeatureNames(char *fname, char *data);
 float *getMinMax(float *minmax,float *data, int nrows,int ncols);
 unsigned int *readClusterIds(char *fname, unsigned int *cids);
 
