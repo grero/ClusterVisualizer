@@ -23,6 +23,10 @@ property of each cluster, filters the clusters accordingly.
 
 - In the process of rewriting the feature loading to be more general. Make sure a single group is selected, by explicitly selecting the file, rather than just the directory
 
+- Look into Using NSUndoManager to manage the cluster manipulation. This can be used to e.g. undo a cluster merge.
+
+- Implement a method for deleting a cluster; if a base cluster, i.e. a cluster that was part of the original klustakwik output, the points formerly assigned to this cluster
+should be put into cluster 0. If deleting a cluster that was the result of some manipulation in FeatureViewer, return the points in those clusters to the original KlustaKwik cluster, alternative, the managed clusters that resulting in the deleted cluster. This is where the undoManager comes in. Since merging a cluster reassigns the colors of the corresponding feature points, deleting that cluster should restore the original color assignment. In other words, if clusters 18 and 19 are merged in the cluster "18+19", the union of points in those two clusters receive the same coloring as the points in cluster 18. If we now undo the merging action, the points formerly belonging to cluster 19 should be re-colored using the color of cluster 19. This can most easily be achieved by a recolorPoints method in FeatureView that takes as an argument the cluster containing the points to be recolored. In other words, this would be similar to showCluster, except that in addition to resetting the indices, we are also restting the colors
 
 
 

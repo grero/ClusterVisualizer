@@ -20,6 +20,7 @@
 -(void)awakeFromNib
 {
     //[self setClusters:[NSMutableArray array]];
+    dataloaded = NO;
 }
 
 -(BOOL) acceptsFirstResponder
@@ -39,6 +40,14 @@
     int result = [openPanel runModal];
     if( result == NSOKButton )
     {
+        if(dataloaded == YES)
+        {
+            [dim1 removeAllItems];
+            [dim2 removeAllItems];
+            [dim3 removeAllItems];
+            [self removeAllObjectsFromClusters];
+            
+        }
         NSMutableData *data = [NSMutableData dataWithCapacity:100000*sizeof(float)];
         NSMutableArray *feature_names = [NSMutableArray arrayWithCapacity:16];
         //geth the base path
@@ -62,7 +71,7 @@
         {
             if([file hasPrefix:filebase])
             {
-                    char *filename = [[NSString pathWithComponents: [NSArray arrayWithObjects: directory,file,nil]] cStringUsingEncoding:NSASCIIStringEncoding];
+                char *filename = [[NSString pathWithComponents: [NSArray arrayWithObjects: directory,file,nil]] cStringUsingEncoding:NSASCIIStringEncoding];
                 H = *readFeatureHeader(filename, &H);
                 
                 tmp_data = malloc(H.rows*H.cols*sizeof(float));
@@ -126,7 +135,7 @@
         [dim1 addItemsWithObjectValues:feature_names];
         [dim2 addItemsWithObjectValues:feature_names];
         [dim3 addItemsWithObjectValues:feature_names];
-        
+        dataloaded = YES;
     
     }
     
@@ -163,6 +172,9 @@
     int result = [openPanel runModal];
     if( result == NSOKButton )
     {
+        [[NSNotificationCenter defaultCenter] removeObserver: self];
+        //remove all the all clusters
+        //[self removeAllObjectsFromClusters];
         char *fname = [[[openPanel URL] path] cStringUsingEncoding:NSASCIIStringEncoding];
         /*
         header H;
@@ -186,7 +198,7 @@
         {
             Cluster *cluster = [[Cluster alloc] init];
             cluster.name = [NSString stringWithFormat: @"%d",i];
-            cluster.active = 1;
+            [cluster setActive: 1];
             cluster.npoints = [NSNumber numberWithUnsignedInt: npoints[i]];
             cluster.indices = [NSMutableIndexSet indexSet];
             cluster.valid = 1;
@@ -226,7 +238,7 @@
         [self setClusters:tempArray];
         [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
         [self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",nil]];
-        
+        [allActive setState:1];
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(ClusterStateChanged:)
                                                      name:@"ClusterStateChanged" object:nil];
@@ -240,6 +252,14 @@
 
 -(void)removeObjectFromClustersAtIndex:(NSUInteger)index {
     [Clusters removeObjectAtIndex:index];
+}
+-(void)removeAllObjectsFromClusters
+{
+    //NSInteger state = 0;
+    //state = 0;
+    [Clusters makeObjectsPerformSelector:@selector(makeInactive)];
+    [Clusters makeObjectsPerformSelector:@selector(makeInvalid)];
+    [Clusters removeAllObjects];
 }
 
 -(void)setClusters:(NSMutableArray *)a {
@@ -301,9 +321,23 @@
 
 - (IBAction) changeAllClusters: (id)sender
 {
-    NSInteger state = [sender state];
+    //Temporarily remove notifcations
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    //NSNumber *state = [NSNumber numberWithInt:[sender state]];
     
-    [Clusters makeObjectsPerformSelector:@selector(setActive:) withObject: (NSInteger*)state];
+    if([sender state] == 0 )
+    {
+        [Clusters makeObjectsPerformSelector:@selector(makeInactive)];
+    }
+    else {
+        [Clusters makeObjectsPerformSelector:@selector(makeActive)];
+    }
+    [fw hideAllClusters];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(ClusterStateChanged:)
+                                                 name:@"ClusterStateChanged" object:nil];
+    
+    //[Clusters makeObjectsPerformSelector:@selector(setActive:) withObject: state];
     
 }
 
@@ -324,6 +358,29 @@
              
 }
 
+- (IBAction) saveClusters:(id)sender
+{
+    //Need to get the points of each cluster, and use those points as indexes for which the point is the
+    //cluster number
+    //create an array to hold the indices
+    NSMutableArray *cluster_indices = [NSMutableArray arrayWithCapacity:params.rows];
+    //enumreate all valid clusters
+    NSEnumerator *cluster_enumerator = [[Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"valid==1"]] objectEnumerator];
+    int i;
+    int npoints;
+    id cluster;
+    while( cluster = [cluster_enumerator nextObject] )
+    {
+        NSUInteger *clusteridx = [[cluster points] bytes];
+        npoints = [[cluster npoints] intValue];
+        for(i=0;i<npoints;i++)
+        {
+            [cluster_indices insertObject:[NSString stringWithFormat:@"%d",[cluster name]] atIndex: clusteridx[i]];
+        }
+    }
+    NSString *cidx_string = [cluster_indices componentsJoinedByString:@"\n"];
+    [cidx_string writeToFile:@"FeatureViewer.clusters" atomically:YES];
+}
 
 -(void)mergeCluster: (Cluster *)cluster1 withCluster: (Cluster*)cluster2
 {

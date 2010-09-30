@@ -21,7 +21,23 @@
 		C76102DE124C840F00B6210B /* libhdf5_hl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C76102DD124C840F00B6210B /* libhdf5_hl.dylib */; };
 		C7772F45124C8CA900F7B6EA /* FirstResponder.m in Sources */ = {isa = PBXBuildFile; fileRef = C7772F43124C8CA900F7B6EA /* FirstResponder.m */; };
 		C78C34471250AE34002BB91A /* todo.txt in Resources */ = {isa = PBXBuildFile; fileRef = C78C34461250AE34002BB91A /* todo.txt */; };
+		C78C3EAD1252D391002BB91A /* libhdf5.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C7610288124C81B200B6210B /* libhdf5.dylib */; };
+		C78C3EAE1252D391002BB91A /* libhdf5_hl.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C76102DD124C840F00B6210B /* libhdf5_hl.dylib */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C78C3E891252D1B8002BB91A /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				C78C3EAD1252D391002BB91A /* libhdf5.dylib in CopyFiles */,
+				C78C3EAE1252D391002BB91A /* libhdf5_hl.dylib in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -166,6 +182,8 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
+				C78C3E891252D1B8002BB91A /* CopyFiles */,
+				C78C3ED31252D659002BB91A /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -206,6 +224,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		C78C3ED31252D659002BB91A /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "install_name_tool -change /usr/local/hdf5/lib/libhdf5.dylib @executable_path/../Frameworks/libhdf5.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\ninstall_name_tool -change /usr/local/hdf5/lib/libhdf5_hl.dylib @executable_path/../Frameworks/libhdf5_hl.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\ninstall_name_tool -change /tmp/hdf5-1.8.3/hdf5/lib/libhdf5.6.dylib @executable_path/../Frameworks/libhdf5.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\ninstall_name_tool -change /tmp/hdf5-1.8.3/hdf5/lib/libhdf5_hl.6.dylib @executable_path/../Frameworks/libhdf5_hl.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8D11072C0486CEB800E47090 /* Sources */ = {
@@ -313,7 +348,7 @@
 				HEADER_SEARCH_PATHS = /usr/local/hdf5/include;
 				LIBRARY_SEARCH_PATHS = /usr/local/hdf5/lib;
 				PREBINDING = NO;
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx10.6;
 			};
 			name = Release;
 		};

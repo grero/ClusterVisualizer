@@ -17,9 +17,16 @@
     NSPredicate *isValidCluster;
     NSData *vertex_data;
     header params;
+    BOOL dataloaded;
+    IBOutlet FeatureView *fw;
+    IBOutlet NSComboBox *dim1;
+     IBOutlet NSComboBox *dim2;
+     IBOutlet NSComboBox *dim3;
+    IBOutlet NSButton *allActive;
 }
 -(void)insertObject:(Cluster *)p inClustersAtIndex:(NSUInteger)index;
 -(void)removeObjectFromClustersAtIndex:(NSUInteger)index;
+-(void)removeAllObjectsFromClusters;
 -(void)setClusters:(NSMutableArray *)a;
 -(NSArray*)Clusters;
 
@@ -41,6 +48,7 @@
 - (IBAction) changeDim3: (id)sender;
 - (IBAction) changeAllClusters: (id)sender;
 - (IBAction) performClusterOption: (id)sender;
+- (IBAction) saveClusters:(id)sender;
 
 //@property (assign) IBOutlet NSWindow *window;
 @property (assign) IBOutlet FeatureView *fw;

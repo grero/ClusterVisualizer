@@ -29,5 +29,9 @@
 @property(retain,readwrite) NSData *color;
 @property(assign,readwrite) NSInteger valid;
 
+-(void)makeInactive;
+-(void)makeActive;
 
+-(void)makeInvalid;
+-(void)makeValid;
 @end

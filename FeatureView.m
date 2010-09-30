@@ -33,6 +33,7 @@
     header H;
     //H = *readFeatureHeader("../../test2.hdf5", &H);
     H = *readFeatureHeader(path, &H);
+    //check if vertices has already been allocated
     vertices = malloc(H.rows*H.cols*sizeof(GLfloat));
     //vertices = readFeatureFile("../../test2.hdf5", vertices);
     vertices = readFeatureFile(path, vertices);
@@ -71,7 +72,7 @@
     use_vertices = malloc(rows*ndraw_dims*sizeof(GLfloat));
     indices = malloc(nindices*sizeof(GLuint));
     colors = malloc(nindices*3*sizeof(GLfloat));
-    glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
+    
 
     
     modifyVertices(use_vertices);
@@ -87,6 +88,15 @@
     rows = r;
     cols = c;
     nindices = rows;
+    if(dataloaded)
+    {
+        //data has already been loaded, i.e. we are requesting to draw another set of features
+        dataloaded = NO;
+        free(vertices);
+        free(use_vertices);
+        free(indices);
+        free(colors);
+    }
     vertices = malloc(rows*cols*sizeof(GLfloat));
     [vertex_data getBytes:vertices length: rows*cols*sizeof(float)];
     minmax = realloc(minmax,2*cols*sizeof(float));
@@ -230,6 +240,12 @@
     }
 }
 
+-(void) hideAllClusters
+{
+    nindices = 0;
+    [self setNeedsDisplay:YES];
+}
+
 -(void) rotateY
 {
     glRotated(5, 0, 1, 0);
@@ -325,6 +341,10 @@ static void pushVertices()
 {
     //set up index buffer
     int k = 0;
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
+
     glGenBuffers(1,&indexBuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, nindices*sizeof(GLuint),indices, GL_DYNAMIC_DRAW);
@@ -355,6 +375,7 @@ static void drawFrame()
     glEnd();
     
 }
+
 static void drawAnObject()
 {
     //glColor3f(1.0f,0.85f,0.35f);
@@ -380,7 +401,7 @@ static void drawAnObject()
     //Draw nindices elements of type GL_POINTS, use the loaded indexBuffer
     glDrawElements(GL_POINTS, nindices, GL_UNSIGNED_INT,(void*)0);
     //glDrawRangeElement
-    }
+}
 
 -(void) drawRect :(NSRect) bounds
 {

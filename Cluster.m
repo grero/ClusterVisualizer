@@ -13,7 +13,7 @@
 
 @synthesize name;
 @synthesize points;
-//@synthesize active;
+@synthesize active;
 @synthesize npoints;
 @synthesize color;
 @synthesize indices;
@@ -30,6 +30,25 @@
 -(NSInteger)active
 {
     return active;
+}
+
+-(void)makeInactive
+{
+    [self setActive:0];
+}
+
+-(void)makeActive
+{
+    [self setActive:1];
+}
+
+-(void)makeInvalid
+{
+    [self setValid: 0];
+}
+-(void)makeValid
+{
+    [self setValid:1];
 }
 
 -(NSIndexSet*)indices
