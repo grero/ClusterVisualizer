@@ -9,6 +9,7 @@
 #import "FeatureView.h"
 #import "Cluster.h"
 #import "readFeature.h"
+#import "OpenPanelDelegate.h"
 
 @interface FeatureViewerController : NSController/* Specify a superclass (eg: NSObject or NSView) */ {
     
@@ -18,11 +19,14 @@
     NSData *vertex_data;
     header params;
     BOOL dataloaded;
+    //name of current cluster set
+    NSString *currentBaseName;
     IBOutlet FeatureView *fw;
     IBOutlet NSComboBox *dim1;
-     IBOutlet NSComboBox *dim2;
-     IBOutlet NSComboBox *dim3;
+    IBOutlet NSComboBox *dim2;
+    IBOutlet NSComboBox *dim3;
     IBOutlet NSButton *allActive;
+    
 }
 -(void)insertObject:(Cluster *)p inClustersAtIndex:(NSUInteger)index;
 -(void)removeObjectFromClustersAtIndex:(NSUInteger)index;
@@ -39,6 +43,7 @@
 
 -(void)ClusterStateChanged:(NSNotification*)notification;
 -(void)mergeCluster: (Cluster *)cluster1 withCluster: (Cluster*)cluster2;
+-(void)deleteCluster: (Cluster *)cluster;
 
 - (IBAction) loadFeatureFile: (id)sender;
 - (IBAction) loadClusterIds: (id)sender;

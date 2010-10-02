@@ -18,6 +18,7 @@
     NSData *color;
     NSMutableIndexSet *indices;
     NSInteger valid;
+    NSMutableArray *parents;
 
 }
 
@@ -28,6 +29,7 @@
 @property(retain,readwrite) NSMutableIndexSet *indices;
 @property(retain,readwrite) NSData *color;
 @property(assign,readwrite) NSInteger valid;
+@property(retain,readwrite) NSMutableArray *parents;
 
 -(void)makeInactive;
 -(void)makeActive;

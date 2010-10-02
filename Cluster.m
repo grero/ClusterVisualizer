@@ -18,6 +18,7 @@
 @synthesize color;
 @synthesize indices;
 @synthesize valid;
+@synthesize parents;
 
 -(void)setActive:(NSInteger)value
 {

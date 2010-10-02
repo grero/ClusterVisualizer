@@ -12,6 +12,7 @@
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		C71B0FD21257014400F594EA /* OpenPanelDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C71B0FD11257014400F594EA /* OpenPanelDelegate.m */; };
 		C72337D4124E2B2A00FC9EF6 /* FeatureViewerController.m in Sources */ = {isa = PBXBuildFile; fileRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */; };
 		C723391B124EE6BD00FC9EF6 /* Cluster.m in Sources */ = {isa = PBXBuildFile; fileRef = C723391A124EE6BD00FC9EF6 /* Cluster.m */; };
 		C76101A8124C5FBF00B6210B /* FeatureView.m in Sources */ = {isa = PBXBuildFile; fileRef = C76101A7124C5FBF00B6210B /* FeatureView.m */; };
@@ -52,6 +53,8 @@
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		8D1107310486CEB800E47090 /* FeatureViewer-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "FeatureViewer-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* FeatureViewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FeatureViewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C71B0FD01257014400F594EA /* OpenPanelDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenPanelDelegate.h; sourceTree = "<group>"; };
+		C71B0FD11257014400F594EA /* OpenPanelDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenPanelDelegate.m; sourceTree = "<group>"; };
 		C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FeatureViewerController.h; sourceTree = "<group>"; };
 		C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FeatureViewerController.m; sourceTree = "<group>"; };
 		C7233919124EE6BD00FC9EF6 /* Cluster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Cluster.h; sourceTree = "<group>"; };
@@ -65,7 +68,7 @@
 		C76102DD124C840F00B6210B /* libhdf5_hl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libhdf5_hl.dylib; path = /usr/local/hdf5/lib/libhdf5_hl.dylib; sourceTree = "<absolute>"; };
 		C7772F43124C8CA900F7B6EA /* FirstResponder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FirstResponder.m; sourceTree = "<group>"; };
 		C7772F44124C8CA900F7B6EA /* FirstResponder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FirstResponder.h; sourceTree = "<group>"; };
-		C78C34461250AE34002BB91A /* todo.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = todo.txt; sourceTree = "<group>"; };
+		C78C34461250AE34002BB91A /* todo.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = todo.txt; sourceTree = "<group>"; wrapsLines = 1; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,6 +90,8 @@
 			isa = PBXGroup;
 			children = (
 				256AC3D80F4B6AC300CF3369 /* FeatureViewerAppDelegate.h */,
+				C71B0FD01257014400F594EA /* OpenPanelDelegate.h */,
+				C71B0FD11257014400F594EA /* OpenPanelDelegate.m */,
 				C7233919124EE6BD00FC9EF6 /* Cluster.h */,
 				C78C34461250AE34002BB91A /* todo.txt */,
 				C723391A124EE6BD00FC9EF6 /* Cluster.m */,
@@ -254,6 +259,7 @@
 				C7772F45124C8CA900F7B6EA /* FirstResponder.m in Sources */,
 				C72337D4124E2B2A00FC9EF6 /* FeatureViewerController.m in Sources */,
 				C723391B124EE6BD00FC9EF6 /* Cluster.m in Sources */,
+				C71B0FD21257014400F594EA /* OpenPanelDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

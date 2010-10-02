@@ -53,7 +53,10 @@
         //geth the base path
         NSString *path = [[openPanel URL] path];
         NSString *filebase = [[[path lastPathComponent] componentsSeparatedByString:@"_"] objectAtIndex:0]; 
+        currentBaseName = [[NSString stringWithString:filebase] retain];
         NSString *directory = [[openPanel directoryURL] path];
+        //set the current directory of the process to the the one pointed to by the load dialog
+        [[NSFileManager defaultManager] changeCurrentDirectoryPath:directory];
         NSArray *dir_contents = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath: directory error: nil] pathsMatchingExtensions:[NSArray arrayWithObjects:@"fd",nil]];
         //get all feature files, i.e. files ending in .fd from the FD directory
         //NSArray *dir_contents = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath:[[path stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"FD"] error: NULL] 
@@ -169,6 +172,11 @@
 {
     //TODO: the following is inefficient as it reads the header, which has already been read by the view. Only use this for testing
     NSOpenPanel *openPanel = [NSOpenPanel openPanel];
+    //set a delegate for openPanel so that we can control which files can be opened
+    [openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
+    //set the basePath to the current basepath so that only cluster files compatible with the currently loaded feature files are allowed
+    [[openPanel delegate] setBasePath: currentBaseName];
+    [[openPanel delegate] setExtension: @"clu"];
     int result = [openPanel runModal];
     if( result == NSOKButton )
     {
@@ -237,7 +245,7 @@
         free(cluster_colors);
         [self setClusters:tempArray];
         [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
-        [self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",nil]];
+        [self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",nil]];
         [allActive setState:1];
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(ClusterStateChanged:)
@@ -344,16 +352,34 @@
 - (IBAction) performClusterOption: (id)sender
 {
     NSString *selection = [sender titleOfSelectedItem];
+    //get all selected clusters
+    NSPredicate *testForTrue = [NSPredicate predicateWithFormat:@"active == YES"];
+    NSArray *candidates = [Clusters filteredArrayUsingPredicate:testForTrue];
     if( [selection isEqualToString:@"Merge"] )
     {
-        //get all selected clusters
-        NSPredicate *testForTrue =
-        [NSPredicate predicateWithFormat:@"active == YES"];
-        NSArray *candidates = [Clusters filteredArrayUsingPredicate:testForTrue];
         if( [candidates count] ==2 )
         {
             [self mergeCluster: [candidates objectAtIndex: 0] withCluster: [candidates objectAtIndex: 1]];
         }
+    }
+    else if ( [selection isEqualToString:@"Delete"] )
+    {
+        NSEnumerator *clusterEnumerator = [candidates objectEnumerator];
+        id aCluster;
+        //turn off notifcation while we rearrange the clusters
+        [[NSNotificationCenter defaultCenter] removeObserver:self];
+
+        while(aCluster = [clusterEnumerator nextObject] )
+        {
+            [self deleteCluster:aCluster];                                      
+        }
+        //restore notification alert
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(ClusterStateChanged:)
+                                                     name:@"ClusterStateChanged" object:nil];
+        //[candidates makeObjectsPerformSelector:@selector(makeInactive)];
+        //[candidates makeObjectsPerformSelector:@selector(makeInvalid)];
+        
     }
              
 }
@@ -363,23 +389,47 @@
     //Need to get the points of each cluster, and use those points as indexes for which the point is the
     //cluster number
     //create an array to hold the indices
-    NSMutableArray *cluster_indices = [NSMutableArray arrayWithCapacity:params.rows];
-    //enumreate all valid clusters
-    NSEnumerator *cluster_enumerator = [[Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"valid==1"]] objectEnumerator];
-    int i;
-    int npoints;
-    id cluster;
-    while( cluster = [cluster_enumerator nextObject] )
+    //make sure there are clusters to save
+    if ([Clusters count] > 0)
     {
-        NSUInteger *clusteridx = [[cluster points] bytes];
-        npoints = [[cluster npoints] intValue];
-        for(i=0;i<npoints;i++)
+        //NSMutableArray *cluster_indices = [NSMutableArray arrayWithCapacity:params.rows];
+        //NSMutableIndexSet *index = [NSMutableIndexSet indexSet];
+        NSMutableDictionary *cluster_indices = [NSMutableDictionary dictionaryWithCapacity:params.rows];
+        //enumreate all valid clusters
+        //do it the "c" way
+        //FILE *cluster_file = fopen("FeatureViewer.clusters","w");
+        
+        NSEnumerator *cluster_enumerator = [[Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"valid==1"]] objectEnumerator];
+        int i;
+        int npoints;
+        id cluster;
+        while( cluster = [cluster_enumerator nextObject] )
         {
-            [cluster_indices insertObject:[NSString stringWithFormat:@"%d",[cluster name]] atIndex: clusteridx[i]];
+            unsigned int *clusteridx = (unsigned int*)[[cluster points] bytes];
+            npoints = [[cluster npoints] intValue];
+            for(i=0;i<npoints;i++)
+            {
+                [cluster_indices setObject: [NSNumber numberWithUnsignedInteger: (NSUInteger)clusteridx[i]] forKey:[cluster name]];
+                //[index addIndex:(NSUInteger)clusteridx[i]];
+            }
         }
+        //now, join the components by sorting according to the index
+        //this allows me to try out blocks!! wohooo
+        //basically, I'm just telling the dictionary containing the cluster names and indices to sort itself by comparing the values
+        //i.e. the indices
+        NSString *cidx_string = [[cluster_indices keysSortedByValueUsingComparator: ^(id obj1, id obj2) {
+            if ([obj1 unsignedIntValue] < [obj2 unsignedIntValue] ) {
+                return (NSComparisonResult)NSOrderedAscending;
+            }
+            else
+            {
+                return (NSComparisonResult)NSOrderedDescending;
+            }
+
+            
+        }] componentsJoinedByString:@"\n"];
+        [cidx_string writeToFile:@"FeatureViewer.clusters" atomically:YES];
     }
-    NSString *cidx_string = [cluster_indices componentsJoinedByString:@"\n"];
-    [cidx_string writeToFile:@"FeatureViewer.clusters" atomically:YES];
 }
 
 -(void)mergeCluster: (Cluster *)cluster1 withCluster: (Cluster*)cluster2
@@ -406,10 +456,29 @@
     //[self insertObject:new_cluster inClustersAtIndex:[Clusters indexOfObject: cluster1]];
     //set the new cluste colors
     int nclusters = [Clusters count];
+    new_cluster.parents = [NSArray arrayWithObjects:cluster1,cluster2,nil];
     [self insertObject:new_cluster inClustersAtIndex:nclusters];
     [fw setClusterColors:[[new_cluster color] bytes] forIndices:[[new_cluster points] bytes] length:[[new_cluster npoints] unsignedIntValue]];
     new_cluster.active = 1;
 }
+
+-(void)deleteCluster: (Cluster *)cluster
+{
+    [cluster makeInactive];
+    [cluster makeInvalid];
+    
+    NSEnumerator *parentsEnumerator = [[cluster parents] objectEnumerator];
+    id parent;
+    while(parent = [parentsEnumerator nextObject] )
+    {
+        //restore previous cluster colors
+        [fw setClusterColors: (GLfloat*)[[parent color] bytes] forIndices: (GLuint*)[[parent points] bytes] length:[[parent npoints] unsignedIntValue]];
+        [parent makeValid];
+    }
+    [fw hideCluster:cluster];
+    [self removeObjectFromClustersAtIndex: [Clusters indexOfObject:cluster]];
+}
+
 - (void)keyDown:(NSEvent *)theEvent
 {
     //capture key event, rotate view : left/right -> y-axis, up/down -> x-axis
