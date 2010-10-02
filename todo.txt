@@ -1,6 +1,7 @@
 implementations:
 - cluster merging
     - works in a certain fashion. Left to do: make system take colors from the cluster and not the initial load
+	- FIXED!
 - select points
 - display number of points in each cluster
 - display mean waveform
@@ -12,20 +13,23 @@ implementations:
 
 (- Fix problem with glMapBuffer returning NULL. Could be related to low system memory, but could also be something else. The only thing I changed
 was to change cluster indexing from normal GLUint arrays to NSIndexSet. The reason for this is that it will make things like intersection and
-set differences easier.) FIXED (Cause: I wasn't unmapping the buffer if new_size==0)
+set differences easier.) 
+	- FIXED (Cause: I wasn't unmapping the buffer if new_size==0)
 
 - Change Array Controller such that only valid clusters are drawn. This amounts to given each cluster an additional boolean property indicating 
 whether the cluster is valid or not. To get the Array Controller to only display valid clusters, we can create a predicate which checks the valid
 property of each cluster, filters the clusters accordingly.
     - Something a bit strange.. apparently, I can't merge clusters that are already merged..
-    
+	- FIXED! (Not too sure what the problem was)    
     
 
-- In the process of rewriting the feature loading to be more general. Make sure a single group is selected, by explicitly selecting the file, rather than just the directory
+- In the process of rewriting the feature loading to be more general. Make sure a single group is selected, by explicitly selecting the file, rather than just the directory.
+	-FIXED!
 
 - Look into Using NSUndoManager to manage the cluster manipulation. This can be used to e.g. undo a cluster merge.
 
 - Implement a method for deleting a cluster; if a base cluster, i.e. a cluster that was part of the original klustakwik output, the points formerly assigned to this cluster
+	-FIXED!
 should be put into cluster 0. If deleting a cluster that was the result of some manipulation in FeatureViewer, return the points in those clusters to the original KlustaKwik cluster, alternative, the managed clusters that resulting in the deleted cluster. This is where the undoManager comes in. Since merging a cluster reassigns the colors of the corresponding feature points, deleting that cluster should restore the original color assignment. In other words, if clusters 18 and 19 are merged in the cluster "18+19", the union of points in those two clusters receive the same coloring as the points in cluster 18. If we now undo the merging action, the points formerly belonging to cluster 19 should be re-colored using the color of cluster 19. This can most easily be achieved by a recolorPoints method in FeatureView that takes as an argument the cluster containing the points to be recolored. In other words, this would be similar to showCluster, except that in addition to resetting the indices, we are also restting the colors
 
 - Add text rendering to the system. For this, look into the GLString object and NSAttributedString object. This is less critical for the feature space, but if I want to add things like ISI-histogram and waveforms view, I would need to at the very least add some labels to the axis.

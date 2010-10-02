@@ -170,8 +170,7 @@
 
 - (IBAction) loadClusterIds: (id)sender
 {
-    //TODO: the following is inefficient as it reads the header, which has already been read by the view. Only use this for testing
-    NSOpenPanel *openPanel = [NSOpenPanel openPanel];
+     NSOpenPanel *openPanel = [NSOpenPanel openPanel];
     //set a delegate for openPanel so that we can control which files can be opened
     [openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
     //set the basePath to the current basepath so that only cluster files compatible with the currently loaded feature files are allowed
@@ -205,9 +204,12 @@
         for(i=0;i<cids[0];i++)
         {
             Cluster *cluster = [[Cluster alloc] init];
-            cluster.name = [NSString stringWithFormat: @"%d",i];
+            cluster.clusterId = [NSNumber numberWithUnsignedInt:i];
+            //cluster.name = [NSString stringWithFormat: @"%d",i];
+            
             [cluster setActive: 1];
             cluster.npoints = [NSNumber numberWithUnsignedInt: npoints[i]];
+            cluster.name = [[[[cluster clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[cluster npoints] stringValue]];
             cluster.indices = [NSMutableIndexSet indexSet];
             cluster.valid = 1;
             //set color
@@ -435,14 +437,19 @@
 -(void)mergeCluster: (Cluster *)cluster1 withCluster: (Cluster*)cluster2
 {
     Cluster *new_cluster = [[Cluster alloc] init];
-    new_cluster.name = [[cluster1.name stringByAppendingString: @"+"] stringByAppendingString:cluster2.name];
+    //new_cluster.name = [[cluster1.name stringByAppendingString: @"+"] stringByAppendingString:cluster2.name];
+    //set the new cluster id to the previous number of clusters
+    new_cluster.clusterId = [NSNumber numberWithUnsignedInt:[Clusters count]];
     new_cluster.npoints = [NSNumber numberWithUnsignedInt: [[cluster1 npoints] unsignedIntValue] + [[cluster2 npoints] unsignedIntValue]];
     NSMutableData *points = [NSMutableData dataWithCapacity:[[new_cluster npoints] unsignedIntValue]*sizeof(unsigned int)];
+    new_cluster.name = [[[[[[cluster1 clusterId] stringValue] stringByAppendingString:@"+"] stringByAppendingString:[[cluster2 clusterId] stringValue]]
+                         stringByAppendingString:@":"] stringByAppendingString:[[new_cluster npoints] stringValue]];
     [points appendData:cluster1.points];
     [points appendData:cluster2.points];
     new_cluster.points = points;
     //set the new cluster color to that of the first cluster
-    new_cluster.color = [NSData dataWithData: cluster1.color];
+    NSData *new_color = [cluster1 color];
+    [new_cluster setColor: new_color];
     new_cluster.valid = 1;
     //new_cluster.color[0] = cluster1.color[0];
     //new_cluster.color[0] = cluster1.color[0];

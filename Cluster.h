@@ -12,6 +12,7 @@
 @interface Cluster : NSObject {
     
     NSString *name;
+    NSNumber *clusterId;
     NSData *points;
     NSNumber *npoints;
     NSInteger active;
@@ -19,6 +20,7 @@
     NSMutableIndexSet *indices;
     NSInteger valid;
     NSMutableArray *parents;
+    NSColor *textColor;
 
 }
 
@@ -30,7 +32,8 @@
 @property(retain,readwrite) NSData *color;
 @property(assign,readwrite) NSInteger valid;
 @property(retain,readwrite) NSMutableArray *parents;
-
+@property(retain,readwrite) NSNumber *clusterId;
+@property(retain,readwrite) NSColor *textColor;
 -(void)makeInactive;
 -(void)makeActive;
 
