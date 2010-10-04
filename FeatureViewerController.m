@@ -10,6 +10,7 @@
 @implementation FeatureViewerController
 
 @synthesize fw;
+@synthesize wfv;
 @synthesize dim1;
 @synthesize dim2;
 @synthesize dim3;
@@ -247,13 +248,38 @@
         free(cluster_colors);
         [self setClusters:tempArray];
         [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
-        [self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",nil]];
+        [self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",nil]];
         [allActive setState:1];
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(ClusterStateChanged:)
                                                      name:@"ClusterStateChanged" object:nil];
     }
                                                        
+}
+
+- (void) loadWaveforms: (Cluster*)cluster
+{
+    NSOpenPanel *openPanel = [NSOpenPanel openPanel];
+    //set a delegate for openPanel so that we can control which files can be opened
+    [openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
+    //set the basePath to the current basepath so that only cluster files compatible with the currently loaded feature files are allowed
+    [[openPanel delegate] setBasePath: currentBaseName];
+    [[openPanel delegate] setExtension: @"bin"];
+    int result = [openPanel runModal];
+    if( result == NSOKButton )
+    {
+        //test
+        //Cluster *cluster = [Clusters objectAtIndex: 3];
+        char *path = [[[openPanel URL] path] cStringUsingEncoding:NSASCIIStringEncoding];
+        nptHeader spikeHeader;
+        spikeHeader = *getSpikeInfo(path,&spikeHeader);
+        unsigned int wfSize = spikeHeader.num_spikes*spikeHeader.channels*spikeHeader.timepts;
+        short int *waveforms = malloc(wfSize*sizeof(short int));
+        waveforms = getWaves(path, &spikeHeader, (unsigned int*)[[cluster points] bytes], [[cluster npoints] unsignedIntValue], waveforms);
+        [wfv createVertices:[NSData dataWithBytes:waveforms length:(NSUInteger)wfSize*sizeof(short int)] withNumberOfWaves: (NSUInteger)spikeHeader.num_spikes channels: (NSUInteger)spikeHeader.channels andTimePoints: (NSUInteger)spikeHeader.timepts];
+        [[wfv window] orderFront: self];
+   }        
+    
 }
 
 -(void)insertObject:(Cluster *)p inClustersAtIndex:(NSUInteger)index {
@@ -382,6 +408,10 @@
         //[candidates makeObjectsPerformSelector:@selector(makeInactive)];
         //[candidates makeObjectsPerformSelector:@selector(makeInvalid)];
         
+    }
+    else if ( [selection isEqualToString:@"Show waveforms"] )
+    {
+        [self loadWaveforms:[candidates objectAtIndex: 0]];
     }
              
 }

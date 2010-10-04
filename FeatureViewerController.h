@@ -7,8 +7,10 @@
 
 #import <Cocoa/Cocoa.h>
 #import "FeatureView.h"
+#import "WaveformsView.h"
 #import "Cluster.h"
 #import "readFeature.h"
+#import "nptLoadingEngine.h"
 #import "OpenPanelDelegate.h"
 
 @interface FeatureViewerController : NSController/* Specify a superclass (eg: NSObject or NSView) */ {
@@ -22,6 +24,7 @@
     //name of current cluster set
     NSString *currentBaseName;
     IBOutlet FeatureView *fw;
+    IBOutlet WaveformsView *wfv;
     IBOutlet NSComboBox *dim1;
     IBOutlet NSComboBox *dim2;
     IBOutlet NSComboBox *dim3;
@@ -44,10 +47,11 @@
 -(void)ClusterStateChanged:(NSNotification*)notification;
 -(void)mergeCluster: (Cluster *)cluster1 withCluster: (Cluster*)cluster2;
 -(void)deleteCluster: (Cluster *)cluster;
+-(void)loadWaveforms: (Cluster*)cluster;
 
 - (IBAction) loadFeatureFile: (id)sender;
 - (IBAction) loadClusterIds: (id)sender;
-
+//- (IBAction) loadWaveforms: (id)sender;
 - (IBAction) changeDim1: (id)sender;
 - (IBAction) changeDim2: (id)sender;
 - (IBAction) changeDim3: (id)sender;
@@ -57,6 +61,7 @@
 
 //@property (assign) IBOutlet NSWindow *window;
 @property (assign) IBOutlet FeatureView *fw;
+@property (assign) IBOutlet WaveformsView *wfv;
 @property (assign) IBOutlet NSComboBox *dim1;
 @property (assign) IBOutlet NSComboBox *dim2;
 @property (assign) IBOutlet NSComboBox *dim3;

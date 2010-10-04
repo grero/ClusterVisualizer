@@ -4,6 +4,7 @@ implementations:
 	- FIXED!
 - select points
 - display number of points in each cluster
+	- FIXED!
 - display mean waveform
 - show Xcorr between clusters
 - show isi
@@ -34,3 +35,5 @@ should be put into cluster 0. If deleting a cluster that was the result of some 
 
 - Add text rendering to the system. For this, look into the GLString object and NSAttributedString object. This is less critical for the feature space, but if I want to add things like ISI-histogram and waveforms view, I would need to at the very least add some labels to the axis.
 
+- Started working on a simple waveforms view, whereby if requested, the waveforms fo the currently selected custer(s) can be viewed. I created an NSPanel class for this, containing a custom NSOpenGLView. The idea, then, is that a number of such panels can be opened, depending on the currenly activated clusters. Typically, the waveforms of two clusters will need to be compared. Is this the best way of doing it, or should I instead put both waveforms in one panel?
+	- This is more complicated than anticipated. Because multiple views will now have to support OpenGL drawing, I cannot use NSopenGlView. Rather, I need to create my own custom view. This is quite a project, so maybe I'll get someone else to do this.
