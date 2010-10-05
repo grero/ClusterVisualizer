@@ -95,7 +95,7 @@
                 cols+=H.rows;
                 //feature names
                 //get basename
-                NSString *fn = [[[file componentsSeparatedByString:@"_"] objectAtIndex:1] stringByDeletingPathExtension]; 
+                NSString *fn = [[[file componentsSeparatedByString:@"_"] lastObject] stringByDeletingPathExtension]; 
                 for(j=0;j<H.rows;j++)
                 {
                     [feature_names addObject: [fn stringByAppendingFormat:@"%d",j+1]];
