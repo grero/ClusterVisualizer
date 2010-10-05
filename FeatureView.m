@@ -25,6 +25,124 @@
     minmax[3] = 1;
     minmax[4] = -1;
     minmax[5] = 1;
+    
+    NSOpenGLPixelFormatAttribute attrs[] =
+    {
+        NSOpenGLPFAAllRenderers,YES,
+        NSOpenGLPFAColorSize, 24,
+        NSOpenGLPFAAlphaSize, 8,
+        NSOpenGLPFADepthSize, 16,
+    };
+    //_pixelFormat =[[[NSOpenGLPixelFormat alloc] initWithAttributes:attrs] retain];
+    /*_pixelFormat = [[FeatureView defaultPixelFormat] retain];
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector:@selector(_surfaceNeedsUpdate:)
+                                                 name: NSViewGlobalFrameDidChangeNotification object: self];
+    */
+     //[self setOpenGLContext: [[NSOpenGLContext alloc] initWithFormat:[NSOpenGLView defaultPixelFormat] shareContext:nil]];
+    
+}
+
+- (id) initWithFrame:(NSRect)frameRect 
+{
+    
+    /*self = [super initWithFrame:frameRect];
+    if(self == nil)
+    {
+        return nil;
+    }
+    /*[self setOpenGLContext: [[NSOpenGLContext alloc] initWithFormat:[NSOpenGLView defaultPixelFormat] shareContext:nil]];
+    [[self openGLContext] makeCurrentContext];*/
+    
+    return [self initWithFrame:frameRect pixelFormat: [FeatureView defaultPixelFormat]];
+}
+
+-(id) initWithFrame:(NSRect)frameRect pixelFormat:(NSOpenGLPixelFormat*)format
+{
+    self = [super initWithFrame:frameRect];
+    if( self != nil)
+    {
+        _pixelFormat = [format retain];
+        [self setOpenGLContext: [[NSOpenGLContext alloc] initWithFormat:format shareContext:nil]];
+        [[self openGLContext] makeCurrentContext];
+        [[NSNotificationCenter defaultCenter] addObserver: self
+                                                 selector:@selector(_surfaceNeedsUpdate:)
+                                                     name: NSViewGlobalFrameDidChangeNotification object: self];
+    }
+    return self;
+}
+
+-(void) _surfaceNeedsUpdate:(NSNotification*)notification
+{
+    [self update];
+}
+                                                   
+
+-(void) lockFocus
+{
+    NSOpenGLContext *context = [self openGLContext];
+    
+    [super lockFocus];
+    if( [context view] != self )
+    {
+        [context setView:self];
+    }
+    [context makeCurrentContext];
+}
+
+-(BOOL) isOpaque
+{
+    return YES;
+}
+
+-(void) setOpenGLContext:(NSOpenGLContext *)context
+{
+    _oglContext = [context retain];
+}
+
++(NSOpenGLPixelFormat*) defaultPixelFormat
+{
+    NSOpenGLPixelFormatAttribute attrs[] =
+    {
+        NSOpenGLPFAAllRenderers,YES,
+        NSOpenGLPFADoubleBuffer, YES,
+        NSOpenGLPFAColorSize, 24,
+        NSOpenGLPFAAlphaSize, 8,
+        NSOpenGLPFADepthSize, 32,
+        0
+    };
+    NSOpenGLPixelFormat *pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
+    return pixelFormat;
+    //return [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
+}
+
+-(NSOpenGLContext*)openGLContext
+{
+    return _oglContext;
+}
+
+-(void)clearGLContext
+{
+    [[self openGLContext] clearCurrentContext];
+    [[self openGLContext] release];
+}
+
+-(void)setPixelFormat:(NSOpenGLPixelFormat *)pixelFormat
+{
+    _pixelFormat = [pixelFormat retain];
+}
+
+-(NSOpenGLPixelFormat*)pixelFormat
+{
+    return _pixelFormat;
+}
+
+-(void)update
+{
+    if( [[self openGLContext] view] == self)
+    {
+        [[self openGLContext] update];
+    }
 }
 
 - (void) loadVertices: (NSURL*)url
@@ -405,6 +523,13 @@ static void drawAnObject()
 
 -(void) drawRect :(NSRect) bounds
 {
+    NSOpenGLContext *context = [self openGLContext];
+    [context makeCurrentContext];
+    //if(bounds != [self bounds] )
+    //{
+    glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
+    //glDepthRange(minmax[4],minmax[5]);
+    //}
     glClearColor(0,0,0,0);
     glClear(GL_COLOR_BUFFER_BIT);
     if(dataloaded)
@@ -413,12 +538,19 @@ static void drawAnObject()
         //drawFrame();
     }
     glFlush();
+    [[self openGLContext] flushBuffer];
 
 }
 - (void) prepareOpenGL
 {
     //prepare openGL context
     dataloaded = NO;
+    //_oglContext = [[NSOpenGLContext alloc] initWithFormat: [self pixelFormat] shareContext:nil];
+    NSOpenGLContext *context = [self openGLContext];
+    NSRect bounds = [self bounds];
+    
+    [context makeCurrentContext];
+    glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
     glClearColor(0,0, 0, 0);
     glClearDepth(1.0);
     glDepthFunc(GL_LESS);
@@ -430,7 +562,8 @@ static void drawAnObject()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    
+    [context flushBuffer];
+    //[self update];
     
     
        
@@ -439,6 +572,7 @@ static void drawAnObject()
 {
     //reshape the view
     NSRect bounds = [self bounds];
+    [[self openGLContext] makeCurrentContext];
     glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
     //glMatrixMode(GL_PROJECTION);
     //glLoadIdentity();
@@ -494,6 +628,11 @@ static void drawAnObject()
     //free(cids);
     free(use_colors);
     free(indexset);
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:NSViewGlobalFrameDidChangeNotification
+                                                  object:self];
+    [self clearGLContext];
+    [_pixelFormat release];
     [super dealloc];
 }
 

@@ -33,13 +33,30 @@ static void modifyIndices(GLuint *index_data);
 static void modifyColors(GLfloat *color_data);
 static BOOL dataloaded;
 
-@interface FeatureView : NSOpenGLView {
+@interface FeatureView : NSView {
 
     NSMutableIndexSet *indexset;
+    
+    @private
+    NSOpenGLContext* _oglContext;
+    NSOpenGLPixelFormat* _pixelFormat;
+    
+    
     
 }
 
 @property (retain,readwrite) NSMutableIndexSet *indexset;
+
++(NSOpenGLPixelFormat*)defaultPixelFormat;
+-(id) initWithFrame:(NSRect)frameRect pixelFormat:(NSOpenGLPixelFormat*)format;
+-(void) setOpenGLContext: (NSOpenGLContext*)context;
+-(NSOpenGLContext*)openGLContext;
+-(void) clearGLContext;
+-(void) prepareOpenGL;
+-(void) update;
+-(void) setPixelFormat:(NSOpenGLPixelFormat*)pixelFormat;
+-(NSOpenGLPixelFormat*)pixelFormat;
+-(void) _surfaceNeedsUpdate:(NSNotification *)notification;
 - (void) loadVertices: (NSURL*)url;
 -(void) createVertices: (NSData*)vertex_data withRows: (NSUInteger)r andColumns: (NSUInteger)c;
 -(void) selectDimensions:(NSDictionary*)dims;
