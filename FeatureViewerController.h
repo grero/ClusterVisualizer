@@ -6,6 +6,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import <Accelerate/Accelerate.h>
 #import "FeatureView.h"
 #import "WaveformsView.h"
 #import "Cluster.h"
@@ -17,7 +18,7 @@
     
     NSMutableArray *Clusters;
     NSMutableArray *ClusterOptions;
-    NSPredicate *isValidCluster;
+    NSPredicate *isValidCluster, *filterClustersPredicate;
     NSData *vertex_data;
     header params;
     BOOL dataloaded;
@@ -29,6 +30,7 @@
     IBOutlet NSComboBox *dim2;
     IBOutlet NSComboBox *dim3;
     IBOutlet NSButton *allActive;
+    IBOutlet NSPanel *filterClustersPanel;
     
 }
 -(void)insertObject:(Cluster *)p inClustersAtIndex:(NSUInteger)index;
@@ -68,4 +70,5 @@
 @property (retain,readwrite) NSMutableArray *Clusters;
 @property (retain,readwrite) NSMutableArray *ClusterOptions;
 @property (retain, readwrite) NSPredicate *isValidCluster;
+@property (retain, readwrite) NSPredicate *filterClustersPredicate;
 @end

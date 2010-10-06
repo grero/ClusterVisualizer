@@ -159,10 +159,10 @@
     int c;
     for(c=0;c<H.cols;c++)
     {
-        minmax[2*c] = 0;
-        minmax[2*c+1] = 0;
+        minmax[2*c] = -1;
+        minmax[2*c+1] = 1;
     }
-    minmax = getMinMax(minmax, vertices, H.rows, H.cols);
+    //minmax = getMinMax(minmax, vertices, H.rows, H.cols);
     draw_dims[0] = 0;
     draw_dims[1] = 1;
     draw_dims[2] = 3;
@@ -221,10 +221,10 @@
     int cl;
     for(cl=0;cl<cols;cl++)
     {
-        minmax[2*cl] = 0;
-        minmax[2*cl+1] = 0;
+        minmax[2*cl] = -1.0;
+        minmax[2*cl+1] = 1.0;
     }
-    minmax = getMinMax(minmax, vertices, rows, cols);
+    //minmax = getMinMax(minmax, vertices, rows, cols);
     draw_dims[0] = 0;
     draw_dims[1] = 1;
     draw_dims[2] = 3;
@@ -232,7 +232,7 @@
     use_vertices = malloc(rows*ndraw_dims*sizeof(GLfloat));
     indices = malloc(nindices*sizeof(GLuint));
     colors = malloc(nindices*3*sizeof(GLfloat));
-    glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
+    glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]+1], 1.1*minmax[2*draw_dims[2]]);
     modifyVertices(use_vertices);
     modifyIndices(indices);
     modifyColors(colors);

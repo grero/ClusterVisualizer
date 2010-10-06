@@ -24,6 +24,7 @@
 		C78C34471250AE34002BB91A /* todo.txt in Resources */ = {isa = PBXBuildFile; fileRef = C78C34461250AE34002BB91A /* todo.txt */; };
 		C78C3EAD1252D391002BB91A /* libhdf5.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C7610288124C81B200B6210B /* libhdf5.dylib */; };
 		C78C3EAE1252D391002BB91A /* libhdf5_hl.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C76102DD124C840F00B6210B /* libhdf5_hl.dylib */; };
+		C7AEFDAA125B5BA1007F5D43 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C7AEFDA9125B5BA1007F5D43 /* Accelerate.framework */; };
 		C7D281CA1257906F007D19EA /* WaveformsView.m in Sources */ = {isa = PBXBuildFile; fileRef = C7D281C91257906F007D19EA /* WaveformsView.m */; };
 		C7D281F31257A52B007D19EA /* nptLoadingEngine.c in Sources */ = {isa = PBXBuildFile; fileRef = C7D281F11257A52B007D19EA /* nptLoadingEngine.c */; };
 		C7D282241257B34A007D19EA /* WaveformsPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = C7D282231257B34A007D19EA /* WaveformsPanel.m */; };
@@ -72,6 +73,7 @@
 		C7772F43124C8CA900F7B6EA /* FirstResponder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FirstResponder.m; sourceTree = "<group>"; };
 		C7772F44124C8CA900F7B6EA /* FirstResponder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FirstResponder.h; sourceTree = "<group>"; };
 		C78C34461250AE34002BB91A /* todo.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = todo.txt; sourceTree = "<group>"; wrapsLines = 1; };
+		C7AEFDA9125B5BA1007F5D43 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		C7D281C81257906F007D19EA /* WaveformsView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WaveformsView.h; sourceTree = "<group>"; };
 		C7D281C91257906F007D19EA /* WaveformsView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WaveformsView.m; sourceTree = "<group>"; };
 		C7D281F11257A52B007D19EA /* nptLoadingEngine.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nptLoadingEngine.c; sourceTree = "<group>"; };
@@ -89,6 +91,7 @@
 				C76101C2124C655E00B6210B /* OpenGL.framework in Frameworks */,
 				C7610289124C81B200B6210B /* libhdf5.dylib in Frameworks */,
 				C76102DE124C840F00B6210B /* libhdf5_hl.dylib in Frameworks */,
+				C7AEFDAA125B5BA1007F5D43 /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -188,6 +191,7 @@
 			children = (
 				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
+				C7AEFDA9125B5BA1007F5D43 /* Accelerate.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";

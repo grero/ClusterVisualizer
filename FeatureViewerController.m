@@ -17,11 +17,13 @@
 @synthesize Clusters;
 @synthesize ClusterOptions;
 @synthesize isValidCluster;
+@synthesize filterClustersPredicate;
 
 -(void)awakeFromNib
 {
     //[self setClusters:[NSMutableArray array]];
     dataloaded = NO;
+    [self setFilterClustersPredicate:[NSPredicate predicateWithFormat: @"valid==YES"]];
 }
 
 -(BOOL) acceptsFirstResponder
@@ -89,6 +91,8 @@
                         tmp_data2[j*H.rows+i] = tmp_data[i*H.cols+j];
                     }
                 }
+                //scale
+                //vDSP_vsdiv(
                 [data appendBytes:tmp_data2 length: H.rows*H.cols*sizeof(float)];
                 free(tmp_data);
                 free(tmp_data2);
@@ -129,9 +133,30 @@
                 }
             }
         }
+        
+        
         NSRange range;
         range.location = 0;
         range.length = rows*cols*sizeof(float);
+        
+        //scale data
+        float max,min,l;
+        for(i=0;i<cols;i++)
+        {
+            //find max
+            vDSP_maxv(tmp_data+i,cols,&max,rows);
+            //find min
+            vDSP_minv(tmp_data+i,cols,&min,rows);
+            //scale the data
+            l = max-min;
+            /*min *=-1;
+            vDSP_addv(tmp_data2+i,cols,&min,
+            vDSP_vsdiv(tmp_data2+i,cols,&l,tmp_data+i,cols,rows*cols);*/
+            for(j=0;j<rows;j++)
+            {
+                tmp_data[j*cols+i] = 2*(tmp_data[j*cols+i]-min)/l-1;
+            }
+        }
         [data replaceBytesInRange:range withBytes:tmp_data length: rows*cols*sizeof(float)];
         free(tmp_data);
         [fw createVertices:data withRows:rows andColumns:cols];
@@ -248,7 +273,7 @@
         free(cluster_colors);
         [self setClusters:tempArray];
         [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
-        [self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",nil]];
+        [self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",nil]];
         [allActive setState:1];
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(ClusterStateChanged:)
@@ -339,6 +364,23 @@
 
 }
 
+-(void)setFilterClustersPredicate:(NSPredicate *)predicate
+{
+    filterClustersPredicate = [predicate retain];
+    //[fw hideAllClusters];
+    NSPredicate *isActive = [NSPredicate predicateWithFormat:@"active==YES"];
+    //[[Clusters filteredArrayUsingPredicate:[NSCompoundPredicate notPredicateWithSubpredicate: predicate]] makeObjectsPerformSelector:@selector(makeInactive)];
+    //[allActive setState: 0];
+    //Inactive those clusters for which the predicate is not true and which are already active
+    [[Clusters filteredArrayUsingPredicate:[NSCompoundPredicate andPredicateWithSubpredicates:[NSArray arrayWithObjects: 
+                                                                                               [NSCompoundPredicate notPredicateWithSubpredicate:predicate],
+                                                                                               isActive,nil]]] makeObjectsPerformSelector:@selector(makeInactive)];
+    //Activate those clusters for which the predicate is true and which are inactive
+    [[Clusters filteredArrayUsingPredicate: [NSCompoundPredicate andPredicateWithSubpredicates:[NSArray arrayWithObjects: 
+                                                                                                [NSCompoundPredicate notPredicateWithSubpredicate:isActive],
+                                                                                                 predicate,nil]]] makeObjectsPerformSelector:@selector(makeActive)];
+}
+
 - (IBAction) changeDim1: (id)sender
 {
     [fw selectDimensions:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:0],@"dim", [NSNumber numberWithInt: [sender indexOfSelectedItem]],@"dim_data",nil]];
@@ -412,6 +454,10 @@
     else if ( [selection isEqualToString:@"Show waveforms"] )
     {
         [self loadWaveforms:[candidates objectAtIndex: 0]];
+    }
+    else if( [selection isEqualToString:@"Filter clusters"] )
+    {
+        [filterClustersPanel orderFront: self];
     }
              
 }
