@@ -21,6 +21,11 @@
 @synthesize parents;
 @synthesize clusterId;
 @synthesize textColor;
+@synthesize shortISIs;
+@synthesize mean;
+@synthesize cov;
+@synthesize covi;
+@synthesize lRatio;
 
 -(void)setActive:(NSInteger)value
 {
@@ -70,6 +75,82 @@
 {
     return color;
 }
+
+-(void)computeISIs:(NSData*)timestamps
+{
+    //get the times relevant for this cluster
+    unsigned int _npoints = [[self npoints] unsignedIntValue];
+     unsigned long long int* times = (unsigned long long int*)[timestamps bytes];
+    //make sure there at more than 2 points, and that we have timestamps
+    if( (_npoints > 1) && (times != NULL) )
+    {
+        unsigned long long int dt = 0;
+        unsigned int nshort = 0;
+        int i;
+        unsigned int* spoints = (unsigned int*)[[self points] bytes];
+        
+        for(i=0;i<_npoints-1;i++)
+        {
+            dt = times[spoints[i+1]]-times[spoints[i]];
+            if(dt < 1000)
+            {
+                nshort+=1;
+            }
+        }
+        [self setShortISIs: [NSNumber numberWithFloat: 1.0*nshort/_npoints]];
+    }
+    else {
+        [self setShortISIs: [NSNumber numberWithFloat:0.0]];
+    }
+
+    
+    
+}
+
+-(void)computeLRatio:(NSData*)data
+{
+    //need to compute the mahalanobis distance for all points not in the cluster
+    unsigned int _npoints = (unsigned int)([data length]/sizeof(float));
+    float *_data = (float*)[data bytes];
+    unsigned int *_points = (unsigned int*)[self points];
+    float *_mean = (float*)[[self mean] bytes];
+    float *_covi = (float*)[[self covi] bytes];
+    unsigned int ndim = (unsigned int)([[self mean] length]/sizeof(float));
+    //naive implementation
+    int i,found,j,k;
+    found = 0;
+    j = 0;
+    k = 0;
+    //vector to hold the differences
+    float *D = malloc((_npoints-[[self npoints] unsignedIntValue])*sizeof(float));
+    float *d = malloc(ndim*sizeof(float));
+    float *q = malloc(ndim*sizeof(float));
+    for(i=0;i<_npoints;i++)
+    {
+        j = 0;
+        while( (found == 0) && (j < [[self npoints]  unsignedIntValue]))
+        {
+            found = (i==_points[j]);
+            j+=1;
+        }
+        if(found==0)
+        {
+            //subtract cluster mean
+            vDSP_vsub(_mean,1,_data+i*ndim,1,d,1,ndim);
+            //dot product with inverse covariance matrix
+            cblas_sgemv(CblasRowMajor,CblasNoTrans,ndim,ndim,1,_covi,ndim,d,1,0,q,1);
+            D[k] = cblas_sdsdot(ndim, 1, d, 1, q, 1);            
+            k+=1;
+        }
+       
+    }
+    free(d);
+    free(q);
+    [self setLRatio:[NSData dataWithBytes:D length:sizeof(D)]];
+    free(D);
+    
+}
+
 
 -(void) dealloc
 {

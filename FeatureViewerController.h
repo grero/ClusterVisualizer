@@ -13,13 +13,16 @@
 #import "readFeature.h"
 #import "nptLoadingEngine.h"
 #import "OpenPanelDelegate.h"
+#import "utils.h"
 
 @interface FeatureViewerController : NSController/* Specify a superclass (eg: NSObject or NSView) */ {
     
     NSMutableArray *Clusters;
     NSMutableArray *ClusterOptions;
+    NSArray *clusterModel;
     NSPredicate *isValidCluster, *filterClustersPredicate;
     NSData *vertex_data;
+    NSData *timestamps;
     header params;
     BOOL dataloaded;
     //name of current cluster set
@@ -50,7 +53,7 @@
 -(void)mergeCluster: (Cluster *)cluster1 withCluster: (Cluster*)cluster2;
 -(void)deleteCluster: (Cluster *)cluster;
 -(void)loadWaveforms: (Cluster*)cluster;
-
+-(void)readClusterModel:(NSString*)path;
 - (IBAction) loadFeatureFile: (id)sender;
 - (IBAction) loadClusterIds: (id)sender;
 //- (IBAction) loadWaveforms: (id)sender;

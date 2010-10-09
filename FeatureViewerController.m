@@ -64,7 +64,8 @@
         //get all feature files, i.e. files ending in .fd from the FD directory
         //NSArray *dir_contents = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath:[[path stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"FD"] error: NULL] 
          //                        pathsMatchingExtensions:[NSArray arrayWithObjects:@"fd",nil]];
-        
+        //get waveforms file
+                    
         NSEnumerator *enumerator = [dir_contents objectEnumerator];
         id file;
         header H;
@@ -165,9 +166,30 @@
         [dim2 addItemsWithObjectValues:feature_names];
         [dim3 addItemsWithObjectValues:feature_names];
         dataloaded = YES;
-    
+        
+        //get time data
+        NSArray *waveformfiles = [[[[NSFileManager defaultManager] contentsOfDirectoryAtPath: directory error: nil] 
+                                   pathsMatchingExtensions:[NSArray arrayWithObjects:@"bin",nil]] filteredArrayUsingPredicate:
+                                  [NSPredicate predicateWithFormat:@"SELF BEGINSWITH %@", filebase]];
+        //NSString *waveformsPath = @"";
+        if( [waveformfiles count] == 1 )
+        {
+            
+            char *waveformsPath = [[waveformfiles objectAtIndex:0] cStringUsingEncoding: NSASCIIStringEncoding];
+            nptHeader spikeHeader;
+            spikeHeader = *getSpikeInfo(waveformsPath, &spikeHeader);
+            unsigned long long int *times = malloc(rows*sizeof(unsigned long long int));
+            unsigned int *times_indices = malloc(rows*sizeof(unsigned int));
+            for(i=0;i<rows;i++)
+            {
+                times_indices[i] = i;
+            }
+            times = getTimes(waveformsPath, &spikeHeader, times_indices, rows, times);
+            timestamps = [[NSData dataWithBytes:times length:rows*sizeof(unsigned long long int)] retain];
+            free(times);
+            free(times_indices);
+        }
     }
-    
     //load feature anems
     //NSArray *feature_names = [[NSString stringWithContentsOfFile:@"../../feature_names.txt"] componentsSeparatedByString:@"\n"];
    
@@ -263,6 +285,8 @@
             }
             cluster.points = [NSData dataWithBytes:points length:npoints[i]*sizeof(unsigned int)];
             free(points);
+            //compute ISIs; this step can run on a separate thread
+            [cluster computeISIs:timestamps];
             [tempArray addObject:cluster]; 
         }
         free(cids);
@@ -278,6 +302,12 @@
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(ClusterStateChanged:)
                                                      name:@"ClusterStateChanged" object:nil];
+        //check for model file
+        NSString *modelFilePath = [[[openPanel URL] path] stringByReplacingOccurrencesOfString: @"clu" withString: @"model"];
+        if ([[NSFileManager defaultManager] fileExistsAtPath: modelFilePath ] )
+        {
+            [self readClusterModel:modelFilePath];
+        }
     }
                                                        
 }
@@ -572,4 +602,66 @@
     }
 }
 
+-(void)readClusterModel:(NSString*)path
+{
+    NSString *contents = [NSString stringWithContentsOfFile:path];
+    NSArray *lines = [contents componentsSeparatedByString:@"\n"];
+    
+    //NSScanner *scanner = [ NSScanner scannerWithString:[lines objectAtIndex:2]];
+    //NSMutableArray *items = [NSMutableArray arrayWithCapacity:3];
+    NSDictionary *dict = [NSDictionary dictionaryWithObjects: [[lines objectAtIndex:2] componentsSeparatedByString:@" "] 
+                                                     forKeys: [NSArray arrayWithObjects:@"ndim",@"nclusters",@"npoints",nil]];
+    //the second line contains the scaling
+    int nclusters = [[dict valueForKey:@"nclusters"] intValue];
+    int ndim = [[dict valueForKey:@"ndim"] intValue];
+    int linesPerCluster = ndim+2;
+    int i;
+    float *mean = malloc(ndim*sizeof(float));
+    float *cov = malloc(ndim*ndim*sizeof(float));
+    //NSMutableArray *clusterParams = [NSMutableArray arrayWithCapacity:nclusters];
+    for(i=0;i<nclusters;i++)
+    {
+        //NSMutableDictionary *cluster = [NSMutableDictionary dictionaryWithCapacity:3];
+        //[cluster setObject: [NSNumber numberWithFloat: [[[[lines objectAtIndex: 3+i*linesPerCluster] componentsSeparatedByString: @" "] objectAtIndex: 1] floatValue]] forKey:@"Mixture"];
+        NSScanner *meanScanner = [NSScanner scannerWithString:[lines objectAtIndex:3+i*linesPerCluster+1]];
+        
+        int j = 0;
+        while ( [meanScanner isAtEnd] == NO)
+        {
+            [meanScanner scanFloat:mean+j];
+            j+=1;
+        }
+        //[cluster setObject: [NSData dataWithBytes: mean length: ndim*sizeof(float)] forKey: @"Mean"];
+        [[Clusters objectAtIndex:i] setMean: [NSData dataWithBytes: mean length: ndim*sizeof(float)]];
+        //now do covariance matrix
+        NSRange range;
+        range.location = 3+i*linesPerCluster+2;
+        range.length = ndim;
+        NSScanner *covScanner = [NSScanner scannerWithString: [[lines subarrayWithRange: range] componentsJoinedByString:@" "]];
+        j = 0;
+        while ( [covScanner isAtEnd] == NO )
+        {
+            [covScanner scanFloat:cov+j];
+            j+=1;
+        }
+        //[cluster setObject: [NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)] forKey: @"Cov"];
+        [[Clusters objectAtIndex:i] setCov:[NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)]];
+        //compute inverse covariance matrix
+        int status = matrix_inverse(cov, ndim);
+        //[cluster setObject: [NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)] forKey: @"Covi"];
+        [[Clusters objectAtIndex:i] setCovi:[NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)]];
+        //[cluster setObject: [NSNumber numberWithUnsignedInteger: i] forKey: @"ID"];
+        //[clusterParams addObject:cluster];
+    }
+    free(mean);
+    free(cov);
+    //clusterModel = [[NSArray arrayWithArray:clusterParams] retain];
+}
+
+-(void)dealloc
+{
+    [timestamps release];
+    [super dealloc];
+    
+}
 @end
