@@ -67,6 +67,7 @@ static BOOL dataloaded;
 -(void) rotateY;
 -(void) rotateX;
 -(void) rotateZ;
+-(NSData*)getVertexData;
 //-(void) pushVertices;
 
 @end

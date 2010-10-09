@@ -110,12 +110,12 @@
 -(void)computeLRatio:(NSData*)data
 {
     //need to compute the mahalanobis distance for all points not in the cluster
-    unsigned int _npoints = (unsigned int)([data length]/sizeof(float));
-    float *_data = (float*)[data bytes];
-    unsigned int *_points = (unsigned int*)[self points];
+    unsigned int *_points = (unsigned int*)[[self points] bytes];
     float *_mean = (float*)[[self mean] bytes];
     float *_covi = (float*)[[self covi] bytes];
     unsigned int ndim = (unsigned int)([[self mean] length]/sizeof(float));
+    unsigned int _npoints = (unsigned int)([data length]/(ndim*sizeof(float)));
+    float *_data = (float*)[data bytes];
     //naive implementation
     int i,found,j,k;
     found = 0;
@@ -125,14 +125,31 @@
     float *D = malloc((_npoints-[[self npoints] unsignedIntValue])*sizeof(float));
     float *d = malloc(ndim*sizeof(float));
     float *q = malloc(ndim*sizeof(float));
+    //first figure out the indices to loop over
+    /*unsigned int *index = malloc((_npoints-[[self npoints] unsignedIntValue])*sizeof(unsigned int));
+    for(i=0;i<[[self npoints] unsignedIntValue];i++)
+    {
+        while( (found == 0) && (j<_npoints) )
+        {
+            index[k] = j;
+            j+=1;
+        }
+    }*/
     for(i=0;i<_npoints;i++)
     {
-        j = 0;
-        while( (found == 0) && (j < [[self npoints]  unsignedIntValue]))
+        //j = 0;
+        found = 0;
+        //this works because the indices are sorted
+        if(i==_points[j])
+        {
+            found=1;
+            j+=1;
+        }
+        /*while( (found == 0) && (j < [[self npoints]  unsignedIntValue]))
         {
             found = (i==_points[j]);
             j+=1;
-        }
+        }*/
         if(found==0)
         {
             //subtract cluster mean

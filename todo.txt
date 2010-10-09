@@ -45,3 +45,5 @@ should be put into cluster 0. If deleting a cluster that was the result of some 
 	- STARTED!
 
 - Implement a way to read the time stamps as well. This would be useful if we want to look at ISI violations.
+	- FIXED!
+- Add a way to compute Chi2 CDF. This means importing the GSL library. I need this to compute the L-ratio of the clusters

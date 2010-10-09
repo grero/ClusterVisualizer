@@ -272,7 +272,7 @@
             {
                 if(cids[j+1]==i)
                 {
-                    points[k] = j;
+                    points[k] = (unsigned int)j;
                     k+=1;
                     //set the colors at the same time
                     cluster_colors[3*j] = color[0];
@@ -652,10 +652,14 @@
         [[Clusters objectAtIndex:i] setCovi:[NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)]];
         //[cluster setObject: [NSNumber numberWithUnsignedInteger: i] forKey: @"ID"];
         //[clusterParams addObject:cluster];
+        //we can now go ahead and compute the L-ratio for this cluster
     }
     free(mean);
     free(cov);
+    [[Clusters objectAtIndex:43] computeLRatio:[fw getVertexData]];
     //clusterModel = [[NSArray arrayWithArray:clusterParams] retain];
+    
+
 }
 
 -(void)dealloc

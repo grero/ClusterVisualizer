@@ -241,6 +241,11 @@
     
 }
 
+-(NSData*)getVertexData
+{
+    NSData *data = [NSData dataWithBytesNoCopy:vertices length:rows*cols*sizeof(float)];
+    return data;
+}
 
 -(void) selectDimensions:(NSDictionary*)dims
 {
