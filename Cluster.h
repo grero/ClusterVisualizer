@@ -8,6 +8,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import <Accelerate/Accelerate.h>
+#import "utils.h"
 
 @interface Cluster : NSObject {
     
@@ -23,7 +24,7 @@
     NSColor *textColor;
     NSNumber *shortISIs;
     NSData *mean,*cov,*covi;
-    NSData *lRatio;
+    NSNumber *lRatio;
 
 }
 
@@ -41,7 +42,7 @@
 @property(retain,readwrite) NSData *mean;
 @property(retain,readwrite) NSData *cov;
 @property(retain,readwrite) NSData *covi;
-@property(retain,readwrite) NSData *lRatio;
+@property(retain,readwrite) NSNumber *lRatio;
 
 -(void)makeInactive;
 -(void)makeActive;

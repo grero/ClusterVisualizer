@@ -63,6 +63,7 @@ static BOOL dataloaded;
 -(void) showCluster: (Cluster *)cluster;
 -(void) hideCluster: (Cluster *)cluster;
 -(void) hideAllClusters;
+-(void) showAllClusters;
 -(void) setClusterColors: (GLfloat*)cluster_colors forIndices: (GLuint*)cluster_indices length:(NSUInteger)length;
 -(void) rotateY;
 -(void) rotateX;

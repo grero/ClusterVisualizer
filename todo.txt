@@ -47,3 +47,5 @@ should be put into cluster 0. If deleting a cluster that was the result of some 
 - Implement a way to read the time stamps as well. This would be useful if we want to look at ISI violations.
 	- FIXED!
 - Add a way to compute Chi2 CDF. This means importing the GSL library. I need this to compute the L-ratio of the clusters
+	-FIXED, although there appears to be clusters with non-positive definite matrices
+- After I started using NSOperationQueue and blocks for doing the L-ratio calculation, the program crashes all thet ime

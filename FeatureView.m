@@ -369,6 +369,12 @@
     [self setNeedsDisplay:YES];
 }
 
+-(void) showAllClusters
+{
+    nindices = rows;
+    [self setNeedsDisplay:YES];
+}
+
 -(void) rotateY
 {
     glRotated(5, 0, 1, 0);

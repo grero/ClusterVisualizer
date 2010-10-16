@@ -18,11 +18,14 @@
 @synthesize ClusterOptions;
 @synthesize isValidCluster;
 @synthesize filterClustersPredicate;
+@synthesize clustersSortDescriptor;
+@synthesize clustersSortDescriptors;
 
 -(void)awakeFromNib
 {
     //[self setClusters:[NSMutableArray array]];
     dataloaded = NO;
+    queue = [[[NSOperationQueue alloc] init] retain];
     [self setFilterClustersPredicate:[NSPredicate predicateWithFormat: @"valid==YES"]];
 }
 
@@ -297,7 +300,9 @@
         free(cluster_colors);
         [self setClusters:tempArray];
         [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
-        [self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",nil]];
+        [selectClusterOption removeAllItems];
+        [selectClusterOption addItemsWithTitles: [NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",nil]];
+        //[self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",nil]];
         [allActive setState:1];
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(ClusterStateChanged:)
@@ -311,6 +316,8 @@
     }
                                                        
 }
+
+
 
 - (void) loadWaveforms: (Cluster*)cluster
 {
@@ -371,6 +378,7 @@
     return ClusterOptions;
 }
 
+
 -(void)insertObject:(NSString*)p inClusterOptionsAtIndex:(NSUInteger)index
 {
  [ClusterOptions insertObject:p atIndex:index];   
@@ -381,6 +389,11 @@
     [ClusterOptions removeObjectAtIndex:index];
 }
 
+-(void)addClusterOption:(NSString*)option
+{
+    //[ClusterOptions addObject:option];
+    [selectClusterOption addItemWithTitle:option];
+}
 
 -(void)ClusterStateChanged:(NSNotification*)notification
 {
@@ -436,11 +449,13 @@
     if([sender state] == 0 )
     {
         [Clusters makeObjectsPerformSelector:@selector(makeInactive)];
+         [fw hideAllClusters];
     }
     else {
         [Clusters makeObjectsPerformSelector:@selector(makeActive)];
+        [fw showAllClusters];
     }
-    [fw hideAllClusters];
+   
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(ClusterStateChanged:)
                                                  name:@"ClusterStateChanged" object:nil];
@@ -488,6 +503,12 @@
     else if( [selection isEqualToString:@"Filter clusters"] )
     {
         [filterClustersPanel orderFront: self];
+    }
+    else if( [selection isEqualToString:@"Sort L-ratio"])
+    {
+        //set the sort descript for the controller
+        NSMutableArray *descriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"lRatio" ascending:NO]];
+        [self setClustersSortDescriptors: descriptors];
     }
              
 }
@@ -656,7 +677,34 @@
     }
     free(mean);
     free(cov);
-    [[Clusters objectAtIndex:43] computeLRatio:[fw getVertexData]];
+    //set up an operation that will notify the main thread when all the computational tasks have finished
+    //TODO: For some reason, this doesn't work. I get a SIGABRT for the allFinished task. Weird
+    NSBlockOperation *allFinished = [NSBlockOperation blockOperationWithBlock:^{
+        //add operation to add "Sort L-ratio" to the list of available cluster options 
+        NSOperation *op = [[NSInvocationOperation alloc] initWithTarget: self selector:@selector(addClusterOption:) object: @"Sort L-ratio"];
+        //add operation to stop the progress animation
+        NSOperation *op2 = [[NSInvocationOperation alloc] initWithTarget:progressPanel selector:@selector(stopProgressIndicator) object:nil];
+        [[NSOperationQueue mainQueue] addOperation:op];
+        [[NSOperationQueue mainQueue] addOperation:op2];
+    }];
+    //show progress indicator
+    [progressPanel setTitle:@"Computing L-ratio"];
+    [progressPanel orderFront:self];
+    [progressPanel startProgressIndicator];
+    
+    for(i=0;i<nclusters;i++)
+    {
+        //Use NSInvocationOperation here
+        NSInvocationOperation *operation = [[NSInvocationOperation alloc] initWithTarget:[Clusters objectAtIndex:i]
+                                                                                selector:@selector(computeLRatio:) object:[fw getVertexData]];
+        [allFinished addDependency:operation];
+        [queue addOperation:operation];
+        /*[queue addOperationWithBlock:^{
+            [[Clusters objectAtIndex:i] computeLRatio:[fw getVertexData]];
+        }];*/
+    }
+    [queue addOperation:allFinished];
+    //g[queue waitUntilAllOperationsAreFinished];
     //clusterModel = [[NSArray arrayWithArray:clusterParams] retain];
     
 
@@ -665,6 +713,7 @@
 -(void)dealloc
 {
     [timestamps release];
+    [queue release];
     [super dealloc];
     
 }

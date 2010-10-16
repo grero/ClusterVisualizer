@@ -14,6 +14,7 @@
 #import "nptLoadingEngine.h"
 #import "OpenPanelDelegate.h"
 #import "utils.h"
+#import "ProgressPanel.h"
 
 @interface FeatureViewerController : NSController/* Specify a superclass (eg: NSObject or NSView) */ {
     
@@ -21,12 +22,15 @@
     NSMutableArray *ClusterOptions;
     NSArray *clusterModel;
     NSPredicate *isValidCluster, *filterClustersPredicate;
+    NSMutableArray *clustersSortDescriptors;
+    NSSortDescriptor *clustersSortDescriptor;
     NSData *vertex_data;
     NSData *timestamps;
     header params;
     BOOL dataloaded;
     //name of current cluster set
     NSString *currentBaseName;
+    NSOperationQueue *queue;
     IBOutlet FeatureView *fw;
     IBOutlet WaveformsView *wfv;
     IBOutlet NSComboBox *dim1;
@@ -34,6 +38,9 @@
     IBOutlet NSComboBox *dim3;
     IBOutlet NSButton *allActive;
     IBOutlet NSPanel *filterClustersPanel;
+    IBOutlet NSPopUpButton *selectClusterOption;  
+    IBOutlet ProgressPanel *progressPanel;
+    
     
 }
 -(void)insertObject:(Cluster *)p inClustersAtIndex:(NSUInteger)index;
@@ -48,6 +55,7 @@
 -(void)insertObject:(NSString *)p inClusterOptionsAtIndex:(NSUInteger)index;
 -(void)removeObjectFromClusterOptionsAtIndex:(NSUInteger)index;
 
+-(void)addClusterOption:(NSString*)option;
 
 -(void)ClusterStateChanged:(NSNotification*)notification;
 -(void)mergeCluster: (Cluster *)cluster1 withCluster: (Cluster*)cluster2;
@@ -74,4 +82,6 @@
 @property (retain,readwrite) NSMutableArray *ClusterOptions;
 @property (retain, readwrite) NSPredicate *isValidCluster;
 @property (retain, readwrite) NSPredicate *filterClustersPredicate;
+@property (retain, readwrite) NSSortDescriptor *clustersSortDescriptor;
+@property (retain, readwrite) NSMutableArray *clustersSortDescriptors;
 @end

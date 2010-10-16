@@ -111,6 +111,11 @@
 {
     //need to compute the mahalanobis distance for all points not in the cluster
     unsigned int *_points = (unsigned int*)[[self points] bytes];
+    if(_points==NULL)
+    {
+        lRatio = 0;
+        return;
+    }
     float *_mean = (float*)[[self mean] bytes];
     float *_covi = (float*)[[self covi] bytes];
     unsigned int ndim = (unsigned int)([[self mean] length]/sizeof(float));
@@ -122,9 +127,11 @@
     j = 0;
     k = 0;
     //vector to hold the differences
-    float *D = malloc((_npoints-[[self npoints] unsignedIntValue])*sizeof(float));
+    //float *D = malloc((_npoints-[[self npoints] unsignedIntValue])*sizeof(float));
     float *d = malloc(ndim*sizeof(float));
     float *q = malloc(ndim*sizeof(float));
+    float lratio = 0;
+    float x;
     //first figure out the indices to loop over
     /*unsigned int *index = malloc((_npoints-[[self npoints] unsignedIntValue])*sizeof(unsigned int));
     for(i=0;i<[[self npoints] unsignedIntValue];i++)
@@ -156,15 +163,21 @@
             vDSP_vsub(_mean,1,_data+i*ndim,1,d,1,ndim);
             //dot product with inverse covariance matrix
             cblas_sgemv(CblasRowMajor,CblasNoTrans,ndim,ndim,1,_covi,ndim,d,1,0,q,1);
-            D[k] = cblas_sdsdot(ndim, 1, d, 1, q, 1);            
+            //D[k] = cblas_sdsdot(ndim, 1, d, 1, q, 1);  
+            x = cblas_sdsdot(ndim, 0, d, 1, q, 1);
+            if ( x>=0)
+            {
+                lratio+=1-chi2_cdf(x, ndim);
+            }
             k+=1;
         }
        
     }
     free(d);
     free(q);
-    [self setLRatio:[NSData dataWithBytes:D length:sizeof(D)]];
-    free(D);
+    //[self setLRatio:[NSData dataWithBytes:D length:sizeof(D)]];
+    [self setLRatio:[NSNumber numberWithFloat:lratio]];
+    //free(D);
     
 }
 
