@@ -26,6 +26,7 @@
 @synthesize cov;
 @synthesize covi;
 @synthesize lRatio;
+@synthesize isolationDistance;
 
 -(void)setActive:(NSInteger)value
 {
@@ -179,6 +180,57 @@
     [self setLRatio:[NSNumber numberWithFloat:lratio]];
     //free(D);
     
+}
+
+-(void)computeIsolationDistance:(NSData*)data
+{
+    unsigned int *_points = (unsigned int*)[[self points] bytes];
+    if(_points==NULL)
+    {
+        isolationDistance = [NSNumber numberWithFloat: 0];
+        return;
+    }
+    float *_data = (float*)[data bytes];
+    float *_mean = (float*)[[self mean] bytes];
+    unsigned int ndim = (unsigned int)([[self mean] length]/sizeof(float));
+    unsigned int _npoints = (unsigned int)([data length]/(ndim*sizeof(float)));
+    float *d = malloc(ndim*sizeof(float));
+    unsigned int n = [npoints unsignedIntValue];
+    unsigned int N = _npoints-n;
+  
+    float *D = malloc(N*sizeof(float));
+    float q;
+    int i,k,found,j;
+    k = 0;
+    j = 0;
+    for(i=0;i<_npoints;i++)
+    {
+        found = 0;
+        //this works because the indices are sorted
+        if(i==_points[j])
+        {
+            found=1;
+            j+=1;
+        }
+       
+        if(found==0)
+        {
+            //compute the distance
+            vDSP_vsub(_mean,1,_data+i*ndim,1,d,1,ndim);
+            //sum of squares
+            vDSP_svesq(d,1,&q,ndim);
+            D[k] = sqrt(q);
+            k+=1;
+        }
+    }
+    //sort
+    vDSP_vsort(D,N,1);
+    //isolation distance is the distance to the n'th closest point not in this cluster,
+    //where n is the number of points in this cluster
+    [self setIsolationDistance: [NSNumber numberWithFloat:D[n-1]]];
+    free(d);
+    free(D);
+            
 }
 
 

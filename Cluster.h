@@ -24,7 +24,8 @@
     NSColor *textColor;
     NSNumber *shortISIs;
     NSData *mean,*cov,*covi;
-    NSNumber *lRatio;
+    NSNumber *lRatio,*isolationDistance;
+    
 
 }
 
@@ -43,6 +44,7 @@
 @property(retain,readwrite) NSData *cov;
 @property(retain,readwrite) NSData *covi;
 @property(retain,readwrite) NSNumber *lRatio;
+@property(retain,readwrite) NSNumber *isolationDistance;
 
 -(void)makeInactive;
 -(void)makeActive;
@@ -51,4 +53,5 @@
 -(void)makeValid;
 -(void)computeISIs:(NSData*)timestamps;
 -(void)computeLRatio:(NSData*)data;
+-(void)computeIsolationDistance:(NSData*)data;
 @end

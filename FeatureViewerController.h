@@ -62,6 +62,7 @@
 -(void)deleteCluster: (Cluster *)cluster;
 -(void)loadWaveforms: (Cluster*)cluster;
 -(void)readClusterModel:(NSString*)path;
+-(void)performComputation:(NSString*)operationTitle usingSelector:(SEL)operationSelector;
 - (IBAction) loadFeatureFile: (id)sender;
 - (IBAction) loadClusterIds: (id)sender;
 //- (IBAction) loadWaveforms: (id)sender;

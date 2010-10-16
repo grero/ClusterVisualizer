@@ -301,7 +301,8 @@
         [self setClusters:tempArray];
         [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
         [selectClusterOption removeAllItems];
-        [selectClusterOption addItemsWithTitles: [NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",nil]];
+        [selectClusterOption addItemsWithTitles: [NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",
+                                                  @"Compute Isolation Distance",nil]];
         //[self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",nil]];
         [allActive setState:1];
         [[NSNotificationCenter defaultCenter] addObserver:self
@@ -510,6 +511,17 @@
         NSMutableArray *descriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"lRatio" ascending:NO]];
         [self setClustersSortDescriptors: descriptors];
     }
+    else if( [selection isEqualToString:@"Sort Isolation Distance"])
+    {
+        //set the sort descript for the controller
+        NSMutableArray *descriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"isolationDistance" ascending:NO]];
+        [self setClustersSortDescriptors: descriptors];
+    }
+    else if( [selection isEqualToString:@"Compute Isolation Distance"])
+    {
+        [self performComputation:@"Compute Isolation Distance" usingSelector:@selector(computeIsolationDistance:)];
+        
+    }
              
 }
 
@@ -677,26 +689,32 @@
     }
     free(mean);
     free(cov);
+    
+}
+-(void)performComputation:(NSString*)operationTitle usingSelector:(SEL)operationSelector
+{
     //set up an operation that will notify the main thread when all the computational tasks have finished
     //TODO: For some reason, this doesn't work. I get a SIGABRT for the allFinished task. Weird
     NSBlockOperation *allFinished = [NSBlockOperation blockOperationWithBlock:^{
         //add operation to add "Sort L-ratio" to the list of available cluster options 
-        NSOperation *op = [[NSInvocationOperation alloc] initWithTarget: self selector:@selector(addClusterOption:) object: @"Sort L-ratio"];
+        NSOperation *op = [[NSInvocationOperation alloc] initWithTarget: self selector:@selector(addClusterOption:) object: 
+                           [operationTitle stringByReplacingOccurrencesOfString:@"Compute" withString:@"Sort"]];
         //add operation to stop the progress animation
         NSOperation *op2 = [[NSInvocationOperation alloc] initWithTarget:progressPanel selector:@selector(stopProgressIndicator) object:nil];
         [[NSOperationQueue mainQueue] addOperation:op];
         [[NSOperationQueue mainQueue] addOperation:op2];
     }];
     //show progress indicator
-    [progressPanel setTitle:@"Computing L-ratio"];
+    [progressPanel setTitle:operationTitle];
     [progressPanel orderFront:self];
     [progressPanel startProgressIndicator];
-    
+    int i;
+    int nclusters = [Clusters count];
     for(i=0;i<nclusters;i++)
     {
         //Use NSInvocationOperation here
         NSInvocationOperation *operation = [[NSInvocationOperation alloc] initWithTarget:[Clusters objectAtIndex:i]
-                                                                                selector:@selector(computeLRatio:) object:[fw getVertexData]];
+                                                                                selector:operationSelector object:[fw getVertexData]];
         [allFinished addDependency:operation];
         [queue addOperation:operation];
         /*[queue addOperationWithBlock:^{

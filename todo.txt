@@ -11,6 +11,10 @@ implementations:
     - show pair of waveforms with minimum ISI
 - compare waveforms
     - compare real and fake waveforms
+- sorting clusters
+	- L-ratio
+		- WORKS
+	- Isolation distance
 
 (- Fix problem with glMapBuffer returning NULL. Could be related to low system memory, but could also be something else. The only thing I changed
 was to change cluster indexing from normal GLUint arrays to NSIndexSet. The reason for this is that it will make things like intersection and
@@ -43,9 +47,14 @@ should be put into cluster 0. If deleting a cluster that was the result of some 
 	- FIXED!
 - Implement a way to filter the clusters, e.g. only show clusters with more than 100 points, etc. This could be achieved by opening up a predicate panel ala what Finder search uses, so that we can specify multiple filter criteria
 	- STARTED!
+	- Well underway
 
 - Implement a way to read the time stamps as well. This would be useful if we want to look at ISI violations.
 	- FIXED!
 - Add a way to compute Chi2 CDF. This means importing the GSL library. I need this to compute the L-ratio of the clusters
 	-FIXED, although there appears to be clusters with non-positive definite matrices
 - After I started using NSOperationQueue and blocks for doing the L-ratio calculation, the program crashes all thet ime
+	- FIXED (I think...)
+
+- Store the clusters in HDF5 format. I think saving the clusters in terms of boolean indices will be useful, as set operations between clusters can then be performed very efficiently.
+
