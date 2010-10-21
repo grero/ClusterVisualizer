@@ -339,7 +339,7 @@
         unsigned int wfSize = spikeHeader.num_spikes*spikeHeader.channels*spikeHeader.timepts;
         short int *waveforms = malloc(wfSize*sizeof(short int));
         waveforms = getWaves(path, &spikeHeader, (unsigned int*)[[cluster points] bytes], [[cluster npoints] unsignedIntValue], waveforms);
-        [wfv createVertices:[NSData dataWithBytes:waveforms length:(NSUInteger)wfSize*sizeof(short int)] withNumberOfWaves: (NSUInteger)spikeHeader.num_spikes channels: (NSUInteger)spikeHeader.channels andTimePoints: (NSUInteger)spikeHeader.timepts];
+        [wfv createVertices:[NSData dataWithBytes:waveforms length:(NSUInteger)wfSize*sizeof(short int)] withNumberOfWaves: [[cluster npoints] unsignedIntValue] channels: (NSUInteger)spikeHeader.channels andTimePoints: (NSUInteger)spikeHeader.timepts];
         [[wfv window] orderFront: self];
    }        
     
