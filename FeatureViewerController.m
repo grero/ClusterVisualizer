@@ -20,6 +20,7 @@
 @synthesize filterClustersPredicate;
 @synthesize clustersSortDescriptor;
 @synthesize clustersSortDescriptors;
+@synthesize waveformsFile;
 
 -(void)awakeFromNib
 {
@@ -221,7 +222,8 @@
 
 - (IBAction) loadClusterIds: (id)sender
 {
-     NSOpenPanel *openPanel = [NSOpenPanel openPanel];
+     
+    NSOpenPanel *openPanel = [NSOpenPanel openPanel];
     //set a delegate for openPanel so that we can control which files can be opened
     [openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
     //set the basePath to the current basepath so that only cluster files compatible with the currently loaded feature files are allowed
@@ -301,8 +303,9 @@
         [self setClusters:tempArray];
         [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
         [selectClusterOption removeAllItems];
-        [selectClusterOption addItemsWithTitles: [NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",
-                                                  @"Compute Isolation Distance",nil]];
+        NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",nil];
+        //[selectClusterOption addItemsWithTitles: [NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",
+         //                                         @"Compute Isolation Distance",nil]];
         //[self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",nil]];
         [allActive setState:1];
         [[NSNotificationCenter defaultCenter] addObserver:self
@@ -313,7 +316,9 @@
         if ([[NSFileManager defaultManager] fileExistsAtPath: modelFilePath ] )
         {
             [self readClusterModel:modelFilePath];
+            [options addObject: @"Compute Isolation Distance"];
         }
+        [selectClusterOption addItemsWithTitles:options];
     }
                                                        
 }
@@ -322,26 +327,39 @@
 
 - (void) loadWaveforms: (Cluster*)cluster
 {
-    NSOpenPanel *openPanel = [NSOpenPanel openPanel];
-    //set a delegate for openPanel so that we can control which files can be opened
-    [openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
-    //set the basePath to the current basepath so that only cluster files compatible with the currently loaded feature files are allowed
-    [[openPanel delegate] setBasePath: currentBaseName];
-    [[openPanel delegate] setExtension: @"bin"];
-    int result = [openPanel runModal];
-    if( result == NSOKButton )
+    if (waveformsFile == NULL)
     {
-        //test
-        //Cluster *cluster = [Clusters objectAtIndex: 3];
-        char *path = [[[openPanel URL] path] cStringUsingEncoding:NSASCIIStringEncoding];
-        nptHeader spikeHeader;
-        spikeHeader = *getSpikeInfo(path,&spikeHeader);
-        unsigned int wfSize = spikeHeader.num_spikes*spikeHeader.channels*spikeHeader.timepts;
-        short int *waveforms = malloc(wfSize*sizeof(short int));
-        waveforms = getWaves(path, &spikeHeader, (unsigned int*)[[cluster points] bytes], [[cluster npoints] unsignedIntValue], waveforms);
-        [wfv createVertices:[NSData dataWithBytes:waveforms length:(NSUInteger)wfSize*sizeof(short int)] withNumberOfWaves: [[cluster npoints] unsignedIntValue] channels: (NSUInteger)spikeHeader.channels andTimePoints: (NSUInteger)spikeHeader.timepts];
-        [[wfv window] orderFront: self];
-   }        
+        NSOpenPanel *openPanel = [NSOpenPanel openPanel];
+        //set a delegate for openPanel so that we can control which files can be opened
+        [openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
+        //set the basePath to the current basepath so that only cluster files compatible with the currently loaded feature files are allowed
+        [[openPanel delegate] setBasePath: currentBaseName];
+        [[openPanel delegate] setExtension: @"bin"];
+        int result = [openPanel runModal];
+        if( result == NSOKButton )
+        {
+            //test
+            //Cluster *cluster = [Clusters objectAtIndex: 3];
+            [self setWaveformsFile:[[openPanel URL] path]];
+        }
+    }
+    char *path = [[self waveformsFile] cStringUsingEncoding:NSASCIIStringEncoding];         
+    unsigned int npoints = [[cluster npoints] unsignedIntValue];
+    
+    nptHeader spikeHeader;
+    spikeHeader = *getSpikeInfo(path,&spikeHeader);
+    unsigned int wfSize = npoints*spikeHeader.channels*spikeHeader.timepts;
+    short int *waveforms = malloc(wfSize*sizeof(short int));
+    waveforms = getWaves(path, &spikeHeader, (unsigned int*)[[cluster points] bytes], npoints, waveforms);
+    
+    //convert to float
+    float *fwaveforms = malloc(wfSize*sizeof(float));
+    vDSP_vflt16(waveforms, 1, fwaveforms, 1, wfSize);
+    [[wfv window] orderFront: self];
+    [wfv createVertices:[NSData dataWithBytes:fwaveforms length:wfSize*sizeof(float)] withNumberOfWaves: npoints channels: (NSUInteger)spikeHeader.channels andTimePoints: (NSUInteger)spikeHeader.timepts];
+    free(waveforms);
+    free(fwaveforms);
+           
     
 }
 

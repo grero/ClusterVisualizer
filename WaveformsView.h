@@ -7,32 +7,51 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import <Accelerate/Accelerate.h>
 
-static GLuint vertexBuffer;
-static GLuint indexBuffer;
-static GLuint colorBuffer;
-static GLfloat *vertices;
+static GLuint wfVertexBuffer;
+static GLuint wfIndexBuffer;
+static GLuint wfColorBuffer;
+static GLfloat *wfVertices;
 //static GLfloat *use_vertices;
-static GLfloat *colors;
+static GLfloat *wfColors;
 //static GLfloat *use_colors;
-static GLuint *indices;
-static float *minmax;
+static GLuint *wfIndices;
+static float *wfMinmax;
+static unsigned int num_spikes;
+static unsigned int nWfVertices;
+static unsigned int nWfIndices;
+static unsigned int wavesize;
+static int highlightWave;
+static BOOL wfDataloaded;
 
-static int nvertices;
-static int nindices;
-static int wavesize;
-static BOOL dataloaded;
+static void wfPushVertices();
+static void wfModifyVertices(GLfloat *vertex_data);
+static void wfModifyIndices(GLuint *index_data);
+static void wfModifyColors(GLfloat *color_data);
 
-static void pushVertices();
-static void modifyVertices(GLfloat *vertex_data);
-static void modifyIndices(GLuint *index_data);
-static void modifyColors(GLfloat *color_data);
+@interface WaveformsView : NSView {
 
-@interface WaveformsView : NSOpenGLView {
-
+    @private
+    NSOpenGLContext *_oglContext;
+    NSOpenGLPixelFormat *_pixelFormat;
     
 }
--(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints;
+//OpenGL related functions
++(NSOpenGLPixelFormat*)defaultPixelFormat;
+-(id) initWithFrame:(NSRect)frameRect pixelFormat:(NSOpenGLPixelFormat*)format;
+-(void) setOpenGLContext: (NSOpenGLContext*)context;
+-(NSOpenGLContext*)openGLContext;
+-(void) clearGLContext;
+-(void) prepareOpenGL;
+-(void) update;
+-(void) setPixelFormat:(NSOpenGLPixelFormat*)pixelFormat;
+-(NSOpenGLPixelFormat*)pixelFormat;
+-(void) _surfaceNeedsUpdate:(NSNotification *)notification;
 
+
+//others
+-(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints;
+-(void) highlightWaveform:(NSUInteger)wfidx;
 
 @end

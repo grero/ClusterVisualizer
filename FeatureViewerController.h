@@ -30,6 +30,7 @@
     BOOL dataloaded;
     //name of current cluster set
     NSString *currentBaseName;
+    NSString *waveformsFile;
     NSOperationQueue *queue;
     IBOutlet FeatureView *fw;
     IBOutlet WaveformsView *wfv;
@@ -85,4 +86,5 @@
 @property (retain, readwrite) NSPredicate *filterClustersPredicate;
 @property (retain, readwrite) NSSortDescriptor *clustersSortDescriptor;
 @property (retain, readwrite) NSMutableArray *clustersSortDescriptors;
+@property (retain, readwrite) NSString *waveformsFile;
 @end
