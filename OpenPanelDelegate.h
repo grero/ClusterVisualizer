@@ -8,8 +8,13 @@
 
 #import <Cocoa/Cocoa.h>
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_5
+@interface OpenPanelDelegate : NSObject
+#else
+@interface OpenPanelDelegate : NSObject <NSOpenSavePanelDelegate>
+#endif
 
-@interface OpenPanelDelegate : NSObject <NSOpenSavePanelDelegate>{
+{
 
     NSString *basePath;
     NSString *extension;

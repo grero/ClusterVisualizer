@@ -28,15 +28,20 @@ static BOOL wfDataloaded;
 static void wfPushVertices();
 static void wfModifyVertices(GLfloat *vertex_data);
 static void wfModifyIndices(GLuint *index_data);
-static void wfModifyColors(GLfloat *color_data);
+static void wfModifyColors(GLfloat *color_data, GLfloat *color);
 
 @interface WaveformsView : NSView {
 
     @private
     NSOpenGLContext *_oglContext;
     NSOpenGLPixelFormat *_pixelFormat;
+    NSData *drawingColor,*highlightColor;
+    NSMutableData *highlightWaves;
     
 }
+
+@property (retain,readwrite) NSMutableData *highlightWaves;
+
 //OpenGL related functions
 +(NSOpenGLPixelFormat*)defaultPixelFormat;
 -(id) initWithFrame:(NSRect)frameRect pixelFormat:(NSOpenGLPixelFormat*)format;
@@ -48,10 +53,16 @@ static void wfModifyColors(GLfloat *color_data);
 -(void) setPixelFormat:(NSOpenGLPixelFormat*)pixelFormat;
 -(NSOpenGLPixelFormat*)pixelFormat;
 -(void) _surfaceNeedsUpdate:(NSNotification *)notification;
-
+-(void) setColor:(NSData*)color;
+-(NSData*)getColor;
+-(NSData*)getHighlightColor;
 
 //others
--(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints;
+-(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints andColor: (NSData*)color;
 -(void) highlightWaveform:(NSUInteger)wfidx;
+-(void) highlightWaveforms:(NSData*)wfidx;
+-(void) receiveNotification:(NSNotification*)notification;
+-(void) hideWaveforms:(NSData*)wfidx;
+
 
 @end

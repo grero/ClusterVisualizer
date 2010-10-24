@@ -14,7 +14,7 @@
     
     NSString *name;
     NSNumber *clusterId;
-    NSData *points;
+    NSMutableData *points;
     NSNumber *npoints;
     NSInteger active;
     NSData *color;
@@ -25,12 +25,15 @@
     NSNumber *shortISIs;
     NSData *mean,*cov,*covi;
     NSNumber *lRatio,*isolationDistance;
+    NSData *ISIs;
+    NSData *isiIdx;
+    NSMutableData *mask;
     
 
 }
 
 @property(retain,readwrite) NSString *name;
-@property(retain,readwrite) NSData *points;
+@property(retain,readwrite) NSMutableData *points;
 @property(assign, readwrite) NSInteger active;
 @property(retain,readwrite) NSNumber *npoints;
 @property(retain,readwrite) NSMutableIndexSet *indices;
@@ -45,7 +48,10 @@
 @property(retain,readwrite) NSData *covi;
 @property(retain,readwrite) NSNumber *lRatio;
 @property(retain,readwrite) NSNumber *isolationDistance;
+@property(retain,readwrite) NSData *isiIdx;
+@property(retain,readwrite) NSMutableData *mask;
 
+-(void)createName;
 -(void)makeInactive;
 -(void)makeActive;
 
@@ -54,4 +60,6 @@
 -(void)computeISIs:(NSData*)timestamps;
 -(void)computeLRatio:(NSData*)data;
 -(void)computeIsolationDistance:(NSData*)data;
+-(void)removePoints:(NSData*)rpoints;
+-(void)addPoints:(NSData*)rpoints;
 @end

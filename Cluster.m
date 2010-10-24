@@ -27,6 +27,8 @@
 @synthesize covi;
 @synthesize lRatio;
 @synthesize isolationDistance;
+@synthesize isiIdx;
+@synthesize mask;
 
 -(void)setActive:(NSInteger)value
 {
@@ -65,6 +67,11 @@
     return indices;
 }
 
+-(void)createName
+{
+    [self setName: [[[[self clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[self npoints] stringValue]]];
+}
+
 -(void)setColor:(NSData*)new_color
 {
     color = [[NSData dataWithData:new_color] retain];
@@ -87,17 +94,27 @@
     {
         unsigned long long int dt = 0;
         unsigned int nshort = 0;
-        int i;
+        unsigned int i;
         unsigned int* spoints = (unsigned int*)[[self points] bytes];
+        double *isis = malloc(_npoints*sizeof(double));
+        unsigned long *idx = malloc(_npoints*sizeof(unsigned long));                                 
         
         for(i=0;i<_npoints-1;i++)
         {
+            idx[i] = i;
             dt = times[spoints[i+1]]-times[spoints[i]];
-            if(dt < 1000)
+            isis[i] = (double)dt/100.0;
+            if(dt < 1000.0)
             {
                 nshort+=1;
             }
         }
+        //index sort; small to large
+        vDSP_vsortiD(isis, idx, NULL, _npoints-1, 1);
+        [self setIsiIdx:[NSData dataWithBytes:idx length:_npoints*sizeof(unsigned long)]];
+        //ISIs = [[NSData dataWithBytes: isis length: _npoints*sizeof(unsigned long int)] retain];
+        free(isis);
+        free(idx);
         [self setShortISIs: [NSNumber numberWithFloat: 1.0*nshort/_npoints]];
     }
     else {
@@ -231,6 +248,63 @@
     free(d);
     free(D);
             
+}
+
+-(void)removePoints:(NSData*)rpoints
+{
+    unsigned int* _rpoints = (unsigned int*)[rpoints bytes];
+    unsigned int _nrpoints = [rpoints length]/sizeof(unsigned int);
+    
+    //unsigned int*_mask = (unsigned int*)[[self mask] bytes];
+    //unsigned int lmask = [[self mask] length]/sizeof(uint8);
+    unsigned int _npoints = [[self indices] count]-_nrpoints;
+    int i;
+    for(i=0;i<_nrpoints;i++)
+    {
+        //_mask[_rpoints[i]] = 0;
+        [[self indices] removeIndex:_rpoints[i]];
+    }
+    
+    NSUInteger* _points = malloc(_npoints*sizeof(NSUInteger));
+    [[self indices] getIndexes:_points maxCount:_npoints*sizeof(NSUInteger) inIndexRange:nil];
+    unsigned int* _ppoints = malloc(_npoints*sizeof(unsigned int));
+    for(i=0;i<_npoints;i++)
+    {
+        _ppoints[i] = (unsigned int)_points[i];
+    }
+    free(_points);
+    [[self points] setData: [NSData dataWithBytes:_ppoints length:_npoints*sizeof(unsigned int)]];
+    free(_ppoints);
+    [self setNpoints:[NSNumber numberWithUnsignedInt:_npoints]];
+
+    [self createName];
+}
+
+-(void)addPoints:(NSData*)rpoints
+{
+    unsigned int* _rpoints = (unsigned int*)[rpoints bytes];
+    unsigned int _nrpoints = [rpoints length]/sizeof(unsigned int);
+    unsigned int _npoints = [[self indices] count]+_nrpoints;
+
+    int i;
+    for(i=0;i<_nrpoints;i++)
+    {
+        [[self indices] addIndex:_rpoints[i]];
+    }
+    NSUInteger* _points = malloc(_npoints*sizeof(NSUInteger));
+    [[self indices] getIndexes:_points maxCount:_npoints*sizeof(NSUInteger) inIndexRange:nil];
+    unsigned int* _ppoints = malloc(_npoints*sizeof(unsigned int));
+    for(i=0;i<_npoints;i++)
+    {
+        _ppoints[i] = (unsigned int)_points[i];
+    }
+    free(_points);
+    [[self points] setData: [NSData dataWithBytes:_ppoints length:_npoints*sizeof(unsigned int)]];
+    free(_ppoints);
+    [self setNpoints:[NSNumber numberWithUnsignedInt:_npoints]];
+
+    [self createName];
+    
 }
 
 

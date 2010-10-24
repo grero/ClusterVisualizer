@@ -9,8 +9,11 @@
 #import "WaveformsView.h"
 
 #define MIN(a,b) ((a)>(b)?(b):(a))
+#define PI 3.141516
 
 @implementation WaveformsView
+
+@synthesize highlightWaves;
 
 
 -(void)awakeFromNib
@@ -57,6 +60,9 @@
         [[NSNotificationCenter defaultCenter] addObserver: self
                                                  selector:@selector(_surfaceNeedsUpdate:)
                                                      name: NSViewGlobalFrameDidChangeNotification object: self];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) 
+                                                     name:@"highlight" object:nil];
     }
     return self;
 }
@@ -119,7 +125,7 @@
 
 
 
--(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints
+-(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints andColor: (NSData*)color;
 {
     wavesize = channels*timepoints;
     nWfIndices = nwaves*wavesize;
@@ -227,7 +233,16 @@
     wfColors = malloc(nWfVertices*3*sizeof(GLfloat));
     NSOpenGLContext *context = [self openGLContext];
     [context makeCurrentContext];
-    wfModifyColors(wfColors);
+    //GLfloat *gcolor = malloc(4*sizeof(GLfloat));
+    GLfloat *gcolor = (GLfloat*)[color bytes];
+    /*gcolor[0] = 1.0;
+    gcolor[1] = 0.85;
+    gcolor[2] = 0.35;
+    gcolor[4] = 1.0;*/
+    [self setColor: color];
+    //[[self getColor] getRed:gcolor green:gcolor+1 blue:gcolor+2 alpha:gcolor+3];
+    wfModifyColors(wfColors,gcolor);
+    //free(gcolor);
     //push everything to the GPU
     wfPushVertices();
     //draw
@@ -271,15 +286,90 @@ static void wfPushVertices()
     
 }
 
-static void wfModifyColors(GLfloat *color_data)
+static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
 {
     int i;
     for(i=0;i<nWfVertices;i++)
     {
-        color_data[3*i] = 1.0f;//use_colors[3*cids[i+1]];
-        color_data[3*i+1] = 0.85f;//use_colors[3*cids[i+1]+1];
-        color_data[3*i+2] = 0.35f;//use_colors[3*cids[i+1]+2];
+        color_data[3*i] = gcolor[0];//use_colors[3*cids[i+1]];
+        color_data[3*i+1] = gcolor[1];//use_colors[3*cids[i+1]+1];
+        color_data[3*i+2] = gcolor[2];//use_colors[3*cids[i+1]+2];
     }
+}
+-(void) highlightWaveforms:(NSData*)wfidx
+{
+    [[self openGLContext] makeCurrentContext];
+    unsigned int* _points = (unsigned int*)[wfidx bytes];
+    unsigned int _npoints = [wfidx length]/sizeof(unsigned int);
+    
+    GLfloat zvalue;
+    glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
+    GLfloat *_data = (GLfloat*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+    unsigned int idx,i;
+    unsigned int* _hpoints;
+    unsigned int _nhpoints;
+    if( highlightWaves != NULL )
+    {
+        _hpoints = (unsigned int*)[highlightWaves bytes];
+        _nhpoints = [highlightWaves length]/sizeof(unsigned int);
+        for(i=0;i<_nhpoints;i++)
+        {
+            //need to reset z-value of previously highlighted waveform
+            idx = _hpoints[i];
+            zvalue = -1.0;
+            vDSP_vfill(&zvalue,_data+(idx*32*4*3)+2,3,32*4);
+        }
+    }
+    zvalue = 1.1;
+    //set the z-value
+    for(i=0;i<_npoints;i++)
+    {
+        idx = _points[i];
+        vDSP_vfill(&zvalue,_data+(idx*32*4*3)+2,3,32*4);
+    }
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, wfColorBuffer);
+    GLfloat *_colors = (GLfloat*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+    GLfloat *dcolor = (float*)[drawingColor bytes];
+    if( highlightWaves != NULL )
+    {
+        //unsigned int* _hpoints = (unsigned int*)[NSData bytes];
+        //unsigned int _nhpoints = [wfidx length]/sizeof(unsigned int);
+        for(i=0;i<_nhpoints;i++)
+        {
+            idx = _hpoints[i];
+            vDSP_vfill(dcolor,_colors+(idx*32*4*3),3,32*4);
+            vDSP_vfill(dcolor+1,_colors+(idx*32*4*3)+1,3,32*4);
+            vDSP_vfill(dcolor+2,_colors+(idx*32*4*3)+2,3,32*4);
+        }
+        
+    }
+    //find the complement
+    GLfloat *hcolor = malloc(4*sizeof(GLfloat));
+    hcolor[0] = 1.0-dcolor[0];
+    hcolor[1] = 1.0-dcolor[1];
+    hcolor[2] = 1.0-dcolor[2];
+    for(i=0;i<_npoints;i++)
+    {
+        idx = _points[i];
+        vDSP_vfill(hcolor,_colors+(idx*32*4*3),3,32*4);
+        vDSP_vfill(hcolor+1,_colors+(idx*32*4*3)+1,3,32*4);
+        vDSP_vfill(hcolor+2,_colors+(idx*32*4*3)+2,3,32*4);
+    }
+    if(highlightWaves != NULL)
+    {
+        [[self highlightWaves] setData: wfidx];
+    }
+    else 
+    {
+        [self setHighlightWaves:[NSMutableData dataWithData:wfidx]];
+    }
+
+    free(hcolor);
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+    [self setNeedsDisplay:YES];
+    
 }
 
 -(void) highlightWaveform:(NSUInteger)wfidx
@@ -303,41 +393,26 @@ static void wfModifyColors(GLfloat *color_data)
     
     glBindBuffer(GL_ARRAY_BUFFER, wfColorBuffer);
     GLfloat *_colors = (GLfloat*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-    
+    GLfloat *dcolor = (float*)[drawingColor bytes];
     if( highlightWave >= 0 )
     {
         
-        GLfloat pcolor[3] = {1.0,0.85,0.35};
-        vDSP_vfill(pcolor,_colors+(highlightWave*32*4*3),3,32*4);
-        vDSP_vfill(pcolor+1,_colors+(highlightWave*32*4*3)+1,3,32*4);
-        vDSP_vfill(pcolor+2,_colors+(highlightWave*32*4*3)+2,3,32*4);
+        vDSP_vfill(dcolor,_colors+(highlightWave*32*4*3),3,32*4);
+        vDSP_vfill(dcolor+1,_colors+(highlightWave*32*4*3)+1,3,32*4);
+        vDSP_vfill(dcolor+2,_colors+(highlightWave*32*4*3)+2,3,32*4);
         
     }
-     GLfloat hcolor[3] = {1.0,0.0,0.0};
+    //find the complement
+    GLfloat *hcolor = malloc(4*sizeof(GLfloat));
+    hcolor[0] = 1.0-dcolor[0];
+    hcolor[1] = 1.0-dcolor[1];
+    hcolor[2] = 1.0-dcolor[2];
     vDSP_vfill(hcolor,_colors+(wfidx*32*4*3),3,32*4);
     vDSP_vfill(hcolor+1,_colors+(wfidx*32*4*3)+1,3,32*4);
     vDSP_vfill(hcolor+2,_colors+(wfidx*32*4*3)+2,3,32*4);
+    free(hcolor);
     glUnmapBuffer(GL_ARRAY_BUFFER);
     
-    /*
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
-    GLuint *index = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
-    //float *_index = malloc((32*2-2)*4*sizeof(float));
-    //float a = wfidx*((32*2-2)*4);
-    //float b = 1.0;
-    //vDSP_vramp(&a, &b, _index, 1, (32*2-2)*4);
-    //vDSP_vfixu32(_index, 1, index+(32*2-2)*4*wfidx, 1, (32*2-2)*4);
-    int i,L;
-    L = (32*2-2)*4;
-    unsigned int k;
-    for(i=0;i<L;i++)
-    {
-        k = index[i];
-        index[i] = index[L*wfidx+i];
-        index[L*wfidx+i] = k;
-    }
-    //free(_index);
-    glUnmapBuffer(GL_ARRAY_BUFFER);*/
     highlightWave = wfidx;
     [self setNeedsDisplay:YES];
 }
@@ -425,6 +500,79 @@ static void wfDrawAnObject()
            
 }
 
+-(void)setColor:(NSData*)color
+{
+    drawingColor = [[NSData dataWithData:color] retain];
+    //float *_color = malloc(3*sizeof(float));
+    float *_color = (float*)[color bytes];
+    //[color getBytes:_color];
+    //compute HSV
+    CGFloat hue,sat,val,alpha,mi,mx;
+    NSColor *tmp_color = [NSColor colorWithDeviceRed:_color[0] green:_color[1] blue:_color[2] alpha:1.0];
+    [tmp_color getHue:&hue saturation:&sat brightness:&val alpha:&alpha];
+    /*
+    vDSP_maxv(_color, 1,&val, 3);
+    _color[0]/=val;
+    _color[1]/=val;
+    _color[2]/=val;
+    vDSP_maxv(_color, 1,&mx, 3);
+    vDSP_minv(_color, 1,&mi, 3);
+    sat = mx-mi;
+    //scale again
+    _color[0] = (_color[0]-mi)/sat;
+    _color[1] = (_color[1]-mi)/sat;
+    _color[2] = (_color[2]-mi)/sat;
+    unsigned int mxi;
+    vDSP_maxvi(_color, 1, &mx, &mxi, 3);
+    if(mxi==0)
+    {
+        hue = 0.0 + 60.0*(_color[1]-_color[2]);
+    }
+    else if (mxi==1)
+    {
+        hue = 120.0 + 60.0*(_color[2]-_color[0]);
+    }
+    else {
+        hue = 240.0 + 60.0*(_color[0]-color[1]);
+    }
+     */
+    //[color getHue:&hue saturation:&sat brightness:&bri alpha:&alpha];
+    //get complementary color by mirroring
+    hue = hue+0.5;
+    if( hue > 1.0)
+    {
+        hue = hue-1.0;
+    }
+    tmp_color = [NSColor colorWithCalibratedHue:hue saturation:sat brightness:val alpha:alpha];
+    [tmp_color getRed:&hue green:&sat blue:&val alpha:&alpha];
+    float *tmp = malloc(4*sizeof(float));
+    tmp[0] = (float)hue;
+    tmp[1] = (float)sat;
+    tmp[2] = (float)val;
+    tmp[3] = (float)alpha;
+    highlightColor = [[NSData dataWithBytes:tmp length: 4*sizeof(float)] retain];
+    free(tmp);
+    
+}
+
+-(NSData*)getColor
+{
+    return drawingColor;
+}
+
+-(NSData*)getHighlightColor
+{
+    return highlightColor;
+}
+
+-(void) receiveNotification:(NSNotification*)notification
+{
+    if([[notification name] isEqualToString:@"highlight"])
+    {
+        [self highlightWaveforms:[[notification object] objectForKey:@"points"]];
+    }
+}
+    
 //event handlers
 -(void)mouseUp:(NSEvent *)theEvent
 {
@@ -459,9 +607,20 @@ static void wfDrawAnObject()
     free(d);
     free(D);
     unsigned int wfidx = imin/(32*4);
-    [self highlightWaveform:wfidx];
+    NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSData dataWithBytes: &wfidx 
+                                                                                     length: sizeof(unsigned int)],
+                                                                [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects: 
+                                                                                                                      @"points",@"color",nil]];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:params];
+    //[self highlightWaveform:wfidx];
     
 }
+
+/*-(void)removePoints:(NSIndexSet*)points
+{
+    //moves the points in indexset from the currently drawn points to the 0-zero cluster
+    
+}*/
 
 
 -(void)dealloc
@@ -475,6 +634,8 @@ static void wfDrawAnObject()
                                                   object:self];
     [self clearGLContext];
     [_pixelFormat release];
+    [drawingColor release];
+    [highlightColor release];
     [super dealloc];
 }
 

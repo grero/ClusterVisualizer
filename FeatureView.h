@@ -6,6 +6,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import <OpenGL/glu.h>
 #import "Cluster.h"
 
 
@@ -36,7 +37,8 @@ static BOOL dataloaded;
 @interface FeatureView : NSView {
 
     NSMutableIndexSet *indexset;
-    
+    NSMutableData *highlightedPoints;
+    NSMutableData *rotation;
     @private
     NSOpenGLContext* _oglContext;
     NSOpenGLPixelFormat* _pixelFormat;
@@ -46,6 +48,7 @@ static BOOL dataloaded;
 }
 
 @property (retain,readwrite) NSMutableIndexSet *indexset;
+@property (retain,readwrite) NSMutableData *highlightedPoints;
 
 +(NSOpenGLPixelFormat*)defaultPixelFormat;
 -(id) initWithFrame:(NSRect)frameRect pixelFormat:(NSOpenGLPixelFormat*)format;
@@ -58,13 +61,15 @@ static BOOL dataloaded;
 -(NSOpenGLPixelFormat*)pixelFormat;
 -(void) _surfaceNeedsUpdate:(NSNotification *)notification;
 - (void) loadVertices: (NSURL*)url;
--(void) createVertices: (NSData*)vertex_data withRows: (NSUInteger)r andColumns: (NSUInteger)c;
+-(void) createVertices: (NSData*)vertex_data withRows: (NSUInteger)r andColumns: (NSUInteger)c ;
 -(void) selectDimensions:(NSDictionary*)dims;
 -(void) showCluster: (Cluster *)cluster;
 -(void) hideCluster: (Cluster *)cluster;
 -(void) hideAllClusters;
 -(void) showAllClusters;
 -(void) setClusterColors: (GLfloat*)cluster_colors forIndices: (GLuint*)cluster_indices length:(NSUInteger)length;
+-(void) highlightPoints:(NSDictionary*)params;
+-(void) receiveNotification:(NSNotification*)notification;
 -(void) rotateY;
 -(void) rotateX;
 -(void) rotateZ;

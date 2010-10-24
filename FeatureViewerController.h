@@ -20,6 +20,7 @@
     
     NSMutableArray *Clusters;
     NSMutableArray *ClusterOptions;
+    Cluster *activeCluster;
     NSArray *clusterModel;
     NSPredicate *isValidCluster, *filterClustersPredicate;
     NSMutableArray *clustersSortDescriptors;
@@ -87,4 +88,5 @@
 @property (retain, readwrite) NSSortDescriptor *clustersSortDescriptor;
 @property (retain, readwrite) NSMutableArray *clustersSortDescriptors;
 @property (retain, readwrite) NSString *waveformsFile;
+@property (assign,readwrite) Cluster *activeCluster;
 @end

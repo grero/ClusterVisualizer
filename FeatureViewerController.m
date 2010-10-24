@@ -21,6 +21,7 @@
 @synthesize clustersSortDescriptor;
 @synthesize clustersSortDescriptors;
 @synthesize waveformsFile;
+@synthesize activeCluster;
 
 -(void)awakeFromNib
 {
@@ -262,7 +263,8 @@
             
             [cluster setActive: 1];
             cluster.npoints = [NSNumber numberWithUnsignedInt: npoints[i]];
-            cluster.name = [[[[cluster clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[cluster npoints] stringValue]];
+            //cluster.name = [[[[cluster clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[cluster npoints] stringValue]];
+            [cluster createName];
             cluster.indices = [NSMutableIndexSet indexSet];
             cluster.valid = 1;
             //set color
@@ -273,11 +275,15 @@
             cluster.color = [NSData dataWithBytes: color length:3*sizeof(float)];
             unsigned int *points = malloc(npoints[i]*sizeof(unsigned int));
             int k = 0;
+            //use a binary mask to indicate cluster membership
+            //uint8 *_mask = calloc(rows,sizeof(uint8));
+            
             for(j=0;j<rows;j++)
             {
                 if(cids[j+1]==i)
                 {
                     points[k] = (unsigned int)j;
+                    //mask[j] = 1;
                     k+=1;
                     //set the colors at the same time
                     cluster_colors[3*j] = color[0];
@@ -288,7 +294,9 @@
                 }
                 
             }
-            cluster.points = [NSData dataWithBytes:points length:npoints[i]*sizeof(unsigned int)];
+            cluster.points = [NSMutableData dataWithBytes:points length:npoints[i]*sizeof(unsigned int)];
+            //cluster.mask = [NSMutableData dataWithBytes: _mask length: rows*sizeof(uint8)];
+            //free(_mask);
             free(points);
             //compute ISIs; this step can run on a separate thread
             [cluster computeISIs:timestamps];
@@ -303,7 +311,8 @@
         [self setClusters:tempArray];
         [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
         [selectClusterOption removeAllItems];
-        NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",nil];
+        NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",
+                                   @"Show waveforms",@"Filter clusters",@"Shortest ISI",@"Remove waveforms",nil];
         //[selectClusterOption addItemsWithTitles: [NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",
          //                                         @"Compute Isolation Distance",nil]];
         //[self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",nil]];
@@ -356,7 +365,8 @@
     float *fwaveforms = malloc(wfSize*sizeof(float));
     vDSP_vflt16(waveforms, 1, fwaveforms, 1, wfSize);
     [[wfv window] orderFront: self];
-    [wfv createVertices:[NSData dataWithBytes:fwaveforms length:wfSize*sizeof(float)] withNumberOfWaves: npoints channels: (NSUInteger)spikeHeader.channels andTimePoints: (NSUInteger)spikeHeader.timepts];
+    [wfv createVertices:[NSData dataWithBytes:fwaveforms length:wfSize*sizeof(float)] withNumberOfWaves: npoints channels: (NSUInteger)spikeHeader.channels andTimePoints: (NSUInteger)spikeHeader.timepts 
+               andColor:[cluster color]];
     free(waveforms);
     free(fwaveforms);
            
@@ -419,6 +429,7 @@
     if( [[notification object] active] )
     {
         [fw showCluster:[notification object]];
+        [self setActiveCluster:[notification object]];
     }
     else {
         [fw hideCluster: [notification object]];
@@ -540,7 +551,51 @@
         [self performComputation:@"Compute Isolation Distance" usingSelector:@selector(computeIsolationDistance:)];
         
     }
-             
+    else if( [selection isEqualToString:@"Shortest ISI"])
+    {
+        unsigned int *tpts = (unsigned int*)[[activeCluster points] bytes];
+        unsigned int *pts = (unsigned int*)[[activeCluster isiIdx] bytes];
+        unsigned long long int* times = (unsigned long long int*)[timestamps bytes];
+        //isiIdx contains the indices of the isis; the first index is the index of the shortest isi
+        //only mark if the shortest ISI is less than 1000 microseconds
+        if ( times[tpts[pts[0]+1]]-times[tpts[pts[0]]] < 1000)
+        {
+        
+            unsigned int *spts = malloc(2*sizeof(unsigned int));
+            spts[0] = pts[0];
+            spts[1] = pts[0]+1;
+            NSDictionary *params = [NSDictionary dictionaryWithObjects: [NSArray arrayWithObjects:
+                                                                         [NSData dataWithBytes:spts length:2*sizeof(unsigned int)],[activeCluster color],nil]
+                                                               forKeys: [NSArray arrayWithObjects:@"points",@"color",nil]];
+            [[NSNotificationCenter defaultCenter] postNotificationName: @"highlight" object: params];
+            free(spts);
+        }
+    }
+    else if ( [selection isEqualToString:@"Remove waveforms"] )
+    {
+        
+        if([fw highlightedPoints] != NULL)
+        {
+            //remove the currently selected waveforms
+            unsigned int *selected = (unsigned int*)[[fw highlightedPoints] bytes];
+            //unsigned int nselected = [[fw highlightedPoints] length]/sizeof(unsigned int);
+            [[self activeCluster] setActive:0];
+            [[Clusters objectAtIndex:0] setActive: 0];
+            //[fw hideCluster:[self activeCluster]];
+           
+            
+            [[self activeCluster ] removePoints:[NSData dataWithBytes: selected length: [[fw highlightedPoints] length]]];
+            //add this point to the noise cluster
+            [[Clusters objectAtIndex:0] addPoints:[fw highlightedPoints]];
+            [[self activeCluster] setActive:1];
+            //[[Clusters objectAtIndex:0] setActive: 1];
+            //[fw showCluster:[self activeCluster]];
+            //[[fw highlightedPoints] 
+            //[fw setNeedsDisplay:YES];
+        }   
+    }
+        
+                                                                                 
 }
 
 - (IBAction) saveClusters:(id)sender
@@ -713,15 +768,24 @@
 {
     //set up an operation that will notify the main thread when all the computational tasks have finished
     //TODO: For some reason, this doesn't work. I get a SIGABRT for the allFinished task. Weird
+    
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_5
+    NSInvocationOperation *op = [[NSInvocationOperation alloc] initWithTarget: self selector:@selector(addClusterOption:) object: 
+                       [operationTitle stringByReplacingOccurrencesOfString:@"Compute" withString:@"Sort"]];
+    //[op setIsConcurrent]
+    NSInvocationOperation *allFinished = [[NSInvocationOperation alloc] initWithTarget:progressPanel selector:@selector(stopProgressIndicator) object:nil];
+    [allFinished addDependency:op];
+#else
     NSBlockOperation *allFinished = [NSBlockOperation blockOperationWithBlock:^{
         //add operation to add "Sort L-ratio" to the list of available cluster options 
-        NSOperation *op = [[NSInvocationOperation alloc] initWithTarget: self selector:@selector(addClusterOption:) object: 
+        NSInvocationOperation *op = [[NSInvocationOperation alloc] initWithTarget: self selector:@selector(addClusterOption:) object: 
                            [operationTitle stringByReplacingOccurrencesOfString:@"Compute" withString:@"Sort"]];
         //add operation to stop the progress animation
-        NSOperation *op2 = [[NSInvocationOperation alloc] initWithTarget:progressPanel selector:@selector(stopProgressIndicator) object:nil];
+        NSInvocationOperation *op2 = [[NSInvocationOperation alloc] initWithTarget:progressPanel selector:@selector(stopProgressIndicator) object:nil];
         [[NSOperationQueue mainQueue] addOperation:op];
         [[NSOperationQueue mainQueue] addOperation:op2];
     }];
+#endif
     //show progress indicator
     [progressPanel setTitle:operationTitle];
     [progressPanel orderFront:self];
