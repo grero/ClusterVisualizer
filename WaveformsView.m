@@ -61,8 +61,8 @@
                                                  selector:@selector(_surfaceNeedsUpdate:)
                                                      name: NSViewGlobalFrameDidChangeNotification object: self];
         
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) 
-                                                     name:@"highlight" object:nil];
+        //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) 
+        //                                             name:@"highlight" object:nil];
     }
     return self;
 }
@@ -128,9 +128,16 @@
 -(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints andColor: (NSData*)color;
 {
     wavesize = channels*timepoints;
+    waveIndexSize = channels*(2*timepoints-2);
     nWfIndices = nwaves*wavesize;
     nWfVertices = nWfIndices;
     num_spikes = nwaves;
+    //reset highlights
+    if([self highlightWaves] != NULL)
+    {
+        [[self highlightWaves] setLength:0];
+        [self setHighlightWaves:NULL];
+    }
     if(wfDataloaded)
     {
         wfVertices = realloc(wfVertices, nWfVertices*3*sizeof(GLfloat));
@@ -247,7 +254,7 @@
     wfPushVertices();
     //draw
     //[self highlightWaveform:0];
-    
+    //wavesize = (2*timepoints-2)*channels;
     [self setNeedsDisplay: YES];
     
 }
@@ -555,6 +562,69 @@ static void wfDrawAnObject()
     
 }
 
+-(void) hideWaveforms:(NSData*)wfidx
+{
+    [[self openGLContext] makeCurrentContext];
+    unsigned int* _points = (unsigned int*)[wfidx bytes];
+    unsigned int _npoints = [wfidx length]/sizeof(unsigned int);
+    glBindBuffer(GL_ARRAY_BUFFER,wfIndexBuffer);
+    unsigned int *tmp_idx = (unsigned int*)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
+    int i,j,found,k,l;
+    j = 0;
+    found = 0;
+    k = 0;
+    //unsigned int wvsize =
+    for(i=0;i<num_spikes;i++)
+    {
+        found = 0;
+        j=0;
+        while((found==0) & (j<_npoints))
+        {
+            if(i==_points[j])
+                found = 1;
+            //found=(i==_points[j]);
+            j+=1;
+        }
+        if(found == 0)
+        {
+            //rearrange both indices and vertixes
+            //TODO: am I screwing something up here?
+            for(l=0;l<waveIndexSize;l++)
+            {
+                tmp_idx[k*waveIndexSize+l] = tmp_idx[i*waveIndexSize+l];
+            }
+            for(l=0;l<wavesize;l++)
+            {
+                wfVertices[3*(k*wavesize+l)] = wfVertices[3*(i*wavesize+l)];
+                wfVertices[3*(k*wavesize+l)+1] = wfVertices[3*(i*wavesize+l)+1];
+                wfVertices[3*(k*wavesize+l)+2] = wfVertices[3*(i*wavesize+l)+2];
+            }
+            k+=1;
+        }
+    }
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+    num_spikes-=_npoints;
+    if(num_spikes<0)
+        num_spikes=0;
+    
+    nWfVertices-=_npoints*wavesize;
+    if(nWfVertices<0)
+        nWfVertices=0;
+    
+    nWfIndices-=_npoints*waveIndexSize;
+    
+    if(nWfIndices<0)
+        nWfIndices = 0;
+    //push the vertices again
+    //glGenBuffers(1,&wfVertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
+    //push data to the current buffer
+    glBufferData(GL_ARRAY_BUFFER, nWfVertices*3*sizeof(GLfloat), wfVertices, GL_DYNAMIC_DRAW);
+    
+    [self setNeedsDisplay: YES];
+    
+}
+
 -(NSData*)getColor
 {
     return drawingColor;
@@ -594,6 +664,8 @@ static void wfDrawAnObject()
     float fmin;
     p[0] = -dataPoint.x;
     p[1] = -dataPoint.y;
+    //get only the relevant vertices
+    
     //substract the point
     vDSP_vsadd(wfVertices,3,p,D,2,nWfVertices);
     vDSP_vsadd(wfVertices+1,3,p+1,D+1,2,nWfVertices);

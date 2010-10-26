@@ -362,6 +362,8 @@
             range.length =nindices;
             //count = [indexset getIndexes: tmp_indices maxCount: nindices-new_size inIndexRange: nil];
             nindices-=new_size;
+            if(nindices<0)
+                nindices=0;
         }
         glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
         [self setNeedsDisplay:YES];
@@ -423,7 +425,15 @@
         }
     }
     glUnmapBuffer(GL_ARRAY_BUFFER);
-    [self setHighlightedPoints: [NSData dataWithBytes: idx length: _npoints*sizeof(GLuint)]];
+    if( highlightedPoints == NULL)
+    {
+        [self setHighlightedPoints: [NSMutableData dataWithBytes: idx length: _npoints*sizeof(GLuint)]];
+    }
+    else {
+        [[self highlightedPoints] setData: [NSMutableData dataWithBytes: idx length: _npoints*sizeof(GLuint)]];
+        
+    }
+
     [self setNeedsDisplay:YES];
 }
 
@@ -728,64 +738,68 @@ static void drawAnObject()
 
 -(void)mouseUp:(NSEvent *)theEvent
 {
-    //get current point in view coordinates
-    NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
-    //now we will have to figure out which waveform(s) contains this point
-    //scale to data coorindates
-    NSPoint dataPoint;
-    NSRect viewBounds = [self bounds];
-    //scale to data coordinates
-    //take into account rotation
-    //compute appropriate 2-D projection; initial projection is the x-y plane
-   
-    GLint view[4];
-    GLdouble p[16];
-    GLdouble m[16];
-    GLdouble z;
-    [[self openGLContext] makeCurrentContext];
-    glGetDoublev (GL_MODELVIEW_MATRIX, m);
-    glGetDoublev (GL_PROJECTION_MATRIX,p);
-    glGetIntegerv( GL_VIEWPORT, view );
-    double objX,objY,objZ;
-    gluUnProject(currentPoint.x, currentPoint.y, 1, m, p, view, &objX, &objY, &objZ);
-    
-    
-    //(dataPoint.x,dataPoint.y) and the waveforms vectors
-    float *D = malloc(2*nindices*sizeof(float));
-    float *d = malloc(nindices*sizeof(float));
-    float *po = malloc(3*sizeof(float));
-    vDSP_Length imin;
-    float fmin;
-    po[0] = -(float)objX;
-    po[1] = -(float)objY;
-    po[2] = -(float)objZ;
-    //substract the point
-    vDSP_vsadd(use_vertices,3,po,D,2,nindices);
-    vDSP_vsadd(use_vertices+1,3,po+1,D+1,2,nindices);
-    //vDSP_vsadd(vertices+2,3,po+2,D+1,2,nvertices);
-    //sum of squares
-    vDSP_vdist(D,2,D+1,2,d,1,nindices);
-    //find the index of the minimu distance
-    vDSP_minvi(d,1,&fmin,&imin,nindices);
-    //imin now holds the index of the vertex closest to the point
-    //find the number of wfVertices per waveform
-    free(po);
-    free(d);
-    free(D);
-    //3 points per waveform
-    unsigned int wfidx = imin/(3);
-    
-    //get the current drawing color
-    [[self openGLContext] makeCurrentContext];
-    glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-    float *color = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
-    
-    NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSData dataWithBytes: &wfidx 
-                                                                                                        length: sizeof(unsigned int)],
-                                                                [NSData dataWithBytes: color+imin length:3*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
-    glUnmapBuffer(GL_ARRAY_BUFFER);
-    //[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:params];
-    [self highlightPoints:params];
+    if([theEvent modifierFlags] == NSCommandKeyMask)
+    {
+        //only select points if Command key is pressed
+        //get current point in view coordinates
+        NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
+        //now we will have to figure out which waveform(s) contains this point
+        //scale to data coorindates
+        NSPoint dataPoint;
+        NSRect viewBounds = [self bounds];
+        //scale to data coordinates
+        //take into account rotation
+        //compute appropriate 2-D projection; initial projection is the x-y plane
+       
+        GLint view[4];
+        GLdouble p[16];
+        GLdouble m[16];
+        GLdouble z;
+        [[self openGLContext] makeCurrentContext];
+        glGetDoublev (GL_MODELVIEW_MATRIX, m);
+        glGetDoublev (GL_PROJECTION_MATRIX,p);
+        glGetIntegerv( GL_VIEWPORT, view );
+        double objX,objY,objZ;
+        gluUnProject(currentPoint.x, currentPoint.y, 1, m, p, view, &objX, &objY, &objZ);
+        
+        
+        //(dataPoint.x,dataPoint.y) and the waveforms vectors
+        float *D = malloc(2*nindices*sizeof(float));
+        float *d = malloc(nindices*sizeof(float));
+        float *po = malloc(3*sizeof(float));
+        vDSP_Length imin;
+        float fmin;
+        po[0] = -(float)objX;
+        po[1] = -(float)objY;
+        po[2] = -(float)objZ;
+        //substract the point
+        vDSP_vsadd(use_vertices,3,po,D,2,nindices);
+        vDSP_vsadd(use_vertices+1,3,po+1,D+1,2,nindices);
+        //vDSP_vsadd(vertices+2,3,po+2,D+1,2,nvertices);
+        //sum of squares
+        vDSP_vdist(D,2,D+1,2,d,1,nindices);
+        //find the index of the minimu distance
+        vDSP_minvi(d,1,&fmin,&imin,nindices);
+        //imin now holds the index of the vertex closest to the point
+        //find the number of wfVertices per waveform
+        free(po);
+        free(d);
+        free(D);
+        //3 points per waveform
+        unsigned int wfidx = imin/(3);
+        
+        //get the current drawing color
+        [[self openGLContext] makeCurrentContext];
+        glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+        float *color = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+        
+        NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSData dataWithBytes: &wfidx 
+                                                                                                            length: sizeof(unsigned int)],
+                                                                    [NSData dataWithBytes: color+imin length:3*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+        //[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:params];
+        [self highlightPoints:params];
+    }
 }
 
 -(void)dealloc

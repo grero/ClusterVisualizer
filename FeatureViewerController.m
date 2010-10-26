@@ -261,7 +261,7 @@
             cluster.clusterId = [NSNumber numberWithUnsignedInt:i];
             //cluster.name = [NSString stringWithFormat: @"%d",i];
             
-            [cluster setActive: 1];
+           
             cluster.npoints = [NSNumber numberWithUnsignedInt: npoints[i]];
             //cluster.name = [[[[cluster clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[cluster npoints] stringValue]];
             [cluster createName];
@@ -300,8 +300,10 @@
             free(points);
             //compute ISIs; this step can run on a separate thread
             [cluster computeISIs:timestamps];
-            [tempArray addObject:cluster]; 
-        }
+            [cluster setActive: 1];
+
+            [tempArray addObject:cluster];
+         }
         free(cids);
         free(npoints);
         //tell the view to change the colors
@@ -430,6 +432,11 @@
     {
         [fw showCluster:[notification object]];
         [self setActiveCluster:[notification object]];
+        if([[[self wfv] window] isVisible])
+        {
+            //if we are showing waveforms
+            [self loadWaveforms:[notification object]];
+        }
     }
     else {
         [fw hideCluster: [notification object]];
@@ -529,6 +536,24 @@
     else if ( [selection isEqualToString:@"Show waveforms"] )
     {
         [self loadWaveforms:[candidates objectAtIndex: 0]];
+        NSInteger idx = [sender indexOfSelectedItem];
+        NSString *new_selection = [selection stringByReplacingOccurrencesOfString:@"Show" withString:@"Hide"];
+        [sender removeItemAtIndex:idx];
+        [sender insertItemWithTitle:new_selection atIndex:idx];
+        //make sure the waveforms view receives notification of highlights
+        [[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) 
+                                                     name:@"highlight" object:nil];
+
+    }
+    else if ( [selection isEqualToString:@"Hide waveforms"] )
+    {
+        NSInteger idx = [sender indexOfSelectedItem];
+        NSString *new_selection = [selection stringByReplacingOccurrencesOfString:@"Hide" withString:@"Show"];
+        [sender removeItemAtIndex:idx];
+        [sender insertItemWithTitle:new_selection atIndex:idx];
+        [[NSNotificationCenter defaultCenter] removeObserver: [self wfv] name: @"highlight" object: nil];
+        [[[self wfv] window] orderOut:self];
+        
     }
     else if( [selection isEqualToString:@"Filter clusters"] )
     {
@@ -590,7 +615,13 @@
             [[self activeCluster] setActive:1];
             //[[Clusters objectAtIndex:0] setActive: 1];
             //[fw showCluster:[self activeCluster]];
-            //[[fw highlightedPoints] 
+            //reset the highlighted waves
+            [[fw highlightedPoints] setLength:0];
+            if([[wfv window] isVisible])
+            {
+                [wfv hideWaveforms:[wfv highlightWaves]];
+                [[wfv highlightWaves] setLength: 0];
+            }
             //[fw setNeedsDisplay:YES];
         }   
     }

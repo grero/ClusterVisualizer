@@ -22,6 +22,7 @@ static unsigned int num_spikes;
 static unsigned int nWfVertices;
 static unsigned int nWfIndices;
 static unsigned int wavesize;
+static unsigned int waveIndexSize;
 static int highlightWave;
 static BOOL wfDataloaded;
 
@@ -56,7 +57,7 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color);
 -(void) setColor:(NSData*)color;
 -(NSData*)getColor;
 -(NSData*)getHighlightColor;
-
+-(BOOL)isOpaque;
 //others
 -(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints andColor: (NSData*)color;
 -(void) highlightWaveform:(NSUInteger)wfidx;
