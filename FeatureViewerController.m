@@ -56,91 +56,134 @@
             [self removeAllObjectsFromClusters];
             
         }
-        NSMutableData *data = [NSMutableData dataWithCapacity:100000*sizeof(float)];
-        NSMutableArray *feature_names = [NSMutableArray arrayWithCapacity:16];
-        //geth the base path
-        NSString *path = [[openPanel URL] path];
-        NSString *filebase = [[[path lastPathComponent] componentsSeparatedByString:@"_"] objectAtIndex:0]; 
-        currentBaseName = [[NSString stringWithString:filebase] retain];
         NSString *directory = [[openPanel directoryURL] path];
-        //set the current directory of the process to the the one pointed to by the load dialog
-        [[NSFileManager defaultManager] changeCurrentDirectoryPath:directory];
-        NSArray *dir_contents = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath: directory error: nil] pathsMatchingExtensions:[NSArray arrayWithObjects:@"fd",nil]];
-        //get all feature files, i.e. files ending in .fd from the FD directory
-        //NSArray *dir_contents = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath:[[path stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"FD"] error: NULL] 
-         //                        pathsMatchingExtensions:[NSArray arrayWithObjects:@"fd",nil]];
-        //get waveforms file
-                    
-        NSEnumerator *enumerator = [dir_contents objectEnumerator];
-        id file;
-        header H;
+        NSString *path = [[openPanel URL] path];
+        //data object to hold the feature data
+        NSMutableData *data = [NSMutableData dataWithCapacity:100000*sizeof(float)];
         float *tmp_data,*tmp_data2;
         int cols=0;
         int rows = 0;
         int i,j,k;
-        
-        while(file = [enumerator nextObject] )
+        NSMutableArray *feature_names = [NSMutableArray arrayWithCapacity:16];
+        NSString *filebase;
+        if( [[path pathExtension] isEqualToString:@"fd"])
         {
-            if([file hasPrefix:filebase])
+            NSArray *dir_contents = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath: directory error: nil] pathsMatchingExtensions:[NSArray arrayWithObjects:@"fd",nil]];
+           
+            
+            //geth the base path
+           
+            filebase = [[[path lastPathComponent] componentsSeparatedByString:@"_"] objectAtIndex:0]; 
+            currentBaseName = [[NSString stringWithString:filebase] retain];
+            //set the current directory of the process to the the one pointed to by the load dialog
+            [[NSFileManager defaultManager] changeCurrentDirectoryPath:directory];
+            //get all feature files, i.e. files ending in .fd from the FD directory
+            //NSArray *dir_contents = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath:[[path stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"FD"] error: NULL] 
+             //                        pathsMatchingExtensions:[NSArray arrayWithObjects:@"fd",nil]];
+            //get waveforms file
+                        
+            NSEnumerator *enumerator = [dir_contents objectEnumerator];
+            id file;
+            header H;
+            //float *tmp_data,*tmp_data2;
+                        
+            
+            while(file = [enumerator nextObject] )
             {
-                char *filename = [[NSString pathWithComponents: [NSArray arrayWithObjects: directory,file,nil]] cStringUsingEncoding:NSASCIIStringEncoding];
-                H = *readFeatureHeader(filename, &H);
+                if([file hasPrefix:filebase])
+                {
+                    char *filename = [[NSString pathWithComponents: [NSArray arrayWithObjects: directory,file,nil]] cStringUsingEncoding:NSASCIIStringEncoding];
+                    H = *readFeatureHeader(filename, &H);
+                    
+                    tmp_data = malloc(H.rows*H.cols*sizeof(float));
+                    tmp_data2 = malloc(H.rows*H.cols*sizeof(float));
+                    tmp_data = readFeatureData(filename, tmp_data);
+                    //transpose
+                    for(i=0;i<H.rows;i++)
+                    { 
+                        for(j=0;j<H.cols;j++)
+                        {
+                            tmp_data2[j*H.rows+i] = tmp_data[i*H.cols+j];
+                        }
+                    }
+                    //scale
+                    //vDSP_vsdiv(
+                    [data appendBytes:tmp_data2 length: H.rows*H.cols*sizeof(float)];
+                    free(tmp_data);
+                    free(tmp_data2);
+                    cols+=H.rows;
+                    //feature names
+                    //get basename
+                    NSString *fn = [[[file componentsSeparatedByString:@"_"] lastObject] stringByDeletingPathExtension]; 
+                    for(j=0;j<H.rows;j++)
+                    {
+                        [feature_names addObject: [fn stringByAppendingFormat:@"%d",j+1]];
+                    }
+                    
+                }
                 
-                tmp_data = malloc(H.rows*H.cols*sizeof(float));
-                tmp_data2 = malloc(H.rows*H.cols*sizeof(float));
-                tmp_data = readFeatureData(filename, tmp_data);
-                //transpose
+                /*need to reshape the data
+                tmp_data = malloc([data length]);
+                float *tmp_data2 = [data bytes];
+               
                 for(i=0;i<H.rows;i++)
                 { 
-                    for(j=0;j<H.cols;j++)
+                    for(j=0;j<tmp_cols;j++)
                     {
-                        tmp_data2[j*H.rows+i] = tmp_data[i*H.cols+j];
+                        tmp_data[i*tmp_cols+j] = tmp_data_2[j%H.cols+]
+                    }
+                }*/
+                rows = H.cols;
+            }
+            //need to reshape
+            tmp_data = malloc(rows*cols*sizeof(float));
+            tmp_data2 = (float*)[data bytes];
+            for(i=0;i<rows;i++)
+            {
+                for(k=0;k<cols/H.rows;k++)
+                {
+                    for(j=0;j<H.rows;j++)
+                    {
+                        tmp_data[i*cols+k*H.rows+j] = tmp_data2[k*rows*H.rows + i*H.rows+j];
                     }
                 }
-                //scale
-                //vDSP_vsdiv(
-                [data appendBytes:tmp_data2 length: H.rows*H.cols*sizeof(float)];
-                free(tmp_data);
-                free(tmp_data2);
-                cols+=H.rows;
-                //feature names
-                //get basename
-                NSString *fn = [[[file componentsSeparatedByString:@"_"] lastObject] stringByDeletingPathExtension]; 
-                for(j=0;j<H.rows;j++)
-                {
-                    [feature_names addObject: [fn stringByAppendingFormat:@"%d",j+1]];
-                }
-                
             }
-            
-            /*need to reshape the data
-            tmp_data = malloc([data length]);
-            float *tmp_data2 = [data bytes];
-           
-            for(i=0;i<H.rows;i++)
-            { 
-                for(j=0;j<tmp_cols;j++)
-                {
-                    tmp_data[i*tmp_cols+j] = tmp_data_2[j%H.cols+]
-                }
-            }*/
-            rows = H.cols;
+            //free(temp_data);
         }
-        //need to reshape
-        tmp_data = malloc(rows*cols*sizeof(float));
-        tmp_data2 = [data bytes];
-        for(i=0;i<rows;i++)
+        
+        else if([[[path componentsSeparatedByString:@"."] objectAtIndex:1] isEqualToString:@"fet"]) 
         {
-            for(k=0;k<cols/H.rows;k++)
+            //the file is a .fet file; it will have all the features written in ascii format, one row per line
+            //the first line contains the number of columns
+            filebase = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:0];
+            currentBaseName = [[NSString stringWithString:filebase] retain];
+
+            NSArray *lines = [[NSString stringWithContentsOfFile:path] componentsSeparatedByString:@"\n"];
+            cols = [[lines objectAtIndex:0] intValue];
+            rows = [lines count]-1;
+            tmp_data = malloc(rows*cols*sizeof(float));
+            int i,j;
+            for(i=0;i<rows;i++)
             {
-                for(j=0;j<H.rows;j++)
+                NSScanner *tokens = [NSScanner scannerWithString: [lines objectAtIndex:i+1]];
+                //skip all whitespace characters
+                [tokens setCharactersToBeSkipped:[NSCharacterSet whitespaceCharacterSet]];
+                for(j=0;j<cols;j++)
                 {
-                    tmp_data[i*cols+k*H.rows+j] = tmp_data2[k*rows*H.rows + i*H.rows+j];
+                    [tokens scanFloat:tmp_data+i*cols+j];
                 }
             }
+            [data appendBytes:tmp_data length:rows*cols*sizeof(float)];
+            tmp_data2 = (float*)[data bytes];
+            //free(tmp_data);
+            //we don't know what the features are, so just call them by the the column
+            for(j=0;j<cols;j++)
+            {
+                [feature_names addObject: [NSString stringWithFormat:@"feature%d", j]];
+            }
         }
-        
-        
+        //float *tmp_data = malloc(rows*cols*sizeof(float));
+        //tmp_data2 = [data bytes];    
         NSRange range;
         range.location = 0;
         range.length = rows*cols*sizeof(float);
@@ -179,8 +222,8 @@
         //NSString *waveformsPath = @"";
         if( [waveformfiles count] == 1 )
         {
-            
-            char *waveformsPath = [[waveformfiles objectAtIndex:0] cStringUsingEncoding: NSASCIIStringEncoding];
+            [self setWaveformsFile: [waveformfiles objectAtIndex:0]];
+            char *waveformsPath = [waveformsFile cStringUsingEncoding: NSASCIIStringEncoding];
             nptHeader spikeHeader;
             spikeHeader = *getSpikeInfo(waveformsPath, &spikeHeader);
             unsigned long long int *times = malloc(rows*sizeof(unsigned long long int));
@@ -194,6 +237,7 @@
             free(times);
             free(times_indices);
         }
+        
     }
     //load feature anems
     //NSArray *feature_names = [[NSString stringWithContentsOfFile:@"../../feature_names.txt"] componentsSeparatedByString:@"\n"];
@@ -314,7 +358,12 @@
         [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
         [selectClusterOption removeAllItems];
         NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",
-                                   @"Show waveforms",@"Filter clusters",@"Shortest ISI",@"Remove waveforms",nil];
+                                   @"Show waveforms",@"Filter clusters",@"Remove waveforms",nil];
+        if(timestamps!=NULL)
+        {
+            //only allow isi computation if timestamps are loaded
+            [options addObject:@"Shortest ISI"];
+        }
         //[selectClusterOption addItemsWithTitles: [NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",
          //                                         @"Compute Isolation Distance",nil]];
         //[self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",nil]];
@@ -371,6 +420,23 @@
                andColor:[cluster color]];
     free(waveforms);
     free(fwaveforms);
+    if(timestamps==NULL)
+    {
+        //load time stamps if not already loaded
+        unsigned long long int *times = malloc(spikeHeader.num_spikes*sizeof(unsigned long long int));
+        unsigned int *times_indices = malloc(spikeHeader.num_spikes*sizeof(unsigned int));
+        int i;
+        for(i=0;i<spikeHeader.num_spikes;i++)
+        {
+            times_indices[i] = i;
+        }
+        times = getTimes(path, &spikeHeader, times_indices, spikeHeader.num_spikes, times);
+        timestamps = [[NSData dataWithBytes:times length:spikeHeader.num_spikes*sizeof(unsigned long long int)] retain];
+        free(times);
+        free(times_indices);
+        //add the ISI options to cluster options
+        [selectClusterOption addItemWithTitle:@"Shortest ISI"];
+    }
            
     
 }
@@ -581,6 +647,11 @@
         unsigned int *tpts = (unsigned int*)[[activeCluster points] bytes];
         unsigned int *pts = (unsigned int*)[[activeCluster isiIdx] bytes];
         unsigned long long int* times = (unsigned long long int*)[timestamps bytes];
+        if( (pts == NULL) & (times != NULL))
+        {
+            [activeCluster computeISIs:timestamps];
+            pts = (unsigned int*)[[activeCluster isiIdx] bytes];
+        }
         //isiIdx contains the indices of the isis; the first index is the index of the shortest isi
         //only mark if the shortest ISI is less than 1000 microseconds
         if ( times[tpts[pts[0]+1]]-times[tpts[pts[0]]] < 1000)
