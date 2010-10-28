@@ -201,10 +201,11 @@
 
 -(void)computeIsolationDistance:(NSData*)data
 {
+    unsigned int n = [npoints unsignedIntValue];
     unsigned int *_points = (unsigned int*)[[self points] bytes];
-    if(_points==NULL)
+    if((_points==NULL) | (n==0) )
     {
-        isolationDistance = [NSNumber numberWithFloat: 0];
+        [self setIsolationDistance: [NSNumber numberWithFloat: 0]];
         return;
     }
     float *_data = (float*)[data bytes];
@@ -212,8 +213,7 @@
     unsigned int ndim = (unsigned int)([[self mean] length]/sizeof(float));
     unsigned int _npoints = (unsigned int)([data length]/(ndim*sizeof(float)));
     float *d = malloc(ndim*sizeof(float));
-    unsigned int n = [npoints unsignedIntValue];
-    unsigned int N = _npoints-n;
+        unsigned int N = _npoints-n;
   
     float *D = malloc(N*sizeof(float));
     float q;

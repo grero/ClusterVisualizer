@@ -694,6 +694,100 @@ static void wfDrawAnObject()
     
 }*/
 
+-(void) createAxis
+{
+    //creates an axis 
+    NSRect bounds = [self bounds];
+    //create a bitmap to hold the axis object
+    NSBitmapImageRep *axis = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:bounds.size.width 
+                                                                     pixelsHigh:bounds.size.height bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO 
+                                                                 colorSpaceName:NSDeviceRGBColorSpace bytesPerRow:0 bitsPerPixel:0];
+    
+    //create context
+    NSGraphicsContext *cg_context = [NSGraphicsContext graphicsContextWithBitmapImageRep:axis];
+    NSDictionary *attribs = [NSDictionary dictionaryWithObjects: [NSArray arrayWithObjects: [NSColor whiteColor],nil]
+                                                        forKeys: [NSArray arrayWithObjects: NSForegroundColorAttributeName,nil]];  
+                              
+    [NSGraphicsContext setCurrentContext:cg_context];
+    //Need to implement a loop over the axis labels here
+    NSString *str = @"hello";
+    NSPoint point;
+    //make sure we are drawing into the bitmap context 
+    
+    [str drawAtPoint:point withAttributes:attribs];
+    //
+    //now create a texture
+    //set current context to the openGL context
+    GLuint texName;
+    texName = 0;
+    [[self openGLContext] makeCurrentContext];
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, [axis pixelsWide]);
+    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+    if (texName == 0) // 6
+        glGenTextures (1, &texName);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texName);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
+                    GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
+     int samplesPerPixel = [axis samplesPerPixel]; 
+    if(![axis isPlanar] &&
+       (samplesPerPixel == 3 || samplesPerPixel == 4)) { // 10
+        glTexImage2D(GL_TEXTURE_RECTANGLE_ARB,
+                     0,
+                     samplesPerPixel == 4 ? GL_RGBA8 : GL_RGB8,
+                     [axis pixelsWide],
+                     [axis pixelsHigh],
+                     0,
+                     samplesPerPixel == 4 ? GL_RGBA : GL_RGB,
+                     GL_UNSIGNED_BYTE,
+                     [axis bitmapData]);
+    } else {
+    }
+    [axis release];
+    
+}
+
+-(void)saveToEPS
+{
+    NSRect bounds = [self bounds];
+    //allocate an image and intialize with the size of the view
+    NSImage *image = [[NSImage alloc] initWithSize: bounds.size];
+    //add an EPS representation
+    NSEPSImageRep *imageRep = [[NSEPSImageRep alloc] init];
+    [image addRepresentation: imageRep];
+    
+    [image lockFocus];
+    
+    //drawing
+
+    int i,j,k,offset;
+    int timepoints = 32;
+    int channels = 4;
+    NSPointArray points = malloc(timepoints*sizeof(NSPoint));
+    for(i=0;i<num_spikes;i++)
+    {
+        for(j=0;j<channels;j++)
+        {
+        //draw 
+            NSBezierPath *path = [NSBezierPath bezierPath];
+            
+            for(k=0;k<timepoints;k++)
+            {
+                offset = 3*(i*wavesize+j*channels+k);
+                points[k] = NSMakePoint(wfVertices[offset],wfVertices[offset+1]);
+            }
+            [path appendBezierPathWithPoints:points count:timepoints];
+            [path stroke];
+        }
+    }
+    free(points);
+    
+    [image unlockFocus];
+     //get the data
+    NSData *imageData = [imageRep EPSRepresentation];
+    [imageData writeToFile:@"test.eps" atomically:YES];
+    
+}
+
 
 -(void)dealloc
 {

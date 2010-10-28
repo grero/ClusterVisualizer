@@ -403,39 +403,42 @@
             [self setWaveformsFile:[[openPanel URL] path]];
         }
     }
-    char *path = [[self waveformsFile] cStringUsingEncoding:NSASCIIStringEncoding];         
-    unsigned int npoints = [[cluster npoints] unsignedIntValue];
-    
-    nptHeader spikeHeader;
-    spikeHeader = *getSpikeInfo(path,&spikeHeader);
-    unsigned int wfSize = npoints*spikeHeader.channels*spikeHeader.timepts;
-    short int *waveforms = malloc(wfSize*sizeof(short int));
-    waveforms = getWaves(path, &spikeHeader, (unsigned int*)[[cluster points] bytes], npoints, waveforms);
-    
-    //convert to float
-    float *fwaveforms = malloc(wfSize*sizeof(float));
-    vDSP_vflt16(waveforms, 1, fwaveforms, 1, wfSize);
-    [[wfv window] orderFront: self];
-    [wfv createVertices:[NSData dataWithBytes:fwaveforms length:wfSize*sizeof(float)] withNumberOfWaves: npoints channels: (NSUInteger)spikeHeader.channels andTimePoints: (NSUInteger)spikeHeader.timepts 
-               andColor:[cluster color]];
-    free(waveforms);
-    free(fwaveforms);
-    if(timestamps==NULL)
+    if (waveformsFile != NULL)
     {
-        //load time stamps if not already loaded
-        unsigned long long int *times = malloc(spikeHeader.num_spikes*sizeof(unsigned long long int));
-        unsigned int *times_indices = malloc(spikeHeader.num_spikes*sizeof(unsigned int));
-        int i;
-        for(i=0;i<spikeHeader.num_spikes;i++)
+        char *path = [[self waveformsFile] cStringUsingEncoding:NSASCIIStringEncoding];         
+        unsigned int npoints = [[cluster npoints] unsignedIntValue];
+        
+        nptHeader spikeHeader;
+        spikeHeader = *getSpikeInfo(path,&spikeHeader);
+        unsigned int wfSize = npoints*spikeHeader.channels*spikeHeader.timepts;
+        short int *waveforms = malloc(wfSize*sizeof(short int));
+        waveforms = getWaves(path, &spikeHeader, (unsigned int*)[[cluster points] bytes], npoints, waveforms);
+        
+        //convert to float
+        float *fwaveforms = malloc(wfSize*sizeof(float));
+        vDSP_vflt16(waveforms, 1, fwaveforms, 1, wfSize);
+        [[wfv window] orderFront: self];
+        [wfv createVertices:[NSData dataWithBytes:fwaveforms length:wfSize*sizeof(float)] withNumberOfWaves: npoints channels: (NSUInteger)spikeHeader.channels andTimePoints: (NSUInteger)spikeHeader.timepts 
+                   andColor:[cluster color]];
+        free(waveforms);
+        free(fwaveforms);
+        if(timestamps==NULL)
         {
-            times_indices[i] = i;
+            //load time stamps if not already loaded
+            unsigned long long int *times = malloc(spikeHeader.num_spikes*sizeof(unsigned long long int));
+            unsigned int *times_indices = malloc(spikeHeader.num_spikes*sizeof(unsigned int));
+            int i;
+            for(i=0;i<spikeHeader.num_spikes;i++)
+            {
+                times_indices[i] = i;
+            }
+            times = getTimes(path, &spikeHeader, times_indices, spikeHeader.num_spikes, times);
+            timestamps = [[NSData dataWithBytes:times length:spikeHeader.num_spikes*sizeof(unsigned long long int)] retain];
+            free(times);
+            free(times_indices);
+            //add the ISI options to cluster options
+            [selectClusterOption addItemWithTitle:@"Shortest ISI"];
         }
-        times = getTimes(path, &spikeHeader, times_indices, spikeHeader.num_spikes, times);
-        timestamps = [[NSData dataWithBytes:times length:spikeHeader.num_spikes*sizeof(unsigned long long int)] retain];
-        free(times);
-        free(times_indices);
-        //add the ISI options to cluster options
-        [selectClusterOption addItemWithTitle:@"Shortest ISI"];
     }
            
     
@@ -683,17 +686,30 @@
             [[self activeCluster ] removePoints:[NSData dataWithBytes: selected length: [[fw highlightedPoints] length]]];
             //add this point to the noise cluster
             [[Clusters objectAtIndex:0] addPoints:[fw highlightedPoints]];
+            GLfloat *_color = (GLfloat*)[[[Clusters objectAtIndex:0] color] bytes];
+            GLuint *_points = [[fw highlightedPoints] bytes];
+            GLuint _length = [[fw highlightedPoints] length]/sizeof(unsigned int);
+            //set the colors of the new cluster
+            [fw setClusterColors:_color forIndices:_points length:_length];
             [[self activeCluster] setActive:1];
             //[[Clusters objectAtIndex:0] setActive: 1];
             //[fw showCluster:[self activeCluster]];
             //reset the highlighted waves
+            /*
+            NSDictionary *params = [NSDictionary dictionaryWithObjects: [NSArray arrayWithObjects:
+                                                                         [NSData dataWithBytes:NULL length:0],[activeCluster color],nil]
+                                                               forKeys: [NSArray arrayWithObjects:@"points",@"color",nil]];
+            
+            //remove the highlights
+            [fw highlightPoints:params];
+             */
             [[fw highlightedPoints] setLength:0];
             if([[wfv window] isVisible])
             {
                 [wfv hideWaveforms:[wfv highlightWaves]];
                 [[wfv highlightWaves] setLength: 0];
             }
-            //[fw setNeedsDisplay:YES];
+            [fw setNeedsDisplay:YES];
         }   
     }
         

@@ -58,3 +58,5 @@ should be put into cluster 0. If deleting a cluster that was the result of some 
 
 - Store the clusters in HDF5 format. I think saving the clusters in terms of boolean indices will be useful, as set operations between clusters can then be performed very efficiently.
 
+- Implement text for axes. This is most relevant for the waveformsview, where we would like to know the amplitudes. I think the best way of doing this is to draw text into a bitmap context, and then render this bitmap as a glTexture. Use graphicsContextWithBitmapImageRep for this, then the drawAtPoint method of the NSString class
+- Implement offline drawing. Since speed is less of a concern here, I'm thinking I could do this by re-drawing the current view using quartz, on a separate thread.
