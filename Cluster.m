@@ -14,6 +14,7 @@
 @synthesize name;
 @synthesize points;
 @synthesize active;
+@synthesize isTemplate;
 @synthesize npoints;
 @synthesize color;
 @synthesize indices;
@@ -29,6 +30,7 @@
 @synthesize isolationDistance;
 @synthesize isiIdx;
 @synthesize mask;
+@synthesize waveformsImage;
 
 -(void)setActive:(NSInteger)value
 {
@@ -51,6 +53,16 @@
 -(void)makeActive
 {
     [self setActive:1];
+}
+
+-(void) makeTemplate
+{
+    [self setIsTemplate:1];
+}
+
+-(void)undoTemplate
+{
+    [self setIsTemplate:0];
 }
 
 -(void)makeInvalid

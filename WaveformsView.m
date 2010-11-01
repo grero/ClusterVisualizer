@@ -132,6 +132,8 @@
     nWfIndices = nwaves*wavesize;
     nWfVertices = nWfIndices;
     num_spikes = nwaves;
+    chs = channels;
+    timepts = timepoints;
     //reset highlights
     if([self highlightWaves] != NULL)
     {
@@ -324,7 +326,7 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
             //need to reset z-value of previously highlighted waveform
             idx = _hpoints[i];
             zvalue = -1.0;
-            vDSP_vfill(&zvalue,_data+(idx*32*4*3)+2,3,32*4);
+            vDSP_vfill(&zvalue,_data+(idx*timepts*chs*3)+2,3,timepts*chs);
         }
     }
     zvalue = 1.1;
@@ -332,7 +334,7 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
     for(i=0;i<_npoints;i++)
     {
         idx = _points[i];
-        vDSP_vfill(&zvalue,_data+(idx*32*4*3)+2,3,32*4);
+        vDSP_vfill(&zvalue,_data+(idx*timepts*chs*3)+2,3,timepts*chs);
     }
     glUnmapBuffer(GL_ARRAY_BUFFER);
     
@@ -346,9 +348,9 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
         for(i=0;i<_nhpoints;i++)
         {
             idx = _hpoints[i];
-            vDSP_vfill(dcolor,_colors+(idx*32*4*3),3,32*4);
-            vDSP_vfill(dcolor+1,_colors+(idx*32*4*3)+1,3,32*4);
-            vDSP_vfill(dcolor+2,_colors+(idx*32*4*3)+2,3,32*4);
+            vDSP_vfill(dcolor,_colors+(idx*wavesize*3),3,wavesize);
+            vDSP_vfill(dcolor+1,_colors+(idx*wavesize*3)+1,3,wavesize);
+            vDSP_vfill(dcolor+2,_colors+(idx*wavesize*3)+2,3,wavesize);
         }
         
     }
@@ -360,9 +362,9 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
     for(i=0;i<_npoints;i++)
     {
         idx = _points[i];
-        vDSP_vfill(hcolor,_colors+(idx*32*4*3),3,32*4);
-        vDSP_vfill(hcolor+1,_colors+(idx*32*4*3)+1,3,32*4);
-        vDSP_vfill(hcolor+2,_colors+(idx*32*4*3)+2,3,32*4);
+        vDSP_vfill(hcolor,_colors+(idx*wavesize*3),3,wavesize);
+        vDSP_vfill(hcolor+1,_colors+(idx*wavesize*3)+1,3,wavesize);
+        vDSP_vfill(hcolor+2,_colors+(idx*wavesize*3)+2,3,wavesize);
     }
     if(highlightWaves != NULL)
     {
@@ -391,11 +393,11 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
     {
         //need to reset z-value of previously highlighted waveform
         zvalue = -1.0;
-        vDSP_vfill(&zvalue,_data+(highlightWave*32*4*3)+2,3,32*4);
+        vDSP_vfill(&zvalue,_data+(highlightWave*wavesize*3)+2,3,wavesize);
     }
     zvalue = 1.1;
     //set the z-value
-    vDSP_vfill(&zvalue,_data+(wfidx*32*4*3)+2,3,32*4);
+    vDSP_vfill(&zvalue,_data+(wfidx*wavesize*3)+2,3,wavesize);
     glUnmapBuffer(GL_ARRAY_BUFFER);
     
     glBindBuffer(GL_ARRAY_BUFFER, wfColorBuffer);
@@ -404,9 +406,9 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
     if( highlightWave >= 0 )
     {
         
-        vDSP_vfill(dcolor,_colors+(highlightWave*32*4*3),3,32*4);
-        vDSP_vfill(dcolor+1,_colors+(highlightWave*32*4*3)+1,3,32*4);
-        vDSP_vfill(dcolor+2,_colors+(highlightWave*32*4*3)+2,3,32*4);
+        vDSP_vfill(dcolor,_colors+(highlightWave*wavesize*3),3,wavesize);
+        vDSP_vfill(dcolor+1,_colors+(highlightWave*wavesize*3)+1,3,wavesize);
+        vDSP_vfill(dcolor+2,_colors+(highlightWave*wavesize*3)+2,3,wavesize);
         
     }
     //find the complement
@@ -414,9 +416,9 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
     hcolor[0] = 1.0-dcolor[0];
     hcolor[1] = 1.0-dcolor[1];
     hcolor[2] = 1.0-dcolor[2];
-    vDSP_vfill(hcolor,_colors+(wfidx*32*4*3),3,32*4);
-    vDSP_vfill(hcolor+1,_colors+(wfidx*32*4*3)+1,3,32*4);
-    vDSP_vfill(hcolor+2,_colors+(wfidx*32*4*3)+2,3,32*4);
+    vDSP_vfill(hcolor,_colors+(wfidx*wavesize*3),3,wavesize);
+    vDSP_vfill(hcolor+1,_colors+(wfidx*wavesize*3)+1,3,wavesize);
+    vDSP_vfill(hcolor+2,_colors+(wfidx*wavesize*3)+2,3,wavesize);
     free(hcolor);
     glUnmapBuffer(GL_ARRAY_BUFFER);
     
@@ -760,8 +762,8 @@ static void wfDrawAnObject()
     //drawing
 
     int i,j,k,offset;
-    int timepoints = 32;
-    int channels = 4;
+    int timepoints = timepts;
+    int channels = chs;
     NSPointArray points = malloc(timepoints*sizeof(NSPoint));
     for(i=0;i<num_spikes;i++)
     {

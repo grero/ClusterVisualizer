@@ -23,6 +23,8 @@ static unsigned int nWfVertices;
 static unsigned int nWfIndices;
 static unsigned int wavesize;
 static unsigned int waveIndexSize;
+static unsigned int chs;
+static unsigned int timepts;
 static int highlightWave;
 static BOOL wfDataloaded;
 
@@ -38,6 +40,7 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color);
     NSOpenGLPixelFormat *_pixelFormat;
     NSData *drawingColor,*highlightColor;
     NSMutableData *highlightWaves;
+    
     
 }
 

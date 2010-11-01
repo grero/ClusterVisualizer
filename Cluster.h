@@ -17,6 +17,7 @@
     NSMutableData *points;
     NSNumber *npoints;
     NSInteger active;
+    NSInteger isTemplate;
     NSData *color;
     NSMutableIndexSet *indices;
     NSInteger valid;
@@ -28,6 +29,7 @@
     NSData *ISIs;
     NSData *isiIdx;
     NSMutableData *mask;
+    NSImage *waveformsImage;
     
 
 }
@@ -35,6 +37,7 @@
 @property(retain,readwrite) NSString *name;
 @property(retain,readwrite) NSMutableData *points;
 @property(assign, readwrite) NSInteger active;
+@property(assign,readwrite) NSInteger isTemplate;
 @property(retain,readwrite) NSNumber *npoints;
 @property(retain,readwrite) NSMutableIndexSet *indices;
 @property(retain,readwrite) NSData *color;
@@ -50,10 +53,13 @@
 @property(retain,readwrite) NSNumber *isolationDistance;
 @property(retain,readwrite) NSData *isiIdx;
 @property(retain,readwrite) NSMutableData *mask;
+@property(retain,readwrite) NSImage *waveformsImage;
 
 -(void)createName;
 -(void)makeInactive;
 -(void)makeActive;
+-(void) makeTemplate;
+-(void) undoTemplate;
 
 -(void)makeInvalid;
 -(void)makeValid;

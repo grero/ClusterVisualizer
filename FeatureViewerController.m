@@ -344,6 +344,7 @@
             free(points);
             //compute ISIs; this step can run on a separate thread
             [cluster computeISIs:timestamps];
+            [cluster setIsTemplate:0];
             [cluster setActive: 1];
 
             [tempArray addObject:cluster];
@@ -358,7 +359,7 @@
         [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
         [selectClusterOption removeAllItems];
         NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",
-                                   @"Show waveforms",@"Filter clusters",@"Remove waveforms",nil];
+                                   @"Show waveforms",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",nil];
         if(timestamps!=NULL)
         {
             //only allow isi computation if timestamps are loaded
@@ -505,6 +506,24 @@
         {
             //if we are showing waveforms
             [self loadWaveforms:[notification object]];
+            //if no image has been created for this cluster,create one
+            if( [[self activeCluster] waveformsImage] == NULL )
+            {
+                //need to recreate the cluster image
+                NSBitmapImageRep *imageRep = [NSBitmapImageRep alloc];
+                int samplesPerPixel = 0;
+                //initiate drawing to bitmap
+                [[self wfv] lockFocus];
+                [imageRep initWithFocusedViewRect:[[self wfv] bounds]];
+                [[self wfv] unlockFocus];
+                NSImage *image = [[NSImage alloc] init];
+                [image addRepresentation:imageRep];
+                [[self activeCluster] setWaveformsImage:image];
+                //we don't need these anymore
+                [image release];
+                [imageRe release];
+                
+            }
         }
     }
     else {
@@ -684,6 +703,9 @@
            
             
             [[self activeCluster ] removePoints:[NSData dataWithBytes: selected length: [[fw highlightedPoints] length]]];
+            //recompute ISI
+            //TODO: Not necessary to recompute everything here
+            [[self activeCluster] computeISIs:timestamps];
             //add this point to the noise cluster
             [[Clusters objectAtIndex:0] addPoints:[fw highlightedPoints]];
             GLfloat *_color = (GLfloat*)[[[Clusters objectAtIndex:0] color] bytes];
@@ -710,7 +732,15 @@
                 [[wfv highlightWaves] setLength: 0];
             }
             [fw setNeedsDisplay:YES];
-        }   
+        }
+    }
+    else if( [selection isEqualToString:@"Make Template"] )
+    {
+        [candidates makeObjectsPerformSelector:@selector(makeTemplate)];
+    }
+    else if( [selection isEqualToString:@"Undo Template"] )
+    {
+        [candidates makeObjectsPerformSelector:@selector(undoTemplate)];
     }
         
                                                                                  
@@ -741,7 +771,7 @@
             npoints = [[cluster npoints] intValue];
             for(i=0;i<npoints;i++)
             {
-                [cluster_indices setObject: [NSNumber numberWithUnsignedInteger: (NSUInteger)clusteridx[i]] forKey:[cluster name]];
+                [cluster_indices setObject: [NSNumber numberWithUnsignedInteger: (NSUInteger)clusteridx[i]] forKey:[cluster clusterId]];
                 //[index addIndex:(NSUInteger)clusteridx[i]];
             }
         }
@@ -760,7 +790,18 @@
 
             
         }] componentsJoinedByString:@"\n"];
-        [cidx_string writeToFile:@"FeatureViewer.clusters" atomically:YES];
+        [cidx_string writeToFile:[NSString stringWithFormat: @"%@.clusters",currentBaseName] atomically:YES];
+        //now write a file containing the template clusters
+        NSArray *templates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"isTemplate==1"]];
+        NSEnumerator *templateEnumerator = [templates objectEnumerator];
+        NSMutableArray *templateIds = [NSMutableArray arrayWithCapacity:[templates count]];
+        id template;
+        while( template = [templateEnumerator nextObject] )
+        {
+            [templateIds addObject:[NSString stringWithFormat: @"%d",[[template clusterId] intValue]]];
+        }
+        NSString *templateIdStr = [templateIds componentsJoinedByString:@"\n"];
+        [templateIdStr writeToFile:[NSString stringWithFormat:@"%@.scu",currentBaseName] atomically:YES];
     }
 }
 
@@ -784,7 +825,8 @@
     //new_cluster.color[0] = cluster1.color[0];
     //new_cluster.color[0] = cluster1.color[0];
     //add the cluster to the list of clusters
-    
+    //compute ISI
+    [new_cluster computeISIs: timestamps];
     //set the valid flag of the two component clusters to 0
     //cluster1.valid = 0;
     cluster1.active = 0;
