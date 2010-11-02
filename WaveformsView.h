@@ -67,7 +67,7 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color);
 -(void) highlightWaveforms:(NSData*)wfidx;
 -(void) receiveNotification:(NSNotification*)notification;
 -(void) hideWaveforms:(NSData*)wfidx;
-
+-(NSImage*)image;
 -(void) createAxis;
 
 @end

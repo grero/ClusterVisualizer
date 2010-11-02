@@ -56,6 +56,7 @@
 -(NSArray*)ClusterOptions;
 -(void)insertObject:(NSString *)p inClusterOptionsAtIndex:(NSUInteger)index;
 -(void)removeObjectFromClusterOptionsAtIndex:(NSUInteger)index;
+-(id)objectInClustersAtIndex: (NSUInteger)index;
 
 -(void)addClusterOption:(NSString*)option;
 
