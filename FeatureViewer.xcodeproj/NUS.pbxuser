@@ -53,7 +53,7 @@
 			C7233644124E110900FC9EF6 /* FeatureView.m:265 */,
 			C7233786124E259C00FC9EF6 /* FeatureViewerAppDelegate.m:22 */,
 			C723379F124E25E600FC9EF6 /* FeatureViewerAppDelegate.m:22 */,
-			C72337FD124E4BD700FC9EF6 /* FeatureViewerController.m:930 */,
+			C72337FD124E4BD700FC9EF6 /* FeatureViewerController.m:938 */,
 			C7233823124E502900FC9EF6 /* FeatureView.m:674 */,
 			C72338AE124EDFA300FC9EF6 /* FeatureView.m:179 */,
 			C72338BC124EDFE700FC9EF6 /* FeatureView.m:189 */,
@@ -76,10 +76,10 @@
 			C78C35CD125103D7002BB91A /* FeatureView.m:195 */,
 			C78C35F812510568002BB91A /* FeatureView.m:330 */,
 			C78C373C125171DB002BB91A /* FeatureView.m:325 */,
-			C78C38C612518CBB002BB91A /* FeatureViewerController.m:660 */,
+			C78C38C612518CBB002BB91A /* FeatureViewerController.m:662 */,
 			C78C38D912518CD4002BB91A /* FeatureView.m:324 */,
 			C78C38DB12518CD7002BB91A /* FeatureView.m:329 */,
-			C78C395E1251932D002BB91A /* FeatureViewerController.m:878 */,
+			C78C395E1251932D002BB91A /* FeatureViewerController.m:886 */,
 			C78C3C3012521D27002BB91A /* FeatureViewerController.m:96 */,
 			C78C3CA11252212A002BB91A /* FeatureViewerController.m:80 */,
 			C78C3D0E1252243A002BB91A /* FeatureViewerController.m:111 */,
@@ -88,14 +88,14 @@
 			C78C3DC812524B6E002BB91A /* FeatureViewerController.m:319 */,
 			C74F2F3E1253078900CBE298 /* FeatureViewerController.m:53 */,
 			C7347E4912534FAB007278ED /* FeatureView.m:366 */,
-			C71B0D871256BD9900F594EA /* FeatureViewerController.m:829 */,
-			C71B0EC91256F1F400F594EA /* FeatureViewerController.m:854 */,
-			C71B0F351256F8DB00F594EA /* FeatureViewerController.m:669 */,
+			C71B0D871256BD9900F594EA /* FeatureViewerController.m:837 */,
+			C71B0EC91256F1F400F594EA /* FeatureViewerController.m:862 */,
+			C71B0F351256F8DB00F594EA /* FeatureViewerController.m:671 */,
 			C71B0F911256FBBE00F594EA /* FeatureView.m:463 */,
 			C71B10361257074700F594EA /* OpenPanelDelegate.m:29 */,
 			C71B117E125735C400F594EA /* FeatureViewerController.m:355 */,
-			C71B121A12573AF800F594EA /* FeatureViewerController.m:889 */,
-			C7D2828012584735007D19EA /* FeatureViewerController.m:707 */,
+			C71B121A12573AF800F594EA /* FeatureViewerController.m:897 */,
+			C7D2828012584735007D19EA /* FeatureViewerController.m:715 */,
 			C7D282F912584A36007D19EA /* FeatureViewerController.m:467 */,
 			C7D283C512584D62007D19EA /* WaveformsView.m:89 */,
 			C7D283E012584F17007D19EA /* WaveformsView.m:109 */,
@@ -124,23 +124,23 @@
 			C720C749125C9F52009BD206 /* FeatureViewerController.m:222 */,
 			C720C771125CA05E009BD206 /* FeatureViewerController.m:235 */,
 			C720C7A9125CC687009BD206 /* FeatureViewerController.m:385 */,
-			C79EA8B1125F17C30066BCAD /* FeatureViewerController.m:982 */,
+			C79EA8B1125F17C30066BCAD /* FeatureViewerController.m:990 */,
 			C79EA8F6125F19A00066BCAD /* FeatureViewerController.m:417 */,
-			C79EA92312600AB00066BCAD /* FeatureViewerController.m:953 */,
-			C79EA93612600B2B0066BCAD /* FeatureViewerController.m:969 */,
-			C79EA94F12600C3E0066BCAD /* FeatureViewerController.m:989 */,
-			C79EA9AE12602C620066BCAD /* FeatureViewerController.m:967 */,
-			C79EA9DA126034E30066BCAD /* FeatureViewerController.m:1030 */,
+			C79EA92312600AB00066BCAD /* FeatureViewerController.m:961 */,
+			C79EA93612600B2B0066BCAD /* FeatureViewerController.m:977 */,
+			C79EA94F12600C3E0066BCAD /* FeatureViewerController.m:997 */,
+			C79EA9AE12602C620066BCAD /* FeatureViewerController.m:975 */,
+			C79EA9DA126034E30066BCAD /* FeatureViewerController.m:1038 */,
 			C79EA9F11260353B0066BCAD /* Cluster.m:153 */,
 			C79EAA00126035AD0066BCAD /* Cluster.m:206 */,
 			C79EAA12126036700066BCAD /* Cluster.m:193 */,
 			C79EAA15126036CF0066BCAD /* Cluster.m:202 */,
 			C79EAA6A12603EAE0066BCAD /* Cluster.m:180 */,
 			C79EACD21260C54E0066BCAD /* Cluster.m:201 */,
-			C79EAD3B1261DD740066BCAD /* FeatureViewerController.m:984 */,
+			C79EAD3B1261DD740066BCAD /* FeatureViewerController.m:992 */,
 			C7E891F31264003A00754DF5 /* FeatureViewerController.m:431 */,
 			C75C0261126940E4000E9BA8 /* FeatureViewerController.m:546 */,
-			C75C030A12694B34000E9BA8 /* FeatureViewerController.m:1016 */,
+			C75C030A12694B34000E9BA8 /* FeatureViewerController.m:1024 */,
 			C7F2BCE01270721300233C00 /* WaveformsView.m:134 */,
 			C7F2BCF91270729C00233C00 /* WaveformsView.m:253 */,
 			C7F2BCFE127072BA00233C00 /* WaveformsView.m:256 */,
@@ -155,7 +155,7 @@
 			C7076BF31274376A00303219 /* WaveformsView.m:344 */,
 			C7076D8012746D7800303219 /* Cluster.m:280 */,
 			C7076DB31274755200303219 /* Cluster.m:287 */,
-			C7076ECE127481AE00303219 /* FeatureViewerController.m:777 */,
+			C7076ECE127481AE00303219 /* FeatureViewerController.m:785 */,
 			C728C9E81275C327001ADF09 /* WaveformsView.m:574 */,
 			C728CADB127672F1001ADF09 /* WaveformsView.m:594 */,
 			C728CAF112767369001ADF09 /* WaveformsView.m:608 */,
@@ -666,7 +666,7 @@
 		vrLen = 393;
 		vrLoc = 0;
 	};
-	C7076ECE127481AE00303219 /* FeatureViewerController.m:777 */ = {
+	C7076ECE127481AE00303219 /* FeatureViewerController.m:785 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -678,13 +678,13 @@
 		functionName = "-performClusterOption:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 777;
+		lineNumber = 785;
 		location = FeatureViewer;
 		modificationTime = 310392402.176374;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C71B0D871256BD9900F594EA /* FeatureViewerController.m:829 */ = {
+	C71B0D871256BD9900F594EA /* FeatureViewerController.m:837 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -696,13 +696,13 @@
 		functionName = "-saveClusters:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 829;
+		lineNumber = 837;
 		location = FeatureViewer;
 		modificationTime = 310392402.14285;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C71B0EC91256F1F400F594EA /* FeatureViewerController.m:854 */ = {
+	C71B0EC91256F1F400F594EA /* FeatureViewerController.m:862 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -714,13 +714,13 @@
 		functionName = "-saveClusters:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 854;
+		lineNumber = 862;
 		location = FeatureViewer;
 		modificationTime = 310392402.143186;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C71B0F351256F8DB00F594EA /* FeatureViewerController.m:669 */ = {
+	C71B0F351256F8DB00F594EA /* FeatureViewerController.m:671 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -732,7 +732,7 @@
 		functionName = "-performClusterOption:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 669;
+		lineNumber = 671;
 		location = FeatureViewer;
 		modificationTime = 310392402.143516;
 		originalNumberOfMultipleMatches = 1;
@@ -808,7 +808,7 @@
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C71B121A12573AF800F594EA /* FeatureViewerController.m:889 */ = {
+	C71B121A12573AF800F594EA /* FeatureViewerController.m:897 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -820,7 +820,7 @@
 		functionName = "-mergeCluster:withCluster:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 889;
+		lineNumber = 897;
 		location = FeatureViewer;
 		modificationTime = 310392402.144623;
 		originalNumberOfMultipleMatches = 1;
@@ -1168,7 +1168,7 @@
 			sepNavWindowFrame = "{{45, 12}, {1265, 766}}";
 		};
 	};
-	C72337FD124E4BD700FC9EF6 /* FeatureViewerController.m:930 */ = {
+	C72337FD124E4BD700FC9EF6 /* FeatureViewerController.m:938 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1180,7 +1180,7 @@
 		functionName = "-keyDown:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 930;
+		lineNumber = 938;
 		location = FeatureViewer;
 		modificationTime = 310392402.132568;
 		originalNumberOfMultipleMatches = 1;
@@ -1803,7 +1803,7 @@
 			sepNavVisRange = "{0, 356}";
 		};
 	};
-	C75C030A12694B34000E9BA8 /* FeatureViewerController.m:1016 */ = {
+	C75C030A12694B34000E9BA8 /* FeatureViewerController.m:1024 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1815,7 +1815,7 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 1016;
+		lineNumber = 1024;
 		location = FeatureViewer;
 		modificationTime = 310392402.16064;
 		originalNumberOfMultipleMatches = 1;
@@ -3895,7 +3895,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 844";
 		rLen = 0;
-		rLoc = 37800;
+		rLoc = 38138;
 		rType = 0;
 		vrLen = 2794;
 		vrLoc = 35055;
@@ -4344,7 +4344,7 @@
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C78C38C612518CBB002BB91A /* FeatureViewerController.m:660 */ = {
+	C78C38C612518CBB002BB91A /* FeatureViewerController.m:662 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4356,7 +4356,7 @@
 		functionName = "-performClusterOption:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 660;
+		lineNumber = 662;
 		location = FeatureViewer;
 		modificationTime = 310392402.139225;
 		originalNumberOfMultipleMatches = 1;
@@ -4398,7 +4398,7 @@
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C78C395E1251932D002BB91A /* FeatureViewerController.m:878 */ = {
+	C78C395E1251932D002BB91A /* FeatureViewerController.m:886 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4410,7 +4410,7 @@
 		functionName = "-mergeCluster:withCluster:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 878;
+		lineNumber = 886;
 		location = FeatureViewer;
 		modificationTime = 310392402.140012;
 		originalNumberOfMultipleMatches = 1;
@@ -4539,7 +4539,7 @@
 			sepNavWindowFrame = "{{249, 23}, {954, 740}}";
 		};
 	};
-	C79EA8B1125F17C30066BCAD /* FeatureViewerController.m:982 */ = {
+	C79EA8B1125F17C30066BCAD /* FeatureViewerController.m:990 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4551,7 +4551,7 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 982;
+		lineNumber = 990;
 		location = FeatureViewer;
 		modificationTime = 310392402.153483;
 		originalNumberOfMultipleMatches = 1;
@@ -4595,7 +4595,7 @@
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C79EA92312600AB00066BCAD /* FeatureViewerController.m:953 */ = {
+	C79EA92312600AB00066BCAD /* FeatureViewerController.m:961 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4607,13 +4607,13 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 953;
+		lineNumber = 961;
 		location = FeatureViewer;
 		modificationTime = 310392402.154306;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C79EA93612600B2B0066BCAD /* FeatureViewerController.m:969 */ = {
+	C79EA93612600B2B0066BCAD /* FeatureViewerController.m:977 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4625,13 +4625,13 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 969;
+		lineNumber = 977;
 		location = FeatureViewer;
 		modificationTime = 310392402.154674;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C79EA94F12600C3E0066BCAD /* FeatureViewerController.m:989 */ = {
+	C79EA94F12600C3E0066BCAD /* FeatureViewerController.m:997 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4643,13 +4643,13 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 989;
+		lineNumber = 997;
 		location = FeatureViewer;
 		modificationTime = 310392402.155058;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C79EA9AE12602C620066BCAD /* FeatureViewerController.m:967 */ = {
+	C79EA9AE12602C620066BCAD /* FeatureViewerController.m:975 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4661,13 +4661,13 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 967;
+		lineNumber = 975;
 		location = FeatureViewer;
 		modificationTime = 310392402.155414;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C79EA9DA126034E30066BCAD /* FeatureViewerController.m:1030 */ = {
+	C79EA9DA126034E30066BCAD /* FeatureViewerController.m:1038 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4679,7 +4679,7 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 1030;
+		lineNumber = 1038;
 		location = FeatureViewer;
 		modificationTime = 310392402.155776;
 		originalNumberOfMultipleMatches = 1;
@@ -4798,7 +4798,7 @@
 		isa = XCGDBBreakpointCondition;
 		conditionString = "x<0";
 	};
-	C79EAD3B1261DD740066BCAD /* FeatureViewerController.m:984 */ = {
+	C79EAD3B1261DD740066BCAD /* FeatureViewerController.m:992 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4811,7 +4811,7 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 984;
+		lineNumber = 992;
 		location = FeatureViewer;
 		modificationTime = 310392402.157655;
 		originalNumberOfMultipleMatches = 1;
@@ -5311,7 +5311,7 @@
 			sepNavVisRange = "{0, 208}";
 		};
 	};
-	C7D2828012584735007D19EA /* FeatureViewerController.m:707 */ = {
+	C7D2828012584735007D19EA /* FeatureViewerController.m:715 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -5323,7 +5323,7 @@
 		functionName = "-performClusterOption:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 707;
+		lineNumber = 715;
 		location = FeatureViewer;
 		modificationTime = 310392402.144986;
 		originalNumberOfMultipleMatches = 1;

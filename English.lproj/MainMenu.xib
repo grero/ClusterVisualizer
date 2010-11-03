@@ -12,12 +12,12 @@
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
+			<integer value="24"/>
+			<integer value="925"/>
+			<integer value="372"/>
 			<integer value="857"/>
 			<integer value="718"/>
 			<integer value="646"/>
-			<integer value="24"/>
-			<integer value="372"/>
-			<integer value="925"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -1918,7 +1918,7 @@
 					<object class="NSButton" id="281155523">
 						<reference key="NSNextResponder" ref="436918885"/>
 						<int key="NSvFlags">268</int>
-						<string key="NSFrame">{{13, 76}, {22, 18}}</string>
+						<string key="NSFrame">{{13, 89}, {22, 18}}</string>
 						<reference key="NSSuperview" ref="436918885"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSButtonCell" key="NSCell" id="1055539112">
@@ -1940,7 +1940,7 @@
 					<object class="NSTextField" id="582731180">
 						<reference key="NSNextResponder" ref="436918885"/>
 						<int key="NSvFlags">268</int>
-						<string key="NSFrame">{{38, 76}, {75, 17}}</string>
+						<string key="NSFrame">{{38, 89}, {75, 17}}</string>
 						<reference key="NSSuperview" ref="436918885"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="261438901">
@@ -1968,7 +1968,7 @@
 								<string>NeXT TIFF v4.0 pasteboard type</string>
 							</object>
 						</object>
-						<string key="NSFrame">{{38, 23}, {75, 48}}</string>
+						<string key="NSFrame">{{38, 17}, {108, 67}}</string>
 						<reference key="NSSuperview" ref="436918885"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSImageCell" key="NSCell" id="13236304">
@@ -1982,7 +1982,7 @@
 						<bool key="NSEditable">YES</bool>
 					</object>
 				</object>
-				<string key="NSFrameSize">{136, 112}</string>
+				<string key="NSFrameSize">{163, 125}</string>
 				<reference key="NSSuperview"/>
 			</object>
 			<object class="NSArrayController" id="915484218">
@@ -6518,9 +6518,9 @@
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
-					<string>{{369, -9}, {791, 646}}</string>
+					<string>{{365, 23}, {791, 646}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{369, -9}, {791, 646}}</string>
+					<string>{{365, 23}, {791, 646}}</string>
 					<integer value="1"/>
 					<string>{{33, 99}, {480, 360}}</string>
 					<string>{3.40282e+38, 3.40282e+38}</string>
@@ -6643,7 +6643,7 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{160, 556}, {136, 112}}</string>
+					<string>{{397, 253}, {163, 125}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>

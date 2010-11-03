@@ -657,6 +657,8 @@
     //get all selected clusters
     NSPredicate *testForTrue = [NSPredicate predicateWithFormat:@"active == YES"];
     NSArray *candidates = [Clusters filteredArrayUsingPredicate:testForTrue];
+    //set the active cluster to the first candidate
+    [self setActiveCluster:[candidates objectAtIndex:0]];
     if( [selection isEqualToString:@"Merge"] )
     {
         if( [candidates count] ==2 )
@@ -685,7 +687,13 @@
     }
     else if ( [selection isEqualToString:@"Show waveforms"] )
     {
-        [self loadWaveforms:[candidates objectAtIndex: 0]];
+        [self loadWaveforms:[self activeCluster]];
+        //make sure we also update the waverormsImage
+        if([[self activeCluster] waveformsImage] == NULL)
+        {
+            NSImage *img = [[self wfv] image];
+            [[self activeCluster] setWaveformsImage:img];
+        }
         NSInteger idx = [sender indexOfSelectedItem];
         NSString *new_selection = [selection stringByReplacingOccurrencesOfString:@"Show" withString:@"Hide"];
         [sender removeItemAtIndex:idx];

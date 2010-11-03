@@ -1,4 +1,5 @@
 implementations:
+
 - cluster merging
     - works in a certain fashion. Left to do: make system take colors from the cluster and not the initial load
 	- FIXED!
@@ -60,3 +61,4 @@ should be put into cluster 0. If deleting a cluster that was the result of some 
 
 - Implement text for axes. This is most relevant for the waveformsview, where we would like to know the amplitudes. I think the best way of doing this is to draw text into a bitmap context, and then render this bitmap as a glTexture. Use graphicsContextWithBitmapImageRep for this, then the drawAtPoint method of the NSString class
 - Implement offline drawing. Since speed is less of a concern here, I'm thinking I could do this by re-drawing the current view using quartz, on a separate thread.
+- One remaining issue now is that when the waveformsview is resized, calling the [Cluster image] method returns the image of the previously drawn cluster instead of the current cluster.
