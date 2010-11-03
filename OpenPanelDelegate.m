@@ -13,6 +13,7 @@
 
 @synthesize basePath;
 @synthesize extension;
+@synthesize extensions;
 
 -(BOOL)panel:(id)sender shouldEnableURL: (NSURL*)url
 {
@@ -25,7 +26,8 @@
     }
     else {
         //next compare the second last path component to see if its a cluster
-        if ([[fileComps objectAtIndex:1 /*[fileComps count]-2]*/] isEqualToString:extension]) 
+        //if ([[fileComps objectAtIndex:1 /*[fileComps count]-2]*/] isEqualToString:extension]) 
+        if( [extensions containsObject: [fileComps objectAtIndex:1]] )
         {
             return YES;
         }

@@ -277,90 +277,125 @@
     [openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
     //set the basePath to the current basepath so that only cluster files compatible with the currently loaded feature files are allowed
     [[openPanel delegate] setBasePath: currentBaseName];
-    [[openPanel delegate] setExtension: @"clu"];
+    [[openPanel delegate] setExtensions: [NSArray arrayWithObjects: @"clu",@"fv",nil]];
     int result = [openPanel runModal];
     if( result == NSOKButton )
     {
         [[NSNotificationCenter defaultCenter] removeObserver: self];
         //remove all the all clusters
         //[self removeAllObjectsFromClusters];
-        char *fname = [[[openPanel URL] path] cStringUsingEncoding:NSASCIIStringEncoding];
-        /*
-        header H;
-        H = *readFeatureHeader("../../test2.hdf5", &H);
-        int rows = H.rows;
-         */
-        unsigned int *cids = malloc((rows+1)*sizeof(unsigned int));
-        cids = readClusterIds(fname, cids);
-        int i;
-        NSMutableArray *tempArray = [NSMutableArray arrayWithCapacity:cids[0]];
-        //count the number of points in each cluster
-        unsigned int *npoints;
-        npoints = calloc(cids[0],sizeof(unsigned int));
-        float *cluster_colors = malloc(rows*3*sizeof(float));
-        for(i=0;i<rows;i++)
+        NSString *filename = [[openPanel URL] path];
+        NSString *extension = [[filename componentsSeparatedByString:@"."] objectAtIndex:1];
+        float *cluster_colors;
+        NSMutableArray *tempArray;
+        if( [extension isEqualToString:@"fv"] )
         {
-            npoints[cids[i+1]]+=1;
-        }
-        int j;
-        for(i=0;i<cids[0];i++)
-        {
-            Cluster *cluster = [[Cluster alloc] init];
-            cluster.clusterId = [NSNumber numberWithUnsignedInt:i];
-            //cluster.name = [NSString stringWithFormat: @"%d",i];
-            
-           
-            cluster.npoints = [NSNumber numberWithUnsignedInt: npoints[i]];
-            //cluster.name = [[[[cluster clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[cluster npoints] stringValue]];
-            [cluster createName];
-            cluster.indices = [NSMutableIndexSet indexSet];
-            cluster.valid = 1;
-            //set color
-            float color[3];
-            color[0] = ((float)rand())/RAND_MAX;
-            color[1] = ((float)rand())/RAND_MAX;
-            color[2] = ((float)rand())/RAND_MAX;
-            cluster.color = [NSData dataWithBytes: color length:3*sizeof(float)];
-            unsigned int *points = malloc(npoints[i]*sizeof(unsigned int));
-            int k = 0;
-            //use a binary mask to indicate cluster membership
-            //uint8 *_mask = calloc(rows,sizeof(uint8));
-            
-            for(j=0;j<rows;j++)
+            tempArray = [NSKeyedUnarchiver unarchiveObjectWithFile:filename];
+            //get cluster colors
+            //NSMutableData *_cluster_colors = [NSMutableData dataWithCapacity:params.rows*3*sizeof(float)];
+            cluster_colors = malloc(params.rows*3*sizeof(float));
+            id _cluster;
+            NSEnumerator *_clustersEnumerator = [tempArray objectEnumerator];
+            int i;
+            while( _cluster = [_clustersEnumerator nextObject] )
             {
-                if(cids[j+1]==i)
+                unsigned int *_points = (unsigned int*)[[_cluster points] bytes];
+                unsigned int _npoints = [[_cluster npoints] intValue];
+                float *_color = (float*)[[_cluster color] bytes];
+                for(i=0;i<_npoints;i++)
                 {
-                    points[k] = (unsigned int)j;
-                    //mask[j] = 1;
-                    k+=1;
-                    //set the colors at the same time
-                    cluster_colors[3*j] = color[0];
-                    cluster_colors[3*j+1] = color[1];
-                    cluster_colors[3*j+2] = color[2];
-                    [[cluster indices] addIndex: (NSUInteger)j];
+                    cluster_colors[3*_points[i]] = _color[0];
+                    cluster_colors[3*_points[i]+1] = _color[1];
+                    cluster_colors[3*_points[i]+2] = _color[2];
+                }
+            }
+            [tempArray makeObjectsPerformSelector:@selector(makeValid)];
+            
+        }
+        else {
+            
+        
+
+            char *fname = [filename cStringUsingEncoding:NSASCIIStringEncoding];
+            /*
+            header H;
+            H = *readFeatureHeader("../../test2.hdf5", &H);
+            int rows = H.rows;
+             */
+            unsigned int *cids = malloc((rows+1)*sizeof(unsigned int));
+            cids = readClusterIds(fname, cids);
+            int i;
+            tempArray = [NSMutableArray arrayWithCapacity:cids[0]];
+            //count the number of points in each cluster
+            unsigned int *npoints;
+            npoints = calloc(cids[0],sizeof(unsigned int));
+            cluster_colors = malloc(rows*3*sizeof(float));
+            for(i=0;i<rows;i++)
+            {
+                npoints[cids[i+1]]+=1;
+            }
+            int j;
+            for(i=0;i<cids[0];i++)
+            {
+                Cluster *cluster = [[Cluster alloc] init];
+                cluster.clusterId = [NSNumber numberWithUnsignedInt:i];
+                //cluster.name = [NSString stringWithFormat: @"%d",i];
+                
+               
+                cluster.npoints = [NSNumber numberWithUnsignedInt: npoints[i]];
+                //cluster.name = [[[[cluster clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[cluster npoints] stringValue]];
+                [cluster createName];
+                cluster.indices = [NSMutableIndexSet indexSet];
+                cluster.valid = 1;
+                //set color
+                float color[3];
+                color[0] = ((float)rand())/RAND_MAX;
+                color[1] = ((float)rand())/RAND_MAX;
+                color[2] = ((float)rand())/RAND_MAX;
+                cluster.color = [NSData dataWithBytes: color length:3*sizeof(float)];
+                unsigned int *points = malloc(npoints[i]*sizeof(unsigned int));
+                int k = 0;
+                //use a binary mask to indicate cluster membership
+                //uint8 *_mask = calloc(rows,sizeof(uint8));
+                
+                for(j=0;j<rows;j++)
+                {
+                    if(cids[j+1]==i)
+                    {
+                        points[k] = (unsigned int)j;
+                        //mask[j] = 1;
+                        k+=1;
+                        //set the colors at the same time
+                        cluster_colors[3*j] = color[0];
+                        cluster_colors[3*j+1] = color[1];
+                        cluster_colors[3*j+2] = color[2];
+                        [[cluster indices] addIndex: (NSUInteger)j];
+                        
+                    }
                     
                 }
-                
-            }
-            cluster.points = [NSMutableData dataWithBytes:points length:npoints[i]*sizeof(unsigned int)];
-            //cluster.mask = [NSMutableData dataWithBytes: _mask length: rows*sizeof(uint8)];
-            //free(_mask);
-            free(points);
-            //compute ISIs; this step can run on a separate thread
-            [cluster computeISIs:timestamps];
-            [cluster setIsTemplate:0];
-            [cluster setActive: 1];
+                cluster.points = [NSMutableData dataWithBytes:points length:npoints[i]*sizeof(unsigned int)];
+                //cluster.mask = [NSMutableData dataWithBytes: _mask length: rows*sizeof(uint8)];
+                //free(_mask);
+                free(points);
+                //compute ISIs; this step can run on a separate thread
+                [cluster computeISIs:timestamps];
+                [cluster setIsTemplate:0];
+                [cluster setActive: 1];
 
-            [tempArray addObject:cluster];
-         }
-        free(cids);
-        free(npoints);
-        //tell the view to change the colors
+                [tempArray addObject:cluster];
+             }
+            free(cids);
+            free(npoints);
+            //tell the view to change the colors
+        }
         [fw setClusterColors: cluster_colors forIndices: NULL length: 1];
         //since colors are now ccopied, we can free it
         free(cluster_colors);
         [self setClusters:tempArray];
         [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
+    
+        
         [selectClusterOption removeAllItems];
         NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",
                                    @"Show waveforms",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",nil];
@@ -369,15 +404,17 @@
             //only allow isi computation if timestamps are loaded
             [options addObject:@"Shortest ISI"];
         }
+    
         //[selectClusterOption addItemsWithTitles: [NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",
          //                                         @"Compute Isolation Distance",nil]];
         //[self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",nil]];
+        
         [allActive setState:1];
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(ClusterStateChanged:)
                                                      name:@"ClusterStateChanged" object:nil];
         //check for model file
-        NSString *modelFilePath = [[[openPanel URL] path] stringByReplacingOccurrencesOfString: @"clu" withString: @"model"];
+        NSString *modelFilePath = [filename stringByReplacingOccurrencesOfString: extension withString: @"model"];
         if ([[NSFileManager defaultManager] fileExistsAtPath: modelFilePath ] )
         {
             [self readClusterModel:modelFilePath];
@@ -399,7 +436,7 @@
         [openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
         //set the basePath to the current basepath so that only cluster files compatible with the currently loaded feature files are allowed
         [[openPanel delegate] setBasePath: currentBaseName];
-        [[openPanel delegate] setExtension: @"bin"];
+        [[openPanel delegate] setExtensions: [NSArray arrayWithObjects: @"bin",nil]];
         int result = [openPanel runModal];
         if( result == NSOKButton )
         {
@@ -519,7 +556,7 @@
             //if no image has been created for this cluster,create one
             if( [[self activeCluster] waveformsImage] == NULL )
             {
-                NSUInteger idx = [Clusters indexOfObject:[self activeCluster]];
+                //NSUInteger idx = [Clusters indexOfObject:[self activeCluster]];
                 
                 //need to recreate the cluster image
                 /*
@@ -824,6 +861,9 @@
         }
         NSString *templateIdStr = [templateIds componentsJoinedByString:@"\n"];
         [templateIdStr writeToFile:[NSString stringWithFormat:@"%@.scu",currentBaseName] atomically:YES];
+        
+        //also store the data
+        [NSKeyedArchiver archiveRootObject: [self Clusters] toFile:[NSString stringWithFormat:@"%@.fv",currentBaseName]];
     }
 }
 

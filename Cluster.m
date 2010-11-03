@@ -319,6 +319,46 @@
     
 }
 
+-(void)encodeWithCoder:(NSCoder*)coder
+{
+    //responsible for encoding this object's variables
+    [coder encodeObject:name forKey: @"ClusterName"];
+    [coder encodeObject:points forKey: @"ClusterPoints"];
+    [coder encodeObject:npoints forKey: @"ClusterNPoints"];
+    [coder encodeObject:indices forKey: @"ClusterIndices"];
+    [coder encodeObject:waveformsImage forKey: @"ClusterWaveformsImage"];
+    [coder encodeObject:clusterId forKey:@"ClusterId"];
+    [coder encodeObject:[NSNumber numberWithInt: isTemplate] forKey:@"CulsterIsTemplate"];
+    [coder encodeObject: color forKey: @"ClusterColor"];
+    [coder encodeObject: ISIs forKey: @"ClusterISIs"];
+    [coder encodeObject: isiIdx forKey:@"ClusterIsiIdx"];
+    [coder encodeObject: parents forKey:@"ClusterParents"];
+}
+
+-(id)initWithCoder:(NSCoder*)coder
+{
+    self = [super init];
+    name = [[coder decodeObjectForKey:@"ClusterName"] retain];
+    points = [[coder decodeObjectForKey:@"ClusterPoints"] retain];
+    npoints = [[coder decodeObjectForKey:@"ClusterNPoints"] retain];
+    indices = [[coder decodeObjectForKey:@"ClusterIndices"] retain];
+    waveformsImage = [[coder decodeObjectForKey:@"ClusterWaveformsImage"] retain];
+    clusterId = [[coder decodeObjectForKey:@"ClusterId"] retain];
+    isTemplate = [[coder decodeObjectForKey:@"ClusterIsTemplate"] intValue];
+    color = [[coder decodeObjectForKey:@"ClusterColor"] retain];
+    //set the textcolor
+    float *buffer = (float*)[color bytes];
+    textColor = [[NSColor colorWithCalibratedRed:buffer[0] green:buffer[1] blue:buffer[2] alpha:1.0] retain];
+    
+    ISIs = [[coder decodeObjectForKey:@"ClusterISIs"] retain];
+    isiIdx = [[coder decodeObjectForKey:@"ClusterIsiIdx"] retain];
+    parents = [[coder decodeObjectForKey:@"ClusterParents"] retain];
+    
+    return self;
+            
+             
+}
+
 
 -(void) dealloc
 {

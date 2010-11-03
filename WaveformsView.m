@@ -818,7 +818,8 @@ static void wfDrawAnObject()
     glReadPixels(0,0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, [imageRep bitmapData]);
     image = [[[NSImage alloc] initWithSize:NSMakeSize(width, height)] autorelease];
     [image addRepresentation:imageRep];
-    [image lockFocusOnRepresentation:imageRep];
+    [image lockFocusFlipped:YES];
+    [imageRep drawInRect:NSMakeRect(0,0,[image size].width, [image size].height)];
     [image unlockFocus];
     return image;
 }

@@ -18,8 +18,10 @@
 
     NSString *basePath;
     NSString *extension;
+    NSArray *extensions;
 }
 @property(retain,readwrite) NSString *basePath;
 @property(retain,readwrite) NSString *extension;
+@property(retain,readwrite) NSArray *extensions;
 
 @end

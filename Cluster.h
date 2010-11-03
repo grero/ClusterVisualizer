@@ -68,4 +68,8 @@
 -(void)computeIsolationDistance:(NSData*)data;
 -(void)removePoints:(NSData*)rpoints;
 -(void)addPoints:(NSData*)rpoints;
+
+//encoding
+-(void)encodeWithCoder:(NSCoder*)coder;
+-(id)initWithCoder:(NSCoder*)coder;
 @end
