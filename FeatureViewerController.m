@@ -421,7 +421,10 @@
             [options addObject: @"Compute Isolation Distance"];
         }
         [selectClusterOption addItemsWithTitles:options];
+        //once we have loaded the clusters, start up a timer that will ensure that data gets arhived automatically every 5 minutes
+        archiveTimer = [NSTimer scheduledTimerWithTimeInterval:300 target:self selector:@selector(archiveClusters) userInfo:nil repeats: YES];
     }
+
                                                        
 }
 
@@ -863,7 +866,8 @@
         [templateIdStr writeToFile:[NSString stringWithFormat:@"%@.scu",currentBaseName] atomically:YES];
         
         //also store the data
-        [NSKeyedArchiver archiveRootObject: [self Clusters] toFile:[NSString stringWithFormat:@"%@.fv",currentBaseName]];
+        
+        [self archiveClusters];
     }
 }
 
@@ -1030,6 +1034,15 @@
     //clusterModel = [[NSArray arrayWithArray:clusterParams] retain];
     
 
+}
+
+-(void)archiveClusters
+{
+    //archive on a separate thread
+    NSBlockOperation *op = [NSBlockOperation blockOperationWithBlock:^{
+                            [NSKeyedArchiver archiveRootObject: [self Clusters] toFile:[NSString stringWithFormat:@"%@.fv",currentBaseName]];
+    }];
+    [queue addOperation:op];
 }
 
 -(void)dealloc

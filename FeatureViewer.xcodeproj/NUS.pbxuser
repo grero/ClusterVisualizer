@@ -53,33 +53,33 @@
 			C7233644124E110900FC9EF6 /* FeatureView.m:265 */,
 			C7233786124E259C00FC9EF6 /* FeatureViewerAppDelegate.m:22 */,
 			C723379F124E25E600FC9EF6 /* FeatureViewerAppDelegate.m:22 */,
-			C72337FD124E4BD700FC9EF6 /* FeatureViewerController.m:926 */,
+			C72337FD124E4BD700FC9EF6 /* FeatureViewerController.m:930 */,
 			C7233823124E502900FC9EF6 /* FeatureView.m:674 */,
 			C72338AE124EDFA300FC9EF6 /* FeatureView.m:179 */,
 			C72338BC124EDFE700FC9EF6 /* FeatureView.m:189 */,
 			C72339B8124EF1DF00FC9EF6 /* FeatureViewerController.m:338 */,
 			C72339EE124EF35800FC9EF6 /* FeatureViewerController.m:32 */,
-			C7233A07124EF38F00FC9EF6 /* FeatureViewerController.m:495 */,
+			C7233A07124EF38F00FC9EF6 /* FeatureViewerController.m:498 */,
 			C7233A40124EF52B00FC9EF6 /* FeatureViewerController.m:394 */,
 			C7233BD4124F17AE00FC9EF6 /* FeatureViewerController.m:332 */,
 			C7233D3D124F248000FC9EF6 /* FeatureView.m:303 */,
 			C7233E5E124F334400FC9EF6 /* FeatureView.m:296 */,
-			C7233E73124F33A000FC9EF6 /* FeatureViewerController.m:548 */,
+			C7233E73124F33A000FC9EF6 /* FeatureViewerController.m:551 */,
 			C7233E9A124F349700FC9EF6 /* FeatureViewerController.m:356 */,
 			C7233F19124F49AE00FC9EF6 /* FeatureViewerController.m:344 */,
 			C7233F77124F4B1F00FC9EF6 /* Cluster.m:37 */,
 			C7233FBB124F53E000FC9EF6 /* FeatureView.m:362 */,
 			C7233FD1124F54E800FC9EF6 /* FeatureView.m:315 */,
-			C723408F124F77EA00FC9EF6 /* FeatureViewerController.m:632 */,
+			C723408F124F77EA00FC9EF6 /* FeatureViewerController.m:635 */,
 			C72340DB124F79BE00FC9EF6 /* FeatureViewerController.m:252 */,
 			C72340DD124F79C000FC9EF6 /* FeatureViewerController.m:259 */,
 			C78C35CD125103D7002BB91A /* FeatureView.m:195 */,
 			C78C35F812510568002BB91A /* FeatureView.m:330 */,
 			C78C373C125171DB002BB91A /* FeatureView.m:325 */,
-			C78C38C612518CBB002BB91A /* FeatureViewerController.m:657 */,
+			C78C38C612518CBB002BB91A /* FeatureViewerController.m:660 */,
 			C78C38D912518CD4002BB91A /* FeatureView.m:324 */,
 			C78C38DB12518CD7002BB91A /* FeatureView.m:329 */,
-			C78C395E1251932D002BB91A /* FeatureViewerController.m:874 */,
+			C78C395E1251932D002BB91A /* FeatureViewerController.m:878 */,
 			C78C3C3012521D27002BB91A /* FeatureViewerController.m:96 */,
 			C78C3CA11252212A002BB91A /* FeatureViewerController.m:80 */,
 			C78C3D0E1252243A002BB91A /* FeatureViewerController.m:111 */,
@@ -88,18 +88,18 @@
 			C78C3DC812524B6E002BB91A /* FeatureViewerController.m:319 */,
 			C74F2F3E1253078900CBE298 /* FeatureViewerController.m:53 */,
 			C7347E4912534FAB007278ED /* FeatureView.m:366 */,
-			C71B0D871256BD9900F594EA /* FeatureViewerController.m:826 */,
-			C71B0EC91256F1F400F594EA /* FeatureViewerController.m:851 */,
-			C71B0F351256F8DB00F594EA /* FeatureViewerController.m:666 */,
+			C71B0D871256BD9900F594EA /* FeatureViewerController.m:829 */,
+			C71B0EC91256F1F400F594EA /* FeatureViewerController.m:854 */,
+			C71B0F351256F8DB00F594EA /* FeatureViewerController.m:669 */,
 			C71B0F911256FBBE00F594EA /* FeatureView.m:463 */,
 			C71B10361257074700F594EA /* OpenPanelDelegate.m:29 */,
 			C71B117E125735C400F594EA /* FeatureViewerController.m:355 */,
-			C71B121A12573AF800F594EA /* FeatureViewerController.m:885 */,
-			C7D2828012584735007D19EA /* FeatureViewerController.m:704 */,
-			C7D282F912584A36007D19EA /* FeatureViewerController.m:464 */,
+			C71B121A12573AF800F594EA /* FeatureViewerController.m:889 */,
+			C7D2828012584735007D19EA /* FeatureViewerController.m:707 */,
+			C7D282F912584A36007D19EA /* FeatureViewerController.m:467 */,
 			C7D283C512584D62007D19EA /* WaveformsView.m:89 */,
 			C7D283E012584F17007D19EA /* WaveformsView.m:109 */,
-			C7D2847712585515007D19EA /* FeatureViewerController.m:484 */,
+			C7D2847712585515007D19EA /* FeatureViewerController.m:487 */,
 			C7D2859B12585F6A007D19EA /* WaveformsView.m:199 */,
 			C7D285C612585FC6007D19EA /* WaveformsView.m:197 */,
 			C7D285DD12586005007D19EA /* WaveformsView.m:151 */,
@@ -120,32 +120,32 @@
 			C7509782125B2D9C00243EFC /* FeatureViewerController.m:139 */,
 			C7509787125B2DEB00243EFC /* FeatureViewerController.m:211 */,
 			C750978A125B2E0700243EFC /* FeatureView.m:232 */,
-			C7AEFF9A125B8691007F5D43 /* FeatureViewerController.m:601 */,
+			C7AEFF9A125B8691007F5D43 /* FeatureViewerController.m:604 */,
 			C720C749125C9F52009BD206 /* FeatureViewerController.m:222 */,
 			C720C771125CA05E009BD206 /* FeatureViewerController.m:235 */,
 			C720C7A9125CC687009BD206 /* FeatureViewerController.m:385 */,
-			C79EA8B1125F17C30066BCAD /* FeatureViewerController.m:978 */,
+			C79EA8B1125F17C30066BCAD /* FeatureViewerController.m:982 */,
 			C79EA8F6125F19A00066BCAD /* FeatureViewerController.m:417 */,
-			C79EA92312600AB00066BCAD /* FeatureViewerController.m:949 */,
-			C79EA93612600B2B0066BCAD /* FeatureViewerController.m:965 */,
-			C79EA94F12600C3E0066BCAD /* FeatureViewerController.m:985 */,
-			C79EA9AE12602C620066BCAD /* FeatureViewerController.m:963 */,
-			C79EA9DA126034E30066BCAD /* FeatureViewerController.m:1026 */,
+			C79EA92312600AB00066BCAD /* FeatureViewerController.m:953 */,
+			C79EA93612600B2B0066BCAD /* FeatureViewerController.m:969 */,
+			C79EA94F12600C3E0066BCAD /* FeatureViewerController.m:989 */,
+			C79EA9AE12602C620066BCAD /* FeatureViewerController.m:967 */,
+			C79EA9DA126034E30066BCAD /* FeatureViewerController.m:1030 */,
 			C79EA9F11260353B0066BCAD /* Cluster.m:153 */,
 			C79EAA00126035AD0066BCAD /* Cluster.m:206 */,
 			C79EAA12126036700066BCAD /* Cluster.m:193 */,
 			C79EAA15126036CF0066BCAD /* Cluster.m:202 */,
 			C79EAA6A12603EAE0066BCAD /* Cluster.m:180 */,
 			C79EACD21260C54E0066BCAD /* Cluster.m:201 */,
-			C79EAD3B1261DD740066BCAD /* FeatureViewerController.m:980 */,
-			C7E891F31264003A00754DF5 /* FeatureViewerController.m:428 */,
-			C75C0261126940E4000E9BA8 /* FeatureViewerController.m:543 */,
-			C75C030A12694B34000E9BA8 /* FeatureViewerController.m:1012 */,
+			C79EAD3B1261DD740066BCAD /* FeatureViewerController.m:984 */,
+			C7E891F31264003A00754DF5 /* FeatureViewerController.m:431 */,
+			C75C0261126940E4000E9BA8 /* FeatureViewerController.m:546 */,
+			C75C030A12694B34000E9BA8 /* FeatureViewerController.m:1016 */,
 			C7F2BCE01270721300233C00 /* WaveformsView.m:134 */,
 			C7F2BCF91270729C00233C00 /* WaveformsView.m:253 */,
 			C7F2BCFE127072BA00233C00 /* WaveformsView.m:256 */,
 			C7F2BD6A12708E2A00233C00 /* FeatureView.m:223 */,
-			C7F2BE3D12712E3200233C00 /* FeatureViewerController.m:461 */,
+			C7F2BE3D12712E3200233C00 /* FeatureViewerController.m:464 */,
 			C7F2C0021271855600233C00 /* WaveformsView.m:554 */,
 			C7F2C0901271DCDA00233C00 /* WaveformsView.m:156 */,
 			C7F2C0E01271EB3C00233C00 /* WaveformsView.m:521 */,
@@ -155,13 +155,13 @@
 			C7076BF31274376A00303219 /* WaveformsView.m:344 */,
 			C7076D8012746D7800303219 /* Cluster.m:280 */,
 			C7076DB31274755200303219 /* Cluster.m:287 */,
-			C7076ECE127481AE00303219 /* FeatureViewerController.m:774 */,
+			C7076ECE127481AE00303219 /* FeatureViewerController.m:777 */,
 			C728C9E81275C327001ADF09 /* WaveformsView.m:574 */,
 			C728CADB127672F1001ADF09 /* WaveformsView.m:594 */,
 			C728CAF112767369001ADF09 /* WaveformsView.m:608 */,
 			C7E111DC1276F1050058B6A8 /* FeatureViewerController.m:160 */,
-			C79F73E1127FA55300A51CA1 /* FeatureViewerController.m:557 */,
-			C77460BE12802CD300DE40C2 /* FeatureViewerController.m:576 */,
+			C79F73E1127FA55300A51CA1 /* FeatureViewerController.m:560 */,
+			C77460BE12802CD300DE40C2 /* FeatureViewerController.m:579 */,
 			C77461431280364E00DE40C2 /* FeatureViewerController.m:265 */,
 		);
 		codeSenseManager = C76101A5124C5EDF00B6210B /* Code sense */;
@@ -666,7 +666,7 @@
 		vrLen = 393;
 		vrLoc = 0;
 	};
-	C7076ECE127481AE00303219 /* FeatureViewerController.m:774 */ = {
+	C7076ECE127481AE00303219 /* FeatureViewerController.m:777 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -678,13 +678,13 @@
 		functionName = "-performClusterOption:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 774;
+		lineNumber = 777;
 		location = FeatureViewer;
 		modificationTime = 310392402.176374;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C71B0D871256BD9900F594EA /* FeatureViewerController.m:826 */ = {
+	C71B0D871256BD9900F594EA /* FeatureViewerController.m:829 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -696,13 +696,13 @@
 		functionName = "-saveClusters:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 826;
+		lineNumber = 829;
 		location = FeatureViewer;
 		modificationTime = 310392402.14285;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C71B0EC91256F1F400F594EA /* FeatureViewerController.m:851 */ = {
+	C71B0EC91256F1F400F594EA /* FeatureViewerController.m:854 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -714,13 +714,13 @@
 		functionName = "-saveClusters:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 851;
+		lineNumber = 854;
 		location = FeatureViewer;
 		modificationTime = 310392402.143186;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C71B0F351256F8DB00F594EA /* FeatureViewerController.m:666 */ = {
+	C71B0F351256F8DB00F594EA /* FeatureViewerController.m:669 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -732,7 +732,7 @@
 		functionName = "-performClusterOption:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 666;
+		lineNumber = 669;
 		location = FeatureViewer;
 		modificationTime = 310392402.143516;
 		originalNumberOfMultipleMatches = 1;
@@ -808,7 +808,7 @@
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C71B121A12573AF800F594EA /* FeatureViewerController.m:885 */ = {
+	C71B121A12573AF800F594EA /* FeatureViewerController.m:889 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -820,7 +820,7 @@
 		functionName = "-mergeCluster:withCluster:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 885;
+		lineNumber = 889;
 		location = FeatureViewer;
 		modificationTime = 310392402.144623;
 		originalNumberOfMultipleMatches = 1;
@@ -1168,7 +1168,7 @@
 			sepNavWindowFrame = "{{45, 12}, {1265, 766}}";
 		};
 	};
-	C72337FD124E4BD700FC9EF6 /* FeatureViewerController.m:926 */ = {
+	C72337FD124E4BD700FC9EF6 /* FeatureViewerController.m:930 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1180,7 +1180,7 @@
 		functionName = "-keyDown:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 926;
+		lineNumber = 930;
 		location = FeatureViewer;
 		modificationTime = 310392402.132568;
 		originalNumberOfMultipleMatches = 1;
@@ -1302,7 +1302,7 @@
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C7233A07124EF38F00FC9EF6 /* FeatureViewerController.m:495 */ = {
+	C7233A07124EF38F00FC9EF6 /* FeatureViewerController.m:498 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1314,7 +1314,7 @@
 		functionName = "-insertObject:inClustersAtIndex:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 495;
+		lineNumber = 498;
 		location = FeatureViewer;
 		modificationTime = 310392402.134271;
 		originalNumberOfMultipleMatches = 1;
@@ -1392,7 +1392,7 @@
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C7233E73124F33A000FC9EF6 /* FeatureViewerController.m:548 */ = {
+	C7233E73124F33A000FC9EF6 /* FeatureViewerController.m:551 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1404,7 +1404,7 @@
 		functionName = "-ClusterStateChanged:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 548;
+		lineNumber = 551;
 		location = FeatureViewer;
 		modificationTime = 310392402.135778;
 		originalNumberOfMultipleMatches = 1;
@@ -1500,7 +1500,7 @@
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C723408F124F77EA00FC9EF6 /* FeatureViewerController.m:632 */ = {
+	C723408F124F77EA00FC9EF6 /* FeatureViewerController.m:635 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1512,7 +1512,7 @@
 		functionName = "-changeAllClusters:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 632;
+		lineNumber = 635;
 		location = FeatureViewer;
 		modificationTime = 310392402.137494;
 		originalNumberOfMultipleMatches = 1;
@@ -1771,7 +1771,7 @@
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C75C0261126940E4000E9BA8 /* FeatureViewerController.m:543 */ = {
+	C75C0261126940E4000E9BA8 /* FeatureViewerController.m:546 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1783,7 +1783,7 @@
 		functionName = "-addClusterOption:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 543;
+		lineNumber = 546;
 		location = FeatureViewer;
 		modificationTime = 310392402.160121;
 		originalNumberOfMultipleMatches = 1;
@@ -1803,7 +1803,7 @@
 			sepNavVisRange = "{0, 356}";
 		};
 	};
-	C75C030A12694B34000E9BA8 /* FeatureViewerController.m:1012 */ = {
+	C75C030A12694B34000E9BA8 /* FeatureViewerController.m:1016 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -1815,7 +1815,7 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 1012;
+		lineNumber = 1016;
 		location = FeatureViewer;
 		modificationTime = 310392402.16064;
 		originalNumberOfMultipleMatches = 1;
@@ -1942,7 +1942,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 450";
 		rLen = 0;
-		rLoc = 20976;
+		rLoc = 21251;
 		rType = 0;
 		vrLen = 1024;
 		vrLoc = 18843;
@@ -1952,7 +1952,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 2096;
 		vrLoc = 1136;
@@ -2032,7 +2032,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 530";
 		rLen = 0;
-		rLoc = 23270;
+		rLoc = 23545;
 		rType = 0;
 		vrLen = 1704;
 		vrLoc = 20000;
@@ -2042,7 +2042,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 1953;
 		vrLoc = 1136;
@@ -2122,7 +2122,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 536";
 		rLen = 0;
-		rLoc = 23909;
+		rLoc = 24184;
 		rType = 0;
 		vrLen = 2481;
 		vrLoc = 21628;
@@ -2132,7 +2132,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 1953;
 		vrLoc = 1136;
@@ -2212,7 +2212,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 536";
 		rLen = 0;
-		rLoc = 23909;
+		rLoc = 24184;
 		rType = 0;
 		vrLen = 2481;
 		vrLoc = 21628;
@@ -2222,7 +2222,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 1953;
 		vrLoc = 1136;
@@ -2302,7 +2302,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 536";
 		rLen = 0;
-		rLoc = 23909;
+		rLoc = 24184;
 		rType = 0;
 		vrLen = 2481;
 		vrLoc = 21628;
@@ -2312,7 +2312,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 1953;
 		vrLoc = 1136;
@@ -2392,7 +2392,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 536";
 		rLen = 0;
-		rLoc = 23909;
+		rLoc = 24184;
 		rType = 0;
 		vrLen = 2552;
 		vrLoc = 21628;
@@ -2402,7 +2402,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 2096;
 		vrLoc = 1136;
@@ -2482,7 +2482,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 536";
 		rLen = 0;
-		rLoc = 23909;
+		rLoc = 24184;
 		rType = 0;
 		vrLen = 2481;
 		vrLoc = 21628;
@@ -2492,7 +2492,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 1953;
 		vrLoc = 1136;
@@ -2572,7 +2572,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 536";
 		rLen = 0;
-		rLoc = 23909;
+		rLoc = 24184;
 		rType = 0;
 		vrLen = 2552;
 		vrLoc = 21628;
@@ -2582,7 +2582,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 2096;
 		vrLoc = 1136;
@@ -2662,7 +2662,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 536";
 		rLen = 0;
-		rLoc = 23909;
+		rLoc = 24184;
 		rType = 0;
 		vrLen = 2481;
 		vrLoc = 21628;
@@ -2672,7 +2672,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 1953;
 		vrLoc = 1136;
@@ -2743,7 +2743,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		fallbackIsa = XCBuildMessageTextBookmark;
 		rLen = 1;
-		rLoc = 575;
+		rLoc = 578;
 		rType = 1;
 	};
 	C774609F12802A7B00DE40C2 /* PBXTextBookmark */ = {
@@ -2762,7 +2762,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		fallbackIsa = XCBuildMessageTextBookmark;
 		rLen = 1;
-		rLoc = 575;
+		rLoc = 578;
 		rType = 1;
 	};
 	C77460A112802A7B00DE40C2 /* PBXTextBookmark */ = {
@@ -2770,7 +2770,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 534";
 		rLen = 0;
-		rLoc = 23470;
+		rLoc = 23745;
 		rType = 0;
 		vrLen = 1209;
 		vrLoc = 20563;
@@ -2780,7 +2780,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 533";
 		rLen = 0;
-		rLoc = 23436;
+		rLoc = 23711;
 		rType = 0;
 		vrLen = 1818;
 		vrLoc = 20257;
@@ -2790,7 +2790,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 1953;
 		vrLoc = 1136;
@@ -2860,7 +2860,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 534";
 		rLen = 0;
-		rLoc = 23470;
+		rLoc = 23745;
 		rType = 0;
 		vrLen = 1225;
 		vrLoc = 20563;
@@ -2870,7 +2870,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 534";
 		rLen = 0;
-		rLoc = 23535;
+		rLoc = 23810;
 		rType = 0;
 		vrLen = 1834;
 		vrLoc = 20257;
@@ -2880,7 +2880,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 1953;
 		vrLoc = 1136;
@@ -2945,7 +2945,7 @@
 		vrLen = 1267;
 		vrLoc = 13753;
 	};
-	C77460BE12802CD300DE40C2 /* FeatureViewerController.m:576 */ = {
+	C77460BE12802CD300DE40C2 /* FeatureViewerController.m:579 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -2957,7 +2957,7 @@
 		functionName = "-ClusterStateChanged:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 576;
+		lineNumber = 579;
 		location = FeatureViewer;
 		modificationTime = 310392405.813898;
 		originalNumberOfMultipleMatches = 1;
@@ -2968,7 +2968,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 534";
 		rLen = 0;
-		rLoc = 23470;
+		rLoc = 23745;
 		rType = 0;
 		vrLen = 1225;
 		vrLoc = 20563;
@@ -2978,7 +2978,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 530";
 		rLen = 0;
-		rLoc = 23329;
+		rLoc = 23604;
 		rType = 0;
 		vrLen = 1758;
 		vrLoc = 20255;
@@ -2988,7 +2988,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 530";
 		rLen = 0;
-		rLoc = 23329;
+		rLoc = 23604;
 		rType = 0;
 		vrLen = 1758;
 		vrLoc = 20255;
@@ -2998,7 +2998,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 1953;
 		vrLoc = 1136;
@@ -3068,7 +3068,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 534";
 		rLen = 0;
-		rLoc = 23470;
+		rLoc = 23745;
 		rType = 0;
 		vrLen = 1225;
 		vrLoc = 20563;
@@ -3078,7 +3078,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 530";
 		rLen = 0;
-		rLoc = 23329;
+		rLoc = 23604;
 		rType = 0;
 		vrLen = 1758;
 		vrLoc = 20255;
@@ -3088,7 +3088,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 1953;
 		vrLoc = 1136;
@@ -3158,7 +3158,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 535";
 		rLen = 0;
-		rLoc = 23470;
+		rLoc = 23745;
 		rType = 0;
 		vrLen = 1235;
 		vrLoc = 20563;
@@ -3168,7 +3168,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 541";
 		rLen = 0;
-		rLoc = 23868;
+		rLoc = 24143;
 		rType = 0;
 		vrLen = 1895;
 		vrLoc = 20204;
@@ -3198,7 +3198,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 1953;
 		vrLoc = 1136;
@@ -3248,7 +3248,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 535";
 		rLen = 0;
-		rLoc = 23470;
+		rLoc = 23745;
 		rType = 0;
 		vrLen = 1235;
 		vrLoc = 20563;
@@ -3268,7 +3268,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 542";
 		rLen = 0;
-		rLoc = 23868;
+		rLoc = 24143;
 		rType = 0;
 		vrLen = 1946;
 		vrLoc = 20204;
@@ -3298,7 +3298,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 1953;
 		vrLoc = 1136;
@@ -3338,7 +3338,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 535";
 		rLen = 0;
-		rLoc = 23470;
+		rLoc = 23745;
 		rType = 0;
 		vrLen = 1235;
 		vrLoc = 20563;
@@ -3358,7 +3358,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 542";
 		rLen = 0;
-		rLoc = 23868;
+		rLoc = 24143;
 		rType = 0;
 		vrLen = 1946;
 		vrLoc = 20204;
@@ -3388,7 +3388,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 1953;
 		vrLoc = 1136;
@@ -3428,7 +3428,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 535";
 		rLen = 0;
-		rLoc = 23470;
+		rLoc = 23745;
 		rType = 0;
 		vrLen = 1235;
 		vrLoc = 20563;
@@ -3448,7 +3448,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 542";
 		rLen = 0;
-		rLoc = 23868;
+		rLoc = 24143;
 		rType = 0;
 		vrLen = 1950;
 		vrLoc = 20204;
@@ -3478,7 +3478,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 59";
 		rLen = 47;
-		rLoc = 1761;
+		rLoc = 1788;
 		rType = 0;
 		vrLen = 1953;
 		vrLoc = 1136;
@@ -3518,7 +3518,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 539";
 		rLen = 0;
-		rLoc = 23470;
+		rLoc = 23745;
 		rType = 0;
 		vrLen = 1257;
 		vrLoc = 20611;
@@ -3538,7 +3538,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 50";
 		rLen = 0;
-		rLoc = 1483;
+		rLoc = 1510;
 		rType = 0;
 		vrLen = 1891;
 		vrLoc = 1010;
@@ -3626,7 +3626,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 539";
 		rLen = 0;
-		rLoc = 23470;
+		rLoc = 23745;
 		rType = 0;
 		vrLen = 1257;
 		vrLoc = 20611;
@@ -3656,7 +3656,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 50";
 		rLen = 0;
-		rLoc = 1483;
+		rLoc = 1510;
 		rType = 0;
 		vrLen = 1891;
 		vrLoc = 1010;
@@ -3735,7 +3735,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 539";
 		rLen = 0;
-		rLoc = 23470;
+		rLoc = 23745;
 		rType = 0;
 		vrLen = 1279;
 		vrLoc = 20611;
@@ -3805,7 +3805,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 50";
 		rLen = 0;
-		rLoc = 1469;
+		rLoc = 1496;
 		rType = 0;
 		vrLen = 1773;
 		vrLoc = 793;
@@ -3895,7 +3895,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 844";
 		rLen = 0;
-		rLoc = 37606;
+		rLoc = 37800;
 		rType = 0;
 		vrLen = 2794;
 		vrLoc = 35055;
@@ -3925,7 +3925,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 50";
 		rLen = 0;
-		rLoc = 1469;
+		rLoc = 1496;
 		rType = 0;
 		vrLen = 1773;
 		vrLoc = 793;
@@ -4035,7 +4035,7 @@
 		fRef = C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */;
 		name = "FeatureViewerController.h: 50";
 		rLen = 0;
-		rLoc = 1469;
+		rLoc = 1496;
 		rType = 0;
 		vrLen = 1773;
 		vrLoc = 793;
@@ -4344,7 +4344,7 @@
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C78C38C612518CBB002BB91A /* FeatureViewerController.m:657 */ = {
+	C78C38C612518CBB002BB91A /* FeatureViewerController.m:660 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4356,7 +4356,7 @@
 		functionName = "-performClusterOption:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 657;
+		lineNumber = 660;
 		location = FeatureViewer;
 		modificationTime = 310392402.139225;
 		originalNumberOfMultipleMatches = 1;
@@ -4398,7 +4398,7 @@
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C78C395E1251932D002BB91A /* FeatureViewerController.m:874 */ = {
+	C78C395E1251932D002BB91A /* FeatureViewerController.m:878 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4410,7 +4410,7 @@
 		functionName = "-mergeCluster:withCluster:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 874;
+		lineNumber = 878;
 		location = FeatureViewer;
 		modificationTime = 310392402.140012;
 		originalNumberOfMultipleMatches = 1;
@@ -4539,7 +4539,7 @@
 			sepNavWindowFrame = "{{249, 23}, {954, 740}}";
 		};
 	};
-	C79EA8B1125F17C30066BCAD /* FeatureViewerController.m:978 */ = {
+	C79EA8B1125F17C30066BCAD /* FeatureViewerController.m:982 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4551,7 +4551,7 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 978;
+		lineNumber = 982;
 		location = FeatureViewer;
 		modificationTime = 310392402.153483;
 		originalNumberOfMultipleMatches = 1;
@@ -4595,7 +4595,7 @@
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C79EA92312600AB00066BCAD /* FeatureViewerController.m:949 */ = {
+	C79EA92312600AB00066BCAD /* FeatureViewerController.m:953 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4607,13 +4607,13 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 949;
+		lineNumber = 953;
 		location = FeatureViewer;
 		modificationTime = 310392402.154306;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C79EA93612600B2B0066BCAD /* FeatureViewerController.m:965 */ = {
+	C79EA93612600B2B0066BCAD /* FeatureViewerController.m:969 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4625,13 +4625,13 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 965;
+		lineNumber = 969;
 		location = FeatureViewer;
 		modificationTime = 310392402.154674;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C79EA94F12600C3E0066BCAD /* FeatureViewerController.m:985 */ = {
+	C79EA94F12600C3E0066BCAD /* FeatureViewerController.m:989 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4643,13 +4643,13 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 985;
+		lineNumber = 989;
 		location = FeatureViewer;
 		modificationTime = 310392402.155058;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C79EA9AE12602C620066BCAD /* FeatureViewerController.m:963 */ = {
+	C79EA9AE12602C620066BCAD /* FeatureViewerController.m:967 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4661,13 +4661,13 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 963;
+		lineNumber = 967;
 		location = FeatureViewer;
 		modificationTime = 310392402.155414;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C79EA9DA126034E30066BCAD /* FeatureViewerController.m:1026 */ = {
+	C79EA9DA126034E30066BCAD /* FeatureViewerController.m:1030 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4679,7 +4679,7 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 1026;
+		lineNumber = 1030;
 		location = FeatureViewer;
 		modificationTime = 310392402.155776;
 		originalNumberOfMultipleMatches = 1;
@@ -4798,7 +4798,7 @@
 		isa = XCGDBBreakpointCondition;
 		conditionString = "x<0";
 	};
-	C79EAD3B1261DD740066BCAD /* FeatureViewerController.m:980 */ = {
+	C79EAD3B1261DD740066BCAD /* FeatureViewerController.m:984 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4811,7 +4811,7 @@
 		functionName = "-readClusterModel:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 980;
+		lineNumber = 984;
 		location = FeatureViewer;
 		modificationTime = 310392402.157655;
 		originalNumberOfMultipleMatches = 1;
@@ -4831,7 +4831,7 @@
 		vrLen = 499;
 		vrLoc = 346;
 	};
-	C79F73E1127FA55300A51CA1 /* FeatureViewerController.m:557 */ = {
+	C79F73E1127FA55300A51CA1 /* FeatureViewerController.m:560 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4843,7 +4843,7 @@
 		functionName = "-ClusterStateChanged:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 557;
+		lineNumber = 560;
 		location = FeatureViewer;
 		modificationTime = 310392405.678707;
 		originalNumberOfMultipleMatches = 1;
@@ -4854,7 +4854,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 517";
 		rLen = 0;
-		rLoc = 23005;
+		rLoc = 23280;
 		rType = 0;
 		vrLen = 2280;
 		vrLoc = 20103;
@@ -4894,7 +4894,7 @@
 		fRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */;
 		name = "FeatureViewerController.m: 507";
 		rLen = 0;
-		rLoc = 22388;
+		rLoc = 22663;
 		rType = 0;
 		vrLen = 2662;
 		vrLoc = 20257;
@@ -4979,7 +4979,7 @@
 		vrLen = 616;
 		vrLoc = 0;
 	};
-	C7AEFF9A125B8691007F5D43 /* FeatureViewerController.m:601 */ = {
+	C7AEFF9A125B8691007F5D43 /* FeatureViewerController.m:604 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -4991,7 +4991,7 @@
 		functionName = "-setFilterClustersPredicate:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 601;
+		lineNumber = 604;
 		location = FeatureViewer;
 		modificationTime = 310392402.151989;
 		originalNumberOfMultipleMatches = 1;
@@ -5311,7 +5311,7 @@
 			sepNavVisRange = "{0, 208}";
 		};
 	};
-	C7D2828012584735007D19EA /* FeatureViewerController.m:704 */ = {
+	C7D2828012584735007D19EA /* FeatureViewerController.m:707 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -5323,13 +5323,13 @@
 		functionName = "-performClusterOption:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 704;
+		lineNumber = 707;
 		location = FeatureViewer;
 		modificationTime = 310392402.144986;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C7D282F912584A36007D19EA /* FeatureViewerController.m:464 */ = {
+	C7D282F912584A36007D19EA /* FeatureViewerController.m:467 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -5341,7 +5341,7 @@
 		functionName = "-loadWaveforms:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 464;
+		lineNumber = 467;
 		location = FeatureViewer;
 		modificationTime = 310392402.145333;
 		originalNumberOfMultipleMatches = 1;
@@ -5383,7 +5383,7 @@
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C7D2847712585515007D19EA /* FeatureViewerController.m:484 */ = {
+	C7D2847712585515007D19EA /* FeatureViewerController.m:487 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -5395,7 +5395,7 @@
 		functionName = "-loadWaveforms:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 484;
+		lineNumber = 487;
 		location = FeatureViewer;
 		modificationTime = 310392402.146112;
 		originalNumberOfMultipleMatches = 1;
@@ -5501,7 +5501,7 @@
 		originalNumberOfMultipleMatches = 1;
 		state = 1;
 	};
-	C7E891F31264003A00754DF5 /* FeatureViewerController.m:428 */ = {
+	C7E891F31264003A00754DF5 /* FeatureViewerController.m:431 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -5513,7 +5513,7 @@
 		functionName = "-addClusterOption:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 428;
+		lineNumber = 431;
 		location = FeatureViewer;
 		modificationTime = 310392402.158054;
 		originalNumberOfMultipleMatches = 1;
@@ -5601,7 +5601,7 @@
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	C7F2BE3D12712E3200233C00 /* FeatureViewerController.m:461 */ = {
+	C7F2BE3D12712E3200233C00 /* FeatureViewerController.m:464 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -5613,7 +5613,7 @@
 		functionName = "-loadWaveforms:";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 461;
+		lineNumber = 464;
 		location = FeatureViewer;
 		modificationTime = 310392402.161984;
 		originalNumberOfMultipleMatches = 1;

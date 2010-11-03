@@ -33,6 +33,7 @@
     NSString *currentBaseName;
     NSString *waveformsFile;
     NSOperationQueue *queue;
+    NSTimer *archiveTimer;
     IBOutlet FeatureView *fw;
     IBOutlet WaveformsView *wfv;
     IBOutlet NSComboBox *dim1;
@@ -66,6 +67,8 @@
 -(void)loadWaveforms: (Cluster*)cluster;
 -(void)readClusterModel:(NSString*)path;
 -(void)performComputation:(NSString*)operationTitle usingSelector:(SEL)operationSelector;
+-(void)archiveClusters;
+
 - (IBAction) loadFeatureFile: (id)sender;
 - (IBAction) loadClusterIds: (id)sender;
 //- (IBAction) loadWaveforms: (id)sender;
