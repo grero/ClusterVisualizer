@@ -120,6 +120,8 @@
     if( [[self openGLContext] view] == self)
     {
         [[self openGLContext] update];
+        //TODO: Something happens here; somehow the view doesn't get upated properly when the window is resized.
+        //[[self openGLContext] flushBuffer];
     }
 }
 
@@ -289,6 +291,8 @@ static void wfPushVertices()
     //wfVertices now exist on the GPU so we can free it up
     //free(wfVertices);
     //wfVertices = NULL;
+    //create the pixelBuffer as wee
+    glGenBuffers(1, &wfPixelBuffer);
     wfDataloaded = YES;
     
     
@@ -659,30 +663,77 @@ static void wfDrawAnObject()
     dataPoint.y = (currentPoint.y*1.1*(wfMinmax[3]-wfMinmax[2]))/viewBounds.size.height+1.1*wfMinmax[2];
     //here, we can simply figure out the smallest distance between the vector defined by
     //(dataPoint.x,dataPoint.y) and the waveforms vectors
-    float *D = malloc(2*nWfVertices*sizeof(float));
-    float *d = malloc(nWfVertices*sizeof(float));
+    
+    
     float *p = malloc(2*sizeof(float));
+    int wfLength = 32*4;
     vDSP_Length imin;
     float fmin;
     p[0] = -dataPoint.x;
     p[1] = -dataPoint.y;
-    //get only the relevant vertices
-    
-    //substract the point
-    vDSP_vsadd(wfVertices,3,p,D,2,nWfVertices);
-    vDSP_vsadd(wfVertices+1,3,p+1,D+1,2,nWfVertices);
-    //sum of squares
-    vDSP_vdist(D,2,D+1,2,d,1,nWfVertices);
-    //find the index of the minimu distance
-    vDSP_minvi(d,1,&fmin,&imin,nWfVertices);
-    //imin now holds the index of the vertex closest to the point
-    //find the number of wfVertices per waveform
+    //if we have pressed the option key, only the currently highlighted waveforms are
+    //eligible for selection
+    unsigned int wfidx;
+    if( ([theEvent modifierFlags] & NSAlternateKeyMask) && ([self highlightWaves] != NULL) )
+    {
+        float *d = malloc(wfLength*sizeof(float));
+        float *D = malloc(2*wfLength*sizeof(float));
+        unsigned int *sIdx = (unsigned int*)[[self highlightWaves] bytes];
+        unsigned int n = [[self highlightWaves] length]/sizeof(unsigned int);
+        //use a for loop for now
+        unsigned int i,s;
+        float d_o;
+        d_o = INFINITY;
+        for(i=0;i<n;i++)
+        {
+            vDSP_vsadd(wfVertices+3*sIdx[i]*wfLength,3,p,D,2,wfLength);
+            vDSP_vsadd(wfVertices+3*sIdx[i]*wfLength+1,3,p+1,D+1,2,wfLength);
+            //sum of squares
+            vDSP_vdist(D,2,D+1,2,d,1,wfLength);
+            //find the index of the minimu distance
+            vDSP_minvi(d,1,&fmin,&imin,wfLength);
+            if(fmin<d_o)
+            {
+                d_o = fmin;
+                s = i;
+            }
+        }
+        free(d);
+        free(D);
+        wfidx = sIdx[s];
+    }
+    else 
+    {
+        //get only the relevant vertices
+        float *d = malloc(nWfVertices*sizeof(float));
+        float *D = malloc(2*nWfVertices*sizeof(float));
+        //substract the point
+        vDSP_vsadd(wfVertices,3,p,D,2,nWfVertices);
+        vDSP_vsadd(wfVertices+1,3,p+1,D+1,2,nWfVertices);
+        //sum of squares
+        vDSP_vdist(D,2,D+1,2,d,1,nWfVertices);
+        //find the index of the minimu distance
+        vDSP_minvi(d,1,&fmin,&imin,nWfVertices);
+        //imin now holds the index of the vertex closest to the point
+        //find the number of wfVertices per waveform
+        
+        free(d);
+        free(D);
+        wfidx = imin/(wfLength);
+    }
     free(p);
-    free(d);
-    free(D);
-    unsigned int wfidx = imin/(32*4);
-    NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSData dataWithBytes: &wfidx 
-                                                                                     length: sizeof(unsigned int)],
+    //if command key is pressed, we want to add this wavform to the currently drawn waveforms
+    NSMutableData *hdata;
+    if([theEvent modifierFlags] & NSCommandKeyMask)
+    {
+        hdata = [NSMutableData dataWithData:[self highlightWaves]];
+    }
+    else
+    {
+        hdata = [NSMutableData dataWithCapacity:sizeof(unsigned int)];
+    }
+    [hdata appendBytes:&wfidx length:sizeof(unsigned int)];
+    NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
                                                                 [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects: 
                                                                                                                       @"points",@"color",nil]];
     [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:params];
@@ -799,10 +850,11 @@ static void wfDrawAnObject()
     int width = viewSize.width;
     int height = viewSize.height;
     
-    [self lockFocus];
-    [self drawRect:[self bounds]];
-    [self unlockFocus];
-    
+    //[self lockFocus];
+    //[self lockFocusIfCanDraw];
+    //[self drawRect:[self bounds]];
+    //[self unlockFocus];
+    [self display];
     imageRep = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes: NULL 
                                                         pixelsWide: width 
                                                         pixelsHigh: height 
@@ -815,6 +867,8 @@ static void wfDrawAnObject()
                                                        bitsPerPixel:32] autorelease];
     
     [[self openGLContext] makeCurrentContext];
+    //bind the vertex buffer as an pixel buffer
+    //glBindBuffer(GL_PIXEL_PACK_BUFFER, wfVertexBuffer);
     glReadPixels(0,0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, [imageRep bitmapData]);
     image = [[[NSImage alloc] initWithSize:NSMakeSize(width, height)] autorelease];
     [image addRepresentation:imageRep];

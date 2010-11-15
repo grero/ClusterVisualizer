@@ -406,12 +406,7 @@
     
     glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
     GLfloat *_colors = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-    for(i=0;i<_npoints;i++)
-    {
-        _colors[idx[i]*3] = 1-_color[0];
-        _colors[idx[i]*3+1] = 1-_color[1];
-        _colors[idx[i]*3+2] = 1-_color[2];
-    }
+    //reset the colors before doing the new colors
     if(highlightedPoints != NULL )
     {
         unsigned int* _hpoints = (unsigned int*)[highlightedPoints bytes];
@@ -424,7 +419,14 @@
             _colors[_hpoints[i]*3+2] = _color[2];
         }
     }
-    glUnmapBuffer(GL_ARRAY_BUFFER);
+    
+    for(i=0;i<_npoints;i++)
+    {
+        _colors[idx[i]*3] = 1-_color[0];
+        _colors[idx[i]*3+1] = 1-_color[1];
+        _colors[idx[i]*3+2] = 1-_color[2];
+    }
+        glUnmapBuffer(GL_ARRAY_BUFFER);
     if( highlightedPoints == NULL)
     {
         [self setHighlightedPoints: [NSMutableData dataWithBytes: idx length: _npoints*sizeof(GLuint)]];

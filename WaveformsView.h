@@ -12,6 +12,7 @@
 static GLuint wfVertexBuffer;
 static GLuint wfIndexBuffer;
 static GLuint wfColorBuffer;
+static GLuint wfPixelBuffer;
 static GLfloat *wfVertices;
 //static GLfloat *use_vertices;
 static GLfloat *wfColors;

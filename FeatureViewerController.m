@@ -559,31 +559,8 @@
             //if no image has been created for this cluster,create one
             if( [[self activeCluster] waveformsImage] == NULL )
             {
-                //NSUInteger idx = [Clusters indexOfObject:[self activeCluster]];
-                
-                //need to recreate the cluster image
-                /*
-                //NSBitmapImageRep *imageRep = [NSBitmapImageRep alloc];
-                int samplesPerPixel = 0;
-                //initiate drawing to bitmap
-                [[self wfv] lockFocus];
-                [imageRep initWithFocusedViewRect:[[self wfv] bounds]];
-                [[self wfv] unlockFocus];
-                NSImage *image = [[NSImage alloc] init];
-                [image addRepresentation:imageRep];
-                //[[self activeCluster] setWaveformsImage:image];
-                [[self objectInClustersAtIndex:idx] setWaveformsImage:image];
-                //we don't need these anymore
-                //debug save
-                NSData *imData = [imageRep TIFFRepresentation];
-                [imData writeToFile:@"test.tiff" atomically: YES];
-                [image release];
-                [imageRep release];
-                 */
                 NSImage *img = [[self wfv] image];
                 [[self activeCluster] setWaveformsImage:img];
-                //NSData *imData = [img TIFFRepresentation];
-                //[imData writeToFile:@"test.tiff" atomically: YES];
                 
             }
         }
