@@ -68,6 +68,9 @@
 -(void)readClusterModel:(NSString*)path;
 -(void)performComputation:(NSString*)operationTitle usingSelector:(SEL)operationSelector;
 -(void)archiveClusters;
+-(void) openFeatureFile:(NSString*)path;
+-(void) openWaveformsFile: (NSString*)path;
+-(void) openClusterFile:(NSString *)path;
 
 - (IBAction) loadFeatureFile: (id)sender;
 - (IBAction) loadClusterIds: (id)sender;

@@ -8,6 +8,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import "FeatureView.h"
+#import "FeatureViewerController.h"
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_5
 @interface FeatureViewerAppDelegate: NSObject
@@ -16,9 +17,11 @@
 #endif
 {
     NSWindow *window;
+    IBOutlet FeatureViewerController *controller;
 }
 
 
 @property (assign) IBOutlet NSWindow *window;
+@property (assign) IBOutlet FeatureViewerController *controller;
 
 @end

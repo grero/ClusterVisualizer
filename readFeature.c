@@ -70,7 +70,8 @@ float *readFeatureData(char *fname,float *data)
     hsize_t dims[2] = {0,0};
     file_id = H5Fopen (fname, H5F_ACC_RDONLY, H5P_DEFAULT);
     status = H5LTread_dataset_float(file_id,"/FeatureData",data);
-    
+    if (status == -1)
+        data = NULL;
     return data;
     
 }
