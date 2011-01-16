@@ -461,8 +461,41 @@
     //once we have loaded the clusters, start up a timer that will ensure that data gets arhived automatically every 5 minutes
     archiveTimer = [NSTimer scheduledTimerWithTimeInterval:300 target:self selector:@selector(archiveClusters) userInfo:nil repeats: YES];
 }
+
+-(void) openWaveformsFile: (NSString*)path
+{
+    //since we do not, in general want to load the entire waveforms file, we load instead a random subset
+    //hide the feature view since we dont need it
+    [[fw window ] orderOut: self];
+    //we also dont' want the FeatureView to receive any notifications
+    [[NSNotificationCenter defaultCenter] removeObserver: fw];
+    [self setWaveformsFile:path];
+    char *fpath = [[self waveformsFile] cStringUsingEncoding:NSASCIIStringEncoding];
+    nptHeader spikeHeader;
+    spikeHeader = *getSpikeInfo(fpath,&spikeHeader);
+    int _npoints = 1000;
+    unsigned int *_points = NSZoneMalloc([self zone], _npoints*sizeof(unsigned int));
+    int i;
+    for(i=0;i<_npoints;i++)
+    {
+        _points[i] = (unsigned int)((((float)rand())/RAND_MAX)*(spikeHeader.num_spikes));
+    }
+    Cluster *cluster = [[Cluster alloc] init];
+    [cluster setPoints:[NSMutableData dataWithBytes:_points length:_npoints*sizeof(unsigned int)]];
+    [cluster setNpoints:[NSNumber numberWithUnsignedInt: _npoints]];
+    float color[3];
+    color[0] = ((float)rand())/RAND_MAX;
+    color[1] = ((float)rand())/RAND_MAX;
+    color[2] = ((float)rand())/RAND_MAX;
+    cluster.color = [NSData dataWithBytes: color length:3*sizeof(float)];
+    NSZoneFree([self zone], _points);
+    [self loadWaveforms:cluster];
+    //allow the waveforms view to receive notification about highlights
+    [[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) 
+                                                 name:@"highlight" object:nil];
+
     
-    
+}
 
 - (void) loadWaveforms: (Cluster*)cluster
 {

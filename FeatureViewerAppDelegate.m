@@ -26,7 +26,8 @@
     if( [[filename pathExtension] isEqualToString:@"bin"] )
     {
         //open waveforms.bin file
-        return NO;
+        [controller openWaveformsFile:filename];
+        return YES;
     }
     else if( [[filename pathExtension] isEqualToString:@"fd"] )
     {
