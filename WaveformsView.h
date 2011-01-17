@@ -8,6 +8,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import <Accelerate/Accelerate.h>
+#import "GLString.h"
 
 static GLuint wfVertexBuffer;
 static GLuint wfIndexBuffer;
@@ -55,6 +56,7 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color);
 -(void) clearGLContext;
 -(void) prepareOpenGL;
 -(void) update;
+-(void) drawLabels;
 -(void) setPixelFormat:(NSOpenGLPixelFormat*)pixelFormat;
 -(NSOpenGLPixelFormat*)pixelFormat;
 -(void) _surfaceNeedsUpdate:(NSNotification *)notification;

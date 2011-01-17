@@ -457,7 +457,33 @@ static void wfDrawAnObject()
     //glDrawRangeElement
 }
 
+-(void)drawLabels
+{
+    //TODO: This does not work; the labels are stretched, and drawn in black, not whte as the color suggests.
+    int nlabels = 10;
+    int i;
+    //NSAttributedString *label;
+    NSMutableDictionary *normal9Attribs = [NSMutableDictionary dictionary];
+    [normal9Attribs setObject: [NSFont fontWithName: @"Helvetica" size: 9.0f] forKey: NSFontAttributeName];
+    //label = [[[NSMutableAttributedString alloc] initWithString:@"GL Capabilities:" attributes:bold12Attribs] autorelease];
+    float width = [self bounds].size.width;
+    float height =[self bounds].size.height;
+    float xmargin = 0.005*width;
+    float ymargin = 0.01*height;
+    float dy = 0.8*height/nlabels;
+    float y = [self bounds].origin.y;
+    for(i=0;i<nlabels;i++)
+    {
+        y = ymargin + i*dy;
+        NSAttributedString *label;
+        label = [[[NSAttributedString alloc] initWithString:[NSString stringWithFormat: @"%.1f",&y]  attributes:normal9Attribs] autorelease];
+        GLString *glabel;
+        glabel = [[GLString alloc] initWithAttributedString:label withTextColor:[NSColor colorWithDeviceRed:1.0f green:1.0f blue:1.0f alpha:1.0f] withBoxColor:[NSColor colorWithDeviceRed:0.4f green:0.4f blue:0.0f alpha:0.0f] withBorderColor:[NSColor colorWithDeviceRed:0.8f green:0.8f blue:0.0f alpha:0.0f]];
+        [glabel drawAtPoint:NSMakePoint (xmargin, y)];
+        
+    }
 
+}
 
 - (void)drawRect:(NSRect)bounds 
 {
@@ -472,6 +498,7 @@ static void wfDrawAnObject()
     if(wfDataloaded)
     {
         wfDrawAnObject();
+        //[self drawLabels];
         //drawFrame();
     }
     glFlush();
