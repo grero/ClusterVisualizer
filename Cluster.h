@@ -66,6 +66,7 @@
 -(void)computeISIs:(NSData*)timestamps;
 -(void)computeLRatio:(NSData*)data;
 -(void)computeIsolationDistance:(NSData*)data;
+-(NSDictionary*)computeXCorr:(Cluster*)cluster timepoints:(NSData*)timepts;
 -(void)removePoints:(NSData*)rpoints;
 -(void)addPoints:(NSData*)rpoints;
 

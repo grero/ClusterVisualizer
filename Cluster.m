@@ -262,6 +262,60 @@
             
 }
 
+-(NSDictionary*)computeXCorr:(Cluster*)cluster timepoints:(NSData*)timepts;
+{
+    if( timepts == NULL)
+    {
+        return NULL;
+    }
+    unsigned int _npoints1 = [[self npoints] unsignedIntValue];
+    unsigned int* _points1 = (unsigned int*)[[self points] bytes];
+    unsigned int _npoints2 = [[cluster npoints] unsignedIntValue];
+    unsigned int* _points2 = (unsigned int*)[[cluster points] bytes];
+    unsigned long long int *_timepts = (unsigned long long int*)[timepts bytes];
+    unsigned int i,j,k;
+    //this can potentially be huge; maybe compute a histogram directly.
+    //histogram computation; -50,50
+    int blen = 101;
+    double binsize = 1.0;
+    double *bins = NSZoneMalloc([self zone], blen*sizeof(double));
+    unsigned int *counts = NSZoneMalloc([self zone], blen*sizeof(unsigned int));
+    //create bins with 1 ms resolution
+    for(i=0;i<blen;i++)
+    {
+        bins[i] = -50+i*binsize;
+    }
+    
+    long long int xcorr = 0;
+    for(i=0;i<_npoints1;i++)
+    {
+        for(j=0;j<_npoints2;j++)
+        {
+            k = 0;
+            xcorr = _timepts[_points1[i]] - _timepts[_points2[j]];
+            if( (xcorr < bins[0] ) || (xcorr > bins[blen-1] ))
+            {
+                continue;
+            }
+            while( (bins[k+1] < xcorr ) && (k<blen-1) )
+            {
+                k++;
+            }
+            if (k < blen-1) 
+            {
+                bins[k]+=1;
+            }
+        }
+    }
+    NSDictionary *dict = [NSDictionary dictionaryWithObjects: [NSArray arrayWithObjects:[NSData dataWithBytes:counts length:blen*sizeof(unsigned int)],
+                                                               [NSData dataWithBytes:bins length:blen*sizeof(double)],nil]
+                                                     forKeys: [NSArray arrayWithObjects:@"counts",@"bins",nil]];
+    NSZoneFree([self zone], counts);
+    NSZoneFree([self zone], bins);
+    return dict;
+    
+}
+
 -(void)removePoints:(NSData*)rpoints
 {
     unsigned int* _rpoints = (unsigned int*)[rpoints bytes];

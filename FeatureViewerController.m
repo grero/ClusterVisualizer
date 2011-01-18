@@ -435,7 +435,7 @@
     
     [selectClusterOption removeAllItems];
     NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",
-                               @"Show waveforms",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",nil];
+                               @"Show waveforms",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",nil];
     if(timestamps!=NULL)
     {
         //only allow isi computation if timestamps are loaded
@@ -856,6 +856,16 @@
     else if( [selection isEqualToString:@"Undo Template"] )
     {
         [candidates makeObjectsPerformSelector:@selector(undoTemplate)];
+    }
+    else if ([selection isEqualToString:@"Compute XCorr"] )
+    {
+        NSDictionary *dict = [[candidates objectAtIndex:0] computeXCorr:[candidates objectAtIndex:1] timepoints:timestamps];
+        if(dict != NULL)
+        {
+            [[histView window] orderFront:self];
+            [histView drawHistogram:[dict objectForKey:@"counts"] andBins:[dict objectForKey:@"bins"]];
+            [histView setNeedsDisplay:YES];
+        }
     }
         
                                                                                  

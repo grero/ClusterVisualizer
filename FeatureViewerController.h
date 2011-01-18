@@ -15,6 +15,7 @@
 #import "OpenPanelDelegate.h"
 #import "utils.h"
 #import "ProgressPanel.h"
+#import "HistogramView.h"
 
 @interface FeatureViewerController : NSController/* Specify a superclass (eg: NSObject or NSView) */ {
     
@@ -43,6 +44,7 @@
     IBOutlet NSPanel *filterClustersPanel;
     IBOutlet NSPopUpButton *selectClusterOption;  
     IBOutlet ProgressPanel *progressPanel;
+    IBOutlet HistogramView *histView;
     
     
 }
@@ -88,6 +90,7 @@
 @property (assign) IBOutlet NSComboBox *dim1;
 @property (assign) IBOutlet NSComboBox *dim2;
 @property (assign) IBOutlet NSComboBox *dim3;
+@property (assign) IBOutlet HistogramView *histView;
 @property (retain,readwrite) NSMutableArray *Clusters;
 @property (retain,readwrite) NSMutableArray *ClusterOptions;
 @property (retain, readwrite) NSPredicate *isValidCluster;
