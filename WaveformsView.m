@@ -693,7 +693,7 @@ static void wfDrawAnObject()
     
     
     float *p = malloc(2*sizeof(float));
-    int wfLength = 32*4;
+    int wfLength = wavesize;
     vDSP_Length imin;
     float fmin;
     p[0] = -dataPoint.x;
