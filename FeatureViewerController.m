@@ -168,16 +168,25 @@
             //free(temp_data);
         }
         
-        else if([[[path componentsSeparatedByString:@"."] objectAtIndex:1] isEqualToString:@"fet"]) 
+        else if([[[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:1] isEqualToString:@"fet"]) 
         {
             //the file is a .fet file; it will have all the features written in ascii format, one row per line
             //the first line contains the number of columns
             filebase = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:0];
+			NSLog(@"LastComponent: %@",[path lastPathComponent]);
             currentBaseName = [[NSString stringWithString:filebase] retain];
 
             NSArray *lines = [[NSString stringWithContentsOfFile:path] componentsSeparatedByString:@"\n"];
             cols = [[lines objectAtIndex:0] intValue];
-            rows = [lines count]-1;
+            //check if last line is empty
+            if( [[lines lastObject] isEqualToString:@""] )
+            {
+                rows = [lines count]-2;
+            }
+            else
+            {
+                rows = [lines count]-1;
+            }
             tmp_data = malloc(rows*cols*sizeof(float));
             int i,j;
             for(i=0;i<rows;i++)
@@ -233,6 +242,8 @@
         dataloaded = YES;
         
         //get time data
+		NSLog(@"XYZF: Is this going to work?");
+		NSLog(@"Filebase: %@",filebase);
         NSArray *waveformfiles = [[[[NSFileManager defaultManager] contentsOfDirectoryAtPath: directory error: nil] 
                                    pathsMatchingExtensions:[NSArray arrayWithObjects:@"bin",nil]] filteredArrayUsingPredicate:
                                   [NSPredicate predicateWithFormat:@"SELF BEGINSWITH %@", filebase]];
@@ -361,18 +372,32 @@
          */
         unsigned int *cids = malloc((rows+1)*sizeof(unsigned int));
         cids = readClusterIds(fname, cids);
+        //find the maximum cluster number
+        //TODO: this is quick and dirty; should try and speed this up
+        unsigned int maxCluster = 0;
         int i;
-        tempArray = [NSMutableArray arrayWithCapacity:cids[0]];
+
+        for(i=0;i<rows;i++)
+        {
+            if( cids[i+1] > maxCluster )
+            {
+                maxCluster = cids[i+1];
+            }
+        }
+        //since we are using 0-based indexing, the number of clusters is maxCluster+1
+        maxCluster+=1;
+        tempArray = [NSMutableArray arrayWithCapacity:maxCluster];
         //count the number of points in each cluster
         unsigned int *npoints;
-        npoints = calloc(cids[0],sizeof(unsigned int));
+        npoints = calloc(maxCluster,sizeof(unsigned int));
         cluster_colors = malloc(rows*3*sizeof(float));
         for(i=0;i<rows;i++)
         {
             npoints[cids[i+1]]+=1;
         }
         int j;
-        for(i=0;i<cids[0];i++)
+        //TOOO: This will fail if there are no noise points, i.e. poinst assigned to cluster 0
+        for(i=0;i<maxCluster;i++)
         {
             Cluster *cluster = [[Cluster alloc] init];
             cluster.clusterId = [NSNumber numberWithUnsignedInt:i];
