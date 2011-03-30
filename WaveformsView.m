@@ -489,14 +489,20 @@ static void wfDrawAnObject()
 {
     NSOpenGLContext *context = [self openGLContext];
     [context makeCurrentContext];
+	
+	//glLoadIdentity();
     glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
 
     glClearColor(0,0,0,0);
     glClearDepth(1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glLoadIdentity();
     //glClear(GL_DEPTH_BUFFER_BIT);
     if(wfDataloaded)
     {
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(1.1*wfMinmax[0], 1.1*wfMinmax[1], 1.1*wfMinmax[2], 1.1*wfMinmax[3], 1.1*wfMinmax[4], 1.1*wfMinmax[5]);
         wfDrawAnObject();
         //[self drawLabels];
         //drawFrame();
