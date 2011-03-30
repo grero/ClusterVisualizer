@@ -804,6 +804,26 @@ static void drawAnObject()
     }
 }
 
+-(void)scrollWheel:(NSEvent *)theEvent
+{
+	if( [theEvent deltaX] > 1 )
+	{
+		[self moveLeft:self];
+	}
+	else if( [theEvent deltaX] < -1 )
+	{
+		[self moveRight:self];
+	}
+	if( [theEvent deltaY] > 1 )
+	{
+		[self moveUp:self];
+	}
+	else if ([theEvent deltaY] < -1 )
+	{
+		[self moveDown:self];
+	}
+}
+
 -(void)dealloc
 {
     free(vertices);
