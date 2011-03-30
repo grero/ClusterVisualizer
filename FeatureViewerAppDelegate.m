@@ -45,6 +45,11 @@
         [controller openClusterFile:filename];
         return YES;
     }
+	else if( [[filename componentsSeparatedByString:@"."] containsObject:@"fet"] )
+	{
+		[controller openFeatureFile:filename];
+		return YES;
+	}
     else{
         //File not recognized, so return FALSE to indicate we could not open the file
         return NO;
