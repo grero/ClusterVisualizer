@@ -905,6 +905,103 @@ static void wfDrawAnObject()
     return image;
 }
 
+//Indicate what kind of drag-operation we are going to support
+-(NSDragOperation)draggingSourceOperationMaskForLocal:(BOOL)localDestination
+{
+	return NSDragOperationCopy;
+}
+
+- (void)keyDown:(NSEvent *)theEvent
+{
+    if ([theEvent modifierFlags] & NSNumericPadKeyMask) {
+        [self interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
+    } else {
+        [self keyDown:theEvent];
+    }
+}
+
+//TODO: this is a bit experimental
+-(void)scrollWheel:(NSEvent *)theEvent
+{
+	//set a threshold for when we accept a scroll
+	if([theEvent deltaX] > 1 )
+	{
+		[self moveRight:self];
+	}
+	else if ( [theEvent deltaX] < -1 )
+	{
+		[self moveLeft:self];
+	}
+}
+
+-(IBAction)moveLeft:(id)sender
+{
+	//shift highlighted waveform downwards
+	NSMutableData *hdata;
+
+	if( [self highlightWaves] != NULL )
+	{
+		hdata = [NSMutableData dataWithData:[self highlightWaves]];		
+		//get the indices and increment by one
+		unsigned int *idx = (unsigned int*)([hdata bytes]);
+		unsigned int len = [hdata length]/sizeof(unsigned int);
+		int i;
+		for(i=0;i<len;i++)
+		{
+			if( idx[i] > 0 )
+			{
+				idx[i]--;
+			}
+		}
+	}
+	else
+	{
+		//no highlighted waves, so set highlight to the first wave
+		unsigned int idx = 0;
+		hdata = [NSMutableData dataWithBytes:&idx length:sizeof(unsigned int)];
+
+	}
+	//create and send the notification
+	NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
+                                                                [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects: 
+                                                                                                                      @"points",@"color",nil]];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:params];
+}
+
+-(IBAction)moveRight:(id)sender
+{
+	//shift highlighted waveform downwards
+	NSMutableData *hdata;
+	
+	if( [self highlightWaves] != NULL )
+	{
+		hdata = [NSMutableData dataWithData:[self highlightWaves]];		
+		//get the indices and increment by one
+		unsigned int *idx = (unsigned int*)([hdata bytes]);
+		unsigned int len = [hdata length]/sizeof(unsigned int);
+		int i;
+		for(i=0;i<len;i++)
+		{
+			if( idx[i] < num_spikes -1 )
+			{
+				idx[i]++;
+			}
+		}
+	}
+	else
+	{
+		//no highlighted waves, so set highlight to the first wave
+		unsigned int idx = 0;
+		hdata = [NSMutableData dataWithBytes:&idx length:sizeof(unsigned int)];
+		
+	}
+	//create and send the notification
+	NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
+                                                                [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects: 
+                                                                                                                      @"points",@"color",nil]];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:params];
+}	
+
 -(void)dealloc
 {
     free(wfVertices);
