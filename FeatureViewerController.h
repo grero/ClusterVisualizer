@@ -16,6 +16,7 @@
 #import "utils.h"
 #import "ProgressPanel.h"
 #import "HistogramView.h"
+#import "fileReaders.h"
 
 @interface FeatureViewerController : NSController/* Specify a superclass (eg: NSObject or NSView) */ {
     

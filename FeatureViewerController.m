@@ -28,6 +28,7 @@
     //[self setClusters:[NSMutableArray array]];
     dataloaded = NO;
     queue = [[[NSOperationQueue alloc] init] retain];
+	currentBaseName = NULL;
     [self setFilterClustersPredicate:[NSPredicate predicateWithFormat: @"valid==YES"]];
 }
 
@@ -59,6 +60,7 @@
         NSString *directory = [[openPanel directoryURL] path];
         NSString *path = [[openPanel URL] path];
         [self openFeatureFile: path];
+		
         
     }
 }
@@ -77,7 +79,11 @@
         if( [[path pathExtension] isEqualToString:@"fd"])
         {
             NSArray *dir_contents = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath: directory error: nil] pathsMatchingExtensions:[NSArray arrayWithObjects:@"fd",nil]];
-           
+			
+			if( [dir_contents count] == 0)
+			{
+				return;
+			}
             
             //geth the base path
            
@@ -242,8 +248,8 @@
         dataloaded = YES;
         
         //get time data
-		NSLog(@"XYZF: Is this going to work?");
-		NSLog(@"Filebase: %@",filebase);
+		//NSLog(@"XYZF: Is this going to work?");
+		//NSLog(@"Filebase: %@",filebase);
         NSArray *waveformfiles = [[[[NSFileManager defaultManager] contentsOfDirectoryAtPath: directory error: nil] 
                                    pathsMatchingExtensions:[NSArray arrayWithObjects:@"bin",nil]] filteredArrayUsingPredicate:
                                   [NSPredicate predicateWithFormat:@"SELF BEGINSWITH %@", filebase]];
@@ -290,6 +296,10 @@
     [dim2 selectItemAtIndex:1];
     [dim3 setEditable:NO];
     [dim3 selectItemAtIndex:2];
+	//register featureview for notification about change in highlight
+	[[NSNotificationCenter defaultCenter] addObserver: fw selector:@selector(receiveNotification:) 
+												 name:@"highlight" object: nil];
+
     if( [self Clusters] != NULL)
     {
         [self removeAllObjectsFromClusters];
@@ -304,8 +314,9 @@
     //set a delegate for openPanel so that we can control which files can be opened
     [openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
     //set the basePath to the current basepath so that only cluster files compatible with the currently loaded feature files are allowed
-    [[openPanel delegate] setBasePath: currentBaseName];
-    [[openPanel delegate] setExtensions: [NSArray arrayWithObjects: @"clu",@"fv",nil]];
+    
+	[[openPanel delegate] setBasePath: currentBaseName];
+    [[openPanel delegate] setExtensions: [NSArray arrayWithObjects: @"clu",@"fv",@"overlap",nil]];
     int result = [openPanel runModal];
     if( result == NSOKButton )
     {
@@ -360,100 +371,172 @@
         [tempArray makeObjectsPerformSelector:@selector(makeValid)];
         
     }
-    else {
+    else 
+	{
+        if( [extension isEqualToString:@"cut"] || [extension isEqualToString:@"clu"] )
+        {
         
-        
-        
-        char *fname = [path cStringUsingEncoding:NSASCIIStringEncoding];
-        /*
-         header H;
-         H = *readFeatureHeader("../../test2.hdf5", &H);
-         int rows = H.rows;
-         */
-        unsigned int *cids = malloc((rows+1)*sizeof(unsigned int));
-        cids = readClusterIds(fname, cids);
-        //find the maximum cluster number
-        //TODO: this is quick and dirty; should try and speed this up
-        unsigned int maxCluster = 0;
-        int i;
+			char *fname = [path cStringUsingEncoding:NSASCIIStringEncoding];
+			//TODO: Check if there is also an overlap present; if so, load it as well
+			/*
+			 header H;
+			 H = *readFeatureHeader("../../test2.hdf5", &H);
+			 int rows = H.rows;
+			 */
+			unsigned int *cids = malloc((rows+1)*sizeof(unsigned int));
+			cids = readClusterIds(fname, cids);
+			//find the maximum cluster number
+			//TODO: this is quick and dirty; should try and speed this up
+			unsigned int maxCluster = 0;
+			int i;
 
-        for(i=0;i<rows;i++)
-        {
-            if( cids[i+1] > maxCluster )
-            {
-                maxCluster = cids[i+1];
-            }
-        }
-        //since we are using 0-based indexing, the number of clusters is maxCluster+1
-        maxCluster+=1;
-        tempArray = [NSMutableArray arrayWithCapacity:maxCluster];
-        //count the number of points in each cluster
-        unsigned int *npoints;
-        npoints = calloc(maxCluster,sizeof(unsigned int));
-        cluster_colors = malloc(rows*3*sizeof(float));
-        for(i=0;i<rows;i++)
-        {
-            npoints[cids[i+1]]+=1;
-        }
-        int j;
-        //TOOO: This will fail if there are no noise points, i.e. poinst assigned to cluster 0
-        for(i=0;i<maxCluster;i++)
-        {
-            Cluster *cluster = [[Cluster alloc] init];
-            cluster.clusterId = [NSNumber numberWithUnsignedInt:i];
-            //cluster.name = [NSString stringWithFormat: @"%d",i];
-            
-            
-            cluster.npoints = [NSNumber numberWithUnsignedInt: npoints[i]];
-            //cluster.name = [[[[cluster clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[cluster npoints] stringValue]];
-            [cluster createName];
-            cluster.indices = [NSMutableIndexSet indexSet];
-            cluster.valid = 1;
-            //set color
-            float color[3];
-            color[0] = ((float)rand())/RAND_MAX;
-            color[1] = ((float)rand())/RAND_MAX;
-            color[2] = ((float)rand())/RAND_MAX;
-            cluster.color = [NSData dataWithBytes: color length:3*sizeof(float)];
-            unsigned int *points = malloc(npoints[i]*sizeof(unsigned int));
-            int k = 0;
-            //use a binary mask to indicate cluster membership
-            //uint8 *_mask = calloc(rows,sizeof(uint8));
-            
-            for(j=0;j<rows;j++)
-            {
-                if(cids[j+1]==i)
-                {
-                    points[k] = (unsigned int)j;
-                    //mask[j] = 1;
-                    k+=1;
-                    //set the colors at the same time
-                    cluster_colors[3*j] = color[0];
-                    cluster_colors[3*j+1] = color[1];
-                    cluster_colors[3*j+2] = color[2];
-                    [[cluster indices] addIndex: (NSUInteger)j];
-                    
-                }
-                
-            }
-            cluster.points = [NSMutableData dataWithBytes:points length:npoints[i]*sizeof(unsigned int)];
-            //cluster.mask = [NSMutableData dataWithBytes: _mask length: rows*sizeof(uint8)];
-            //free(_mask);
-            free(points);
-            //compute ISIs; this step can run on a separate thread
-            [cluster computeISIs:timestamps];
-            [cluster setIsTemplate:0];
-            [cluster setActive: 1];
-            
-            [tempArray addObject:cluster];
-        }
-        free(cids);
-        free(npoints);
-        //tell the view to change the colors
+			for(i=0;i<rows;i++)
+			{
+				if( cids[i+1] > maxCluster )
+				{
+					maxCluster = cids[i+1];
+				}
+			}
+			//since we are using 0-based indexing, the number of clusters is maxCluster+1
+			maxCluster+=1;
+		
+			tempArray = [NSMutableArray arrayWithCapacity:maxCluster];
+			//count the number of points in each cluster
+			unsigned int *npoints;
+			npoints = calloc(maxCluster,sizeof(unsigned int));
+			cluster_colors = malloc(rows*3*sizeof(float));
+			for(i=0;i<rows;i++)
+			{
+				npoints[cids[i+1]]+=1;
+			}
+			for(i=0;i<maxCluster;i++)
+			{
+				Cluster *cluster = [[Cluster alloc] init];
+				cluster.clusterId = [NSNumber numberWithUnsignedInt:i];
+				//cluster.name = [NSString stringWithFormat: @"%d",i];
+				
+				
+				cluster.npoints = [NSNumber numberWithUnsignedInt: npoints[i]];
+				//cluster.name = [[[[cluster clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[cluster npoints] stringValue]];
+				[cluster createName];
+				cluster.indices = [NSMutableIndexSet indexSet];
+				cluster.valid = 1;
+				//set color
+				float color[3];
+				color[0] = ((float)rand())/RAND_MAX;
+				color[1] = ((float)rand())/RAND_MAX;
+				color[2] = ((float)rand())/RAND_MAX;
+				cluster.color = [NSData dataWithBytes: color length:3*sizeof(float)];
+				unsigned int *points = malloc(npoints[i]*sizeof(unsigned int));
+				int j,k = 0;
+				//use a binary mask to indicate cluster membership
+				//uint8 *_mask = calloc(rows,sizeof(uint8));
+				
+				for(j=0;j<rows;j++)
+				{
+					if(cids[j+1]==i)
+					{
+						points[k] = (unsigned int)j;
+						//mask[j] = 1;
+						k+=1;
+						//set the colors at the same time
+						cluster_colors[3*j] = color[0];
+						cluster_colors[3*j+1] = color[1];
+						cluster_colors[3*j+2] = color[2];
+						[[cluster indices] addIndex: (NSUInteger)j];
+						
+					}
+					
+				}
+				cluster.points = [NSMutableData dataWithBytes:points length:npoints[i]*sizeof(unsigned int)];
+				//cluster.mask = [NSMutableData dataWithBytes: _mask length: rows*sizeof(uint8)];
+				//free(_mask);
+				free(points);
+				//compute ISIs; this step can run on a separate thread
+				[cluster computeISIs:timestamps];
+				[cluster setIsTemplate:0];
+				[cluster setActive: 1];
+				
+				[tempArray addObject:cluster];
+			}
+			free(cids);
+			free(npoints);
+			free(cluster_colors);
+
+			//tell the view to change the colors
+		}
+		else if ([extension isEqualToString:@"overlap"])
+		{
+			char *fname = [path cStringUsingEncoding:NSASCIIStringEncoding];
+			uint64_t nelm = getFileSize(fname)/sizeof(uint64_t);
+			unsigned ncols = nelm/2;
+			uint64_t *overlaps = NSZoneMalloc([self zone], nelm*sizeof(uint64_t));
+			overlaps = readOverlapFile(fname, overlaps, nelm);
+			//since the overlaps are assumed to ordered according to clusters, with cluster ids in the first column, we can easily get
+			//the maximum numbers of clusters
+			unsigned int maxCluster = overlaps[ncols-2]+1;
+			unsigned i;
+			
+			tempArray = [NSMutableArray arrayWithCapacity:maxCluster];
+
+			for(i=0;i<maxCluster;i++)
+			{
+				Cluster *cluster = [[Cluster alloc] init];
+				cluster.clusterId = [NSNumber numberWithUnsignedInt:i];
+				//cluster.name = [NSString stringWithFormat: @"%d",i];
+				
+				
+				cluster.npoints = [NSNumber numberWithUnsignedInt: 0];
+				//cluster.name = [[[[cluster clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[cluster npoints] stringValue]];
+				[cluster createName];
+				cluster.indices = [NSMutableIndexSet indexSet];
+				cluster.valid = 1;
+				//set color
+				float color[3];
+				color[0] = ((float)rand())/RAND_MAX;
+				color[1] = ((float)rand())/RAND_MAX;
+				color[2] = ((float)rand())/RAND_MAX;
+				cluster.color = [NSData dataWithBytes: color length:3*sizeof(float)];
+				cluster.points = [NSMutableData dataWithCapacity:1000*sizeof(unsigned long)];
+				//cluster.mask = [NSMutableData dataWithBytes: _mask length: rows*sizeof(uint8)];
+				//free(_mask);
+				//compute ISIs; this step can run on a separate thread
+				//[cluster computeISIs:timestamps];
+				[cluster setIsTemplate:0];
+				[cluster setActive: 1];
+				
+				[tempArray addObject:cluster];
+			}
+			//now loop through the overlap matrix, adding points to the clusters as we go along
+			unsigned int cid,wfidx,npoints;
+			cid = maxCluster+1;
+			Cluster *cluster;
+			for(i=0;i<ncols;i++)
+			{
+				wfidx = overlaps[ncols+i];
+				if( overlaps[i] != cid )
+				{
+					cid = overlaps[i];
+					cluster = [tempArray objectAtIndex:cid];
+				}
+				[[cluster points] appendBytes:&wfidx length:sizeof(unsigned int)];
+				[[cluster indices] addIndex:wfidx];
+				npoints = [[cluster npoints] unsignedIntValue];
+				//increment the number of points
+				[cluster setNpoints:[NSNumber numberWithUnsignedInt:npoints+1]];
+			}
+			//free overlaps since we don't need it
+			NSZoneFree([self zone], overlaps);
+            										
+		}
+        
     }
-    [fw setClusterColors: cluster_colors forIndices: NULL length: 1];
+	if( dataloaded == YES )
+	{
+		//only do this if data has been loaded
+		[fw setClusterColors: cluster_colors forIndices: NULL length: 1];
+	}
     //since colors are now ccopied, we can free it
-    free(cluster_colors);
     [self setClusters:tempArray];
     [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
     
