@@ -355,7 +355,7 @@
         tempArray = [NSKeyedUnarchiver unarchiveObjectWithFile:path];
         //get cluster colors
         //NSMutableData *_cluster_colors = [NSMutableData dataWithCapacity:params.rows*3*sizeof(float)];
-        cluster_colors = malloc(params.rows*3*sizeof(float));
+        cluster_colors = NSZoneMalloc([self zone], params.rows*3*sizeof(float));
         id _cluster;
         NSEnumerator *_clustersEnumerator = [tempArray objectEnumerator];
         int i;
@@ -407,7 +407,7 @@
 			//count the number of points in each cluster
 			unsigned int *npoints;
 			npoints = calloc(maxCluster,sizeof(unsigned int));
-			cluster_colors = malloc(rows*3*sizeof(float));
+			cluster_colors = NSZoneMalloc([self zone],rows*3*sizeof(float));
 			for(i=0;i<rows;i++)
 			{
 				npoints[cids[i+1]]+=1;
@@ -478,8 +478,9 @@
 			//since the overlaps are assumed to ordered according to clusters, with cluster ids in the first column, we can easily get
 			//the maximum numbers of clusters
 			unsigned int maxCluster = overlaps[ncols-2]+1;
-			unsigned i;
+			unsigned i,j;
 			
+			cluster_colors = NSZoneMalloc([self zone], 3*ncols*sizeof(float));
 			tempArray = [NSMutableArray arrayWithCapacity:maxCluster];
 
 			for(i=0;i<maxCluster;i++)
@@ -514,6 +515,7 @@
 			unsigned int cid,wfidx,npoints;
 			cid = maxCluster+1;
 			Cluster *cluster;
+			float  *color;
 			for(i=0;i<ncols;i++)
 			{
 				wfidx = overlaps[ncols+i];
@@ -522,6 +524,12 @@
 					cid = overlaps[i];
 					cluster = [tempArray objectAtIndex:cid];
 				}
+				//set the colors
+				color = (float*)[[cluster color] bytes];
+				cluster_colors[3*i] = color[0];
+				cluster_colors[3*i+1] = color[1];
+				cluster_colors[3*i+2] = color[2];
+				
 				[[cluster points] appendBytes:&wfidx length:sizeof(unsigned int)];
 				[[cluster indices] addIndex:wfidx];
 				npoints = [[cluster npoints] unsignedIntValue];
@@ -530,7 +538,8 @@
 			}
 			//free overlaps since we don't need it
 			NSZoneFree([self zone], overlaps);
-			[tempArray makeObjectsPerformSelector:@selector(createName)];									
+			[tempArray makeObjectsPerformSelector:@selector(createName)];	
+			
 		}
         
     }
@@ -540,7 +549,8 @@
 		[fw setClusterColors: cluster_colors forIndices: NULL length: 1];
 	}
     //since colors are now ccopied, we can free it
-    [self setClusters:tempArray];
+    NSZoneFree([self zone],cluster_colors);
+	[self setClusters:tempArray];
     [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
     
     
