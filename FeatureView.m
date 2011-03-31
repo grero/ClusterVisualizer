@@ -224,8 +224,8 @@
     int cl;
     for(cl=0;cl<cols;cl++)
     {
-        minmax[2*cl] = -1.0;
-        minmax[2*cl+1] = 1.0;
+        minmax[2*cl] = -1.5;
+        minmax[2*cl+1] = 1.5;
     }
     //minmax = getMinMax(minmax, vertices, rows, cols);
     draw_dims[0] = 0;
@@ -236,8 +236,10 @@
     indices = malloc(nindices*sizeof(GLuint));
     colors = malloc(nindices*3*sizeof(GLfloat));
     [[self openGLContext] makeCurrentContext];
-    glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]+1], 1.1*minmax[2*draw_dims[2]]);
-    modifyVertices(use_vertices);
+    //glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]+1], 1.1*minmax[2*draw_dims[2]]);
+	//glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
+
+	modifyVertices(use_vertices);
     modifyIndices(indices);
     modifyColors(colors);
     pushVertices();
@@ -535,6 +537,7 @@ static void pushVertices()
     
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
+    //glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
     glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
 
     glGenBuffers(1,&indexBuffer);
