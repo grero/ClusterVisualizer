@@ -106,9 +106,15 @@
             
             while(file = [enumerator nextObject] )
             {
-                if([file hasPrefix:filebase])
+                if(([file hasPrefix:filebase] )) //&& ([[file stringByDeletingPathExtension]))
                 {
-                    char *filename = [[NSString pathWithComponents: [NSArray arrayWithObjects: directory,file,nil]] cStringUsingEncoding:NSASCIIStringEncoding];
+                    //check if this file contains a valid feature
+					if( [[file stringByDeletingPathExtension] isEqualToString:filebase] )
+					{
+						//skip
+						continue;
+					}
+					char *filename = [[NSString pathWithComponents: [NSArray arrayWithObjects: directory,file,nil]] cStringUsingEncoding:NSASCIIStringEncoding];
                     H = *readFeatureHeader(filename, &H);
                     
                     tmp_data = malloc(H.rows*H.cols*sizeof(float));
@@ -543,6 +549,8 @@
 		}
         
     }
+	//turn off the first cluster, since it's usually the noise cluster
+	[[tempArray objectAtIndex:0] makeInactive];
 	if( dataloaded == YES )
 	{
 		//only do this if data has been loaded
