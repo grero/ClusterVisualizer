@@ -333,7 +333,7 @@
     //[self removeAllObjectsFromClusters];
     //NSString *filename = [[openPanel URL] path];
     
-    NSString *extension = [[path componentsSeparatedByString:@"."] objectAtIndex:1];
+    NSString *extension = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:1];
     float *cluster_colors;
     NSMutableArray *tempArray;
     //check if data is loaded
@@ -1074,7 +1074,11 @@
     int nclusters = [Clusters count];
     new_cluster.parents = [NSArray arrayWithObjects:cluster1,cluster2,nil];
     [self insertObject:new_cluster inClustersAtIndex:nclusters];
-    [fw setClusterColors:[[new_cluster color] bytes] forIndices:[[new_cluster points] bytes] length:[[new_cluster npoints] unsignedIntValue]];
+	if( dataloaded == YES)
+	{
+		//only do this if data has been loaded; should probably try to make this a bit more general
+		[fw setClusterColors:[[new_cluster color] bytes] forIndices:[[new_cluster points] bytes] length:[[new_cluster npoints] unsignedIntValue]];
+	}
     new_cluster.active = 1;
 }
 
