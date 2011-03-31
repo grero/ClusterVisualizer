@@ -71,9 +71,7 @@
                                                      name: NSViewGlobalFrameDidChangeNotification object: self];
         
         //receive notification about change in highlight
-        [[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
-                                                     name:@"highlight" object: nil];
-    }
+	}
     return self;
 }
 
@@ -690,8 +688,10 @@ static void drawAnObject()
     [rotation getBytes: &rot range:range];
     rot-=5.0;
     [rotation replaceBytesInRange:range withBytes:&rot];*/
+	//glMatrixMode(GL_MODELVIEW);
     glRotated(-5, 0, 0, 1);
-    [self setNeedsDisplay:YES];
+    //[self setNeedsDisplay:YES];
+	[self display];
 }
 
 -(IBAction)moveDown:(id)sender
@@ -704,8 +704,13 @@ static void drawAnObject()
     rot+=5.0;
     [rotation replaceBytesInRange:range withBytes:&rot];*/
     //rotate about z-axis
-    glRotated(5, 0, 0, 1);
-    [self setNeedsDisplay:YES];
+	//only rotate if the current context belongs to me
+	//if([[NSOpenGLContext currentContext] isEqualTo:[self openGLContext]])
+	//{
+	glRotated(5, 0, 0, 1);
+	//[self setNeedsDisplay:YES];
+	[self display];
+	//}
 }
 
 -(IBAction)moveLeft:(id)sender
@@ -720,7 +725,8 @@ static void drawAnObject()
     [rotation replaceBytesInRange:range withBytes:&rot];
     //rotate about y-axis*/
     glRotated(5, 0, 1, 0);
-    [self setNeedsDisplay:YES];
+    //[self setNeedsDisplay:YES];
+	[self display];
 }
 
 -(IBAction)moveRight:(id)sender
@@ -734,7 +740,8 @@ static void drawAnObject()
     [rotation replaceBytesInRange:range withBytes:&rot];*/
     //rotate about y-axis
     glRotated(-5, 0, 1, 0);
-    [self setNeedsDisplay:YES];
+    //[self setNeedsDisplay:YES];
+	[self display];
 
 }
 
