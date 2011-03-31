@@ -20,6 +20,7 @@ static GLfloat *wfColors;
 //static GLfloat *use_colors;
 static GLuint *wfIndices;
 static float *wfMinmax;
+static float xmin,xmax;
 static unsigned int num_spikes;
 static unsigned int nWfVertices;
 static unsigned int nWfIndices;
@@ -27,6 +28,7 @@ static unsigned int wavesize;
 static unsigned int waveIndexSize;
 static unsigned int chs;
 static unsigned int timepts;
+static unsigned int channelHop;
 static int highlightWave;
 static BOOL wfDataloaded;
 
@@ -42,11 +44,13 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color);
     NSOpenGLPixelFormat *_pixelFormat;
     NSData *drawingColor,*highlightColor;
     NSMutableData *highlightWaves;
+	NSMutableArray *highlightedChannels;
     
     
 }
 
 @property (retain,readwrite) NSMutableData *highlightWaves;
+@property (retain,readwrite) NSMutableArray *highlightedChannels;
 
 //OpenGL related functions
 +(NSOpenGLPixelFormat*)defaultPixelFormat;
@@ -68,6 +72,7 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color);
 -(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints andColor: (NSData*)color;
 -(void) highlightWaveform:(NSUInteger)wfidx;
 -(void) highlightWaveforms:(NSData*)wfidx;
+-(void) highlightChannels:(NSArray*)channels;
 -(void) receiveNotification:(NSNotification*)notification;
 -(void) hideWaveforms:(NSData*)wfidx;
 -(NSImage*)image;

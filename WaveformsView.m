@@ -14,7 +14,7 @@
 @implementation WaveformsView
 
 @synthesize highlightWaves;
-
+@synthesize highlightedChannels;
 
 -(void)awakeFromNib
 {
@@ -156,7 +156,7 @@
     unsigned int offset = 0;
     //3 dimensions X 2
     wfMinmax = calloc(6,sizeof(float));
-    int channelHop = 10;
+    channelHop = 10;
     //copy wfVertices
     float dz = (100.0-1.0)/num_spikes;
     for(i=0;i<nwaves;i++)
@@ -191,6 +191,8 @@
     }
     wfMinmax[0] = 0;
     wfMinmax[1] = channels*(timepoints+channelHop);
+	xmin = 0;
+	xmax = wfMinmax[1];
     wfMinmax[4] = -1.0;//0.1;
     wfMinmax[5] = 1.0;//100;//nwaves+2;
     //create indices
@@ -270,7 +272,8 @@ static void wfPushVertices()
     
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(1.1*wfMinmax[0], 1.1*wfMinmax[1], 1.1*wfMinmax[2], 1.1*wfMinmax[3], 1.1*wfMinmax[4], 1.1*wfMinmax[5]);
+    glOrtho(1.05*xmin-0.05*xmax, 1.05*xmax-0.05*xmin, 1.05*wfMinmax[2]-0.05*wfMinmax[3], 
+			1.05*wfMinmax[3]-0.05*wfMinmax[2], 1.05*wfMinmax[4]-0.05*wfMinmax[5], 1.05*wfMinmax[5]-0.05*wfMinmax[4]);
     //glFrustum(1.1*wfMinmax[0], 1.1*wfMinmax[1], 1.1*wfMinmax[2], 1.1*wfMinmax[3], 1.1*wfMinmax[5], 1.1*wfMinmax[4]);
 
     glGenBuffers(1,&wfIndexBuffer);
@@ -309,6 +312,12 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
         color_data[3*i+2] = gcolor[2];//use_colors[3*cids[i+1]+2];
     }
 }
+
+-(void) highlightChannels:(NSArray*)channels
+{
+	[[self openGLContext] makeCurrentContext];
+}
+
 -(void) highlightWaveforms:(NSData*)wfidx
 {
     [[self openGLContext] makeCurrentContext];
@@ -502,8 +511,10 @@ static void wfDrawAnObject()
     {
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		glOrtho(1.1*wfMinmax[0], 1.1*wfMinmax[1], 1.1*wfMinmax[2], 1.1*wfMinmax[3], 1.1*wfMinmax[4], 1.1*wfMinmax[5]);
-        wfDrawAnObject();
+		/*glOrtho(1.05*xmin-0.05*xmax, 1.05*xmin-0.05*xmax, 1.05*wfMinmax[2]-0.05*wfMinmax[3], 
+				1.05*wfMinmax[3]-0.05*wfMinmax[2], wfMinmax[4], wfMinmax[5]);*/
+        glOrtho(xmin, xmax, 1.1*wfMinmax[2], 1.1*wfMinmax[3], 1.1*wfMinmax[4], 1.1*wfMinmax[5]);
+		wfDrawAnObject();
         //[self drawLabels];
         //drawFrame();
     }
@@ -627,7 +638,6 @@ static void wfDrawAnObject()
         if(found == 0)
         {
             //rearrange both indices and vertixes
-            //TODO: am I screwing something up here?
             for(l=0;l<waveIndexSize;l++)
             {
                 tmp_idx[k*waveIndexSize+l] = tmp_idx[i*waveIndexSize+l];
@@ -683,6 +693,32 @@ static void wfDrawAnObject()
 }
     
 //event handlers
+/*-(void)mouseDown:(NSEvent*)theEvent
+//{
+//	NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
+    //now we will have to figure out which waveform(s) contains this point
+    //scale to data coorindates
+    NSPoint dataPoint;
+    NSRect viewBounds = [self bounds];
+    //scale to data coordinates
+    dataPoint.x = (currentPoint.x*1.1*(wfMinmax[1]-wfMinmax[0]))/viewBounds.size.width+1.1*wfMinmax[0];
+    dataPoint.y = (currentPoint.y*1.1*(wfMinmax[3]-wfMinmax[2]))/viewBounds.size.height+1.1*wfMinmax[2];
+	
+	//get the channel corresponding to the point
+	NSNumber *channel = [NSNumber numberWithUnsignedInt:dataPoint.x/(channelHop+timepts)];
+	[highlightedChannels addObject: channel];
+}*/
+-(void)keyUp:(NSEvent *)theEvent
+{
+	//check if control key was released (hopefully...)
+	if ([ theEvent modifierFlags] & NSControlKeyMask )
+	{
+		unsigned int minChannel = [[highlightedChannels objectAtIndex:0] unsignedIntValue];
+		unsigned int maxChannel = [[highlightedChannels lastObject] unsignedIntValue];
+		xmin = (GLfloat)(minChannel*(timepts+channelHop));
+		xmax = (GLfloat)(maxChannel*(timepts+channelHop));
+	}
+}
 -(void)mouseUp:(NSEvent *)theEvent
 {
     //get current point in view coordinates
@@ -692,8 +728,8 @@ static void wfDrawAnObject()
     NSPoint dataPoint;
     NSRect viewBounds = [self bounds];
     //scale to data coordinates
-    dataPoint.x = (currentPoint.x*1.1*(wfMinmax[1]-wfMinmax[0]))/viewBounds.size.width+1.1*wfMinmax[0];
-    dataPoint.y = (currentPoint.y*1.1*(wfMinmax[3]-wfMinmax[2]))/viewBounds.size.height+1.1*wfMinmax[2];
+    dataPoint.x = (currentPoint.x*(xmax-xmin))/viewBounds.size.width+xmin;
+    dataPoint.y = (currentPoint.y*(1.1*wfMinmax[3]-1.1*wfMinmax[2]))/viewBounds.size.height+1.1*wfMinmax[2];
     //here, we can simply figure out the smallest distance between the vector defined by
     //(dataPoint.x,dataPoint.y) and the waveforms vectors
     
@@ -735,6 +771,21 @@ static void wfDrawAnObject()
         free(D);
         wfidx = sIdx[s];
     }
+	else if ([ theEvent modifierFlags] & NSControlKeyMask )
+	{
+		//control was pressed; highlight channels
+		if( highlightedChannels == NULL )
+		{
+			highlightedChannels = [[NSMutableArray arrayWithCapacity:10] retain];
+		}
+		[highlightedChannels addObject:[NSNumber numberWithFloat:(dataPoint.x-xmin)/(channelHop+timepts)]];
+		/*unsigned int minChannel = [[highlightedChannels objectAtIndex:0] unsignedIntValue];
+		unsigned int maxChannel = [[highlightedChannels objectAtIndex:0] unsignedIntValue];
+		xmin = (GLfloat)(minChannel*(timepts+channelHop));
+		xmax = (GLfloat)(maxChannel*(timepts+channelHop));*/
+		return;
+
+	}
     else 
     {
         //get only the relevant vertices
@@ -922,7 +973,30 @@ static void wfDrawAnObject()
     if ([theEvent modifierFlags] & NSNumericPadKeyMask) {
         [self interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
     } else {
-        [self keyDown:theEvent];
+		//TODO: this should be made more general, i.e. I don't want to have to rely on arcane key combinations
+		if( [[theEvent characters] isEqualToString: @"z"] )
+		{
+			//[self highlightChannels: highlightedChannels]
+			float minChannel = [[highlightedChannels objectAtIndex:0] floatValue];
+			float maxChannel = [[highlightedChannels lastObject] floatValue];
+			if (minChannel<maxChannel)
+			{
+				xmin = (GLfloat)(((int)minChannel)*(timepts+channelHop));
+				xmax = (GLfloat)(((int)(maxChannel+1))*(timepts+channelHop));
+				
+				
+				[self setNeedsDisplay:YES];
+			}
+			[highlightedChannels removeAllObjects];
+		}
+		else if ( [[theEvent characters] isEqualToString:@"b"] )
+		{
+			//indicate we want to restore zoom
+			xmin = wfMinmax[0];
+			xmax = wfMinmax[1];
+			[self setNeedsDisplay:YES];
+		}
+        //[self keyDown:theEvent];
     }
 }
 
