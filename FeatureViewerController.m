@@ -86,8 +86,10 @@
 			}
             
             //geth the base path
-           
-            filebase = [[[path lastPathComponent] componentsSeparatedByString:@"_"] objectAtIndex:0]; 
+            //TODO: This does not work if there are underscores in the file name
+			//find the last occurrence of "_"
+            NSRange range = [[path lastPathComponent] rangeOfString:@"_" options:NSBackwardsSearch];
+			filebase = [[path lastPathComponent] substringToIndex:range.location]; 
             currentBaseName = [[NSString stringWithString:filebase] retain];
             //set the current directory of the process to the the one pointed to by the load dialog
             [[NSFileManager defaultManager] changeCurrentDirectoryPath:directory];
@@ -137,7 +139,7 @@
                     cols+=H.rows;
                     //feature names
                     //get basename
-                    NSString *fn = [[[file componentsSeparatedByString:@"_"] lastObject] stringByDeletingPathExtension]; 
+                    NSString *fn = [[[[file lastPathComponent] componentsSeparatedByString:@"_"] lastObject] stringByDeletingPathExtension]; 
                     for(j=0;j<H.rows;j++)
                     {
                         [feature_names addObject: [fn stringByAppendingFormat:@"%d",j+1]];
@@ -300,7 +302,8 @@
 	[[NSNotificationCenter defaultCenter] addObserver: fw selector:@selector(receiveNotification:) 
 												 name:@"highlight" object: nil];
 
-    if( [self Clusters] != NULL)
+	//only reset clusters if data has already been loaded
+    if( ([self Clusters] != NULL) && (dataloaded == YES ) )
     {
         [self removeAllObjectsFromClusters];
     }
