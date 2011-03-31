@@ -527,7 +527,7 @@
 			}
 			//free overlaps since we don't need it
 			NSZoneFree([self zone], overlaps);
-            										
+			[tempArray makeObjectsPerformSelector:@selector(createName)];									
 		}
         
     }
