@@ -45,8 +45,14 @@
         [controller openClusterFile:filename];
         return YES;
     }
+	else if( [[filename componentsSeparatedByString:@"."] containsObject:@"overlap"] )
+    {
+        [controller openClusterFile:filename];
+        return YES;
+    }
 	else if( [[filename componentsSeparatedByString:@"."] containsObject:@"fet"] )
 	{
+		//NSLog(@"filename: %@",filename);
 		[controller openFeatureFile:filename];
 		return YES;
 	}
