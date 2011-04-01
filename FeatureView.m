@@ -264,7 +264,9 @@
     {
         draw_dims[dim] = dim_data;
         //set openGL viewport based on vertices
-        glMatrixMode(GL_PROJECTION);
+		//make sure we are in the current context
+        [[self openGLContext] makeCurrentContext];
+		glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
         

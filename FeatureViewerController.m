@@ -304,6 +304,7 @@
     [dim2 selectItemAtIndex:1];
     [dim3 setEditable:NO];
     [dim3 selectItemAtIndex:2];
+	featureNames = [[NSMutableArray arrayWithArray:feature_names] retain];
 	//register featureview for notification about change in highlight
 	[[NSNotificationCenter defaultCenter] addObserver: fw selector:@selector(receiveNotification:) 
 												 name:@"highlight" object: nil];
@@ -663,6 +664,7 @@
                    andColor:[cluster color]];
         free(waveforms);
         free(fwaveforms);
+		nchannels = spikeHeader.channels;
         if(timestamps==NULL)
         {
             //load time stamps if not already loaded
@@ -679,7 +681,11 @@
             free(times_indices);
             //add the ISI options to cluster options
             [selectClusterOption addItemWithTitle:@"Shortest ISI"];
+			
+
         }
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) 
+													 name:@"setFeatures" object:nil];
     }
            
     
@@ -787,18 +793,68 @@
 
 - (IBAction) changeDim1: (id)sender
 {
-    [fw selectDimensions:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:0],@"dim", [NSNumber numberWithInt: [sender indexOfSelectedItem]],@"dim_data",nil]];
+    //[fw selectDimensions:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:0],@"dim", [NSNumber numberWithInt: [sender indexOfSelectedItem]],@"dim_data",nil]];
+	[fw selectDimensions:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:0],@"dim", 
+						  [NSNumber numberWithInt: [featureNames indexOfObject:[sender objectValueOfSelectedItem]]],@"dim_data",nil]];
+
 }
 
 - (IBAction) changeDim2: (id)sender
 {
-    [fw selectDimensions:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:1],@"dim", [NSNumber numberWithInt: [sender indexOfSelectedItem]],@"dim_data",nil]];
-    
+    //[fw selectDimensions:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:1],@"dim", [NSNumber numberWithInt: [sender indexOfSelectedItem]],@"dim_data",nil]];
+    [fw selectDimensions:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:1],@"dim", 
+						  [NSNumber numberWithInt: [featureNames indexOfObject:[sender objectValueOfSelectedItem]]],@"dim_data",nil]];
+	
+	
 }
 - (IBAction) changeDim3: (id)sender
 {
-    [fw selectDimensions:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:2],@"dim", [NSNumber numberWithInt: [sender indexOfSelectedItem]],@"dim_data",nil]];
-    
+    //[fw selectDimensions:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:2],@"dim", [NSNumber numberWithInt: [sender indexOfSelectedItem]],@"dim_data",nil]];
+    [fw selectDimensions:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:2],@"dim", 
+						  [NSNumber numberWithInt: [featureNames indexOfObject:[sender objectValueOfSelectedItem]]],@"dim_data",nil]];
+	
+	
+}
+
+-(void) receiveNotification:(NSNotification*)notification
+{
+	if( [[notification name] isEqualToString:@"setFeatures"] )
+	{
+		[self setAvailableFeatures:[notification object]];
+	}
+}
+
+-(void) setAvailableFeatures:(NSArray*)channels
+{
+	//sets the features based on the channels
+	unsigned nfeatures = cols;
+	[dim1 removeAllItems];
+	[dim2 removeAllItems];
+	[dim3 removeAllItems];
+
+	NSEnumerator *channelEnumerator = [channels objectEnumerator];
+	id ch;
+	while( ch = [channelEnumerator nextObject] )
+	{
+		//NSArray *validFeatures = [featureNames filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"SELF CONTAINS %@",[NSString stringWithFormat:@"%d",[ch intValue]+1]]];
+		NSString *regexp = [NSString stringWithFormat: @"[A-Za-z]*%d",[ch intValue]+1];
+		NSArray *validFeatures = [featureNames filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"SELF MATCHES %@",regexp]];
+
+		[dim1 addItemsWithObjectValues:validFeatures];
+		[dim2 addItemsWithObjectValues:validFeatures];
+
+		[dim3 addItemsWithObjectValues:validFeatures];
+		
+	   //[dim1 objectValueOfSelectedItem]
+	}
+	[dim1 selectItemAtIndex:0];
+	//notify that soemthing changed
+	[self changeDim1:dim1];
+	[dim2 selectItemAtIndex:1];
+	[dim3 selectItemAtIndex:2];
+
+						
+	
 }
 
 - (IBAction) changeAllClusters: (id)sender

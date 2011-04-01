@@ -987,6 +987,9 @@ static void wfDrawAnObject()
 				
 				[self setNeedsDisplay:YES];
 			}
+			NSArray *_channels = [[self highlightedChannels] copyWithZone:[self zone]];
+			[[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:@"setFeatures" 
+																								 object:_channels]];
 			[highlightedChannels removeAllObjects];
 		}
 		else if ( [[theEvent characters] isEqualToString:@"b"] )
@@ -994,6 +997,15 @@ static void wfDrawAnObject()
 			//indicate we want to restore zoom
 			xmin = wfMinmax[0];
 			xmax = wfMinmax[1];
+			//restore feature dimensions
+			int i;
+			NSMutableArray *channels = [NSMutableArray arrayWithCapacity:chs];
+			for(i=0;i<chs;i++)
+			{
+				[channels addObject:[NSNumber numberWithInt:i]];
+			}
+			[[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:@"setFeatures" 
+																								 object:channels]];
 			[self setNeedsDisplay:YES];
 		}
         //[self keyDown:theEvent];

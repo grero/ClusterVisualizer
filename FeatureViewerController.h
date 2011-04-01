@@ -18,7 +18,7 @@
 #import "HistogramView.h"
 #import "fileReaders.h"
 
-@interface FeatureViewerController : NSController/* Specify a superclass (eg: NSObject or NSView) */ {
+@interface FeatureViewerController : NSController {
     
     NSMutableArray *Clusters;
     NSMutableArray *ClusterOptions;
@@ -29,8 +29,10 @@
     NSSortDescriptor *clustersSortDescriptor;
     NSData *vertex_data;
     NSData *timestamps;
+	NSMutableArray *featureNames;
     header params;
     BOOL dataloaded;
+	NSInteger nchannels;
     //name of current cluster set
     NSString *currentBaseName;
     NSString *waveformsFile;
@@ -74,7 +76,8 @@
 -(void) openFeatureFile:(NSString*)path;
 -(void) openWaveformsFile: (NSString*)path;
 -(void) openClusterFile:(NSString *)path;
-
+-(void) setAvailableFeatures:(NSArray*)channels;
+-(void) receiveNotification:(NSNotification*)notification;
 - (IBAction) loadFeatureFile: (id)sender;
 - (IBAction) loadClusterIds: (id)sender;
 //- (IBAction) loadWaveforms: (id)sender;
