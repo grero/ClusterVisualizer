@@ -987,9 +987,15 @@ static void wfDrawAnObject()
 				
 				[self setNeedsDisplay:YES];
 			}
-			NSArray *_channels = [[self highlightedChannels] copyWithZone:[self zone]];
-			[[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:@"setFeatures" 
-																								 object:_channels]];
+			//TODO: I should make sure the channels are contiguous
+			NSMutableArray *_channels = [NSMutableArray arrayWithCapacity:maxChannel-minChannel];
+			int c;
+			for(c=(int)minChannel;c<=(int)maxChannel;c++)
+			{
+				[_channels addObject:[NSNumber numberWithInt:c]];
+			}
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"setFeatures" object:self userInfo: 
+			 [NSDictionary dictionaryWithObjectsAndKeys: _channels, @"channels",nil]];
 			[highlightedChannels removeAllObjects];
 		}
 		else if ( [[theEvent characters] isEqualToString:@"b"] )
@@ -1004,8 +1010,8 @@ static void wfDrawAnObject()
 			{
 				[channels addObject:[NSNumber numberWithInt:i]];
 			}
-			[[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:@"setFeatures" 
-																								 object:channels]];
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"setFeatures" object:self userInfo: 
+			 [NSDictionary dictionaryWithObjectsAndKeys:channels, @"channels",nil]];
 			[self setNeedsDisplay:YES];
 		}
         //[self keyDown:theEvent];

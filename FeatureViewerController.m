@@ -67,218 +67,221 @@
         
 -(void) openFeatureFile:(NSString*)path
 {
-        //data object to hold the feature data
-        NSString *directory = [path stringByDeletingLastPathComponent];
-        NSMutableData *data = [NSMutableData dataWithCapacity:100000*sizeof(float)];
-        float *tmp_data,*tmp_data2;
-        int cols=0;
-        int rows = 0;
-        int i,j,k;
-        NSMutableArray *feature_names = [NSMutableArray arrayWithCapacity:16];
-        NSString *filebase;
-        if( [[path pathExtension] isEqualToString:@"fd"])
-        {
-            NSArray *dir_contents = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath: directory error: nil] pathsMatchingExtensions:[NSArray arrayWithObjects:@"fd",nil]];
-			
-			if( [dir_contents count] == 0)
+	//data object to hold the feature data
+	NSString *directory = [path stringByDeletingLastPathComponent];
+	NSMutableData *data = [NSMutableData dataWithCapacity:100000*sizeof(float)];
+	float *tmp_data,*tmp_data2;
+	int cols=0;
+	int rows = 0;
+	int i,j,k;
+	NSMutableArray *feature_names = [NSMutableArray arrayWithCapacity:16];
+	NSString *filebase;
+	if( [[path pathExtension] isEqualToString:@"fd"])
+	{
+		NSArray *dir_contents = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath: directory error: nil] pathsMatchingExtensions:[NSArray arrayWithObjects:@"fd",nil]];
+		
+		if( [dir_contents count] == 0)
+		{
+			return;
+		}
+		
+		//geth the base path
+		//TODO: This does not work if there are underscores in the file name
+		//find the last occurrence of "_"
+		NSRange range = [[path lastPathComponent] rangeOfString:@"_" options:NSBackwardsSearch];
+		filebase = [[path lastPathComponent] substringToIndex:range.location]; 
+		currentBaseName = [[NSString stringWithString:filebase] retain];
+		//set the current directory of the process to the the one pointed to by the load dialog
+		[[NSFileManager defaultManager] changeCurrentDirectoryPath:directory];
+		//get all feature files, i.e. files ending in .fd from the FD directory
+		//NSArray *dir_contents = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath:[[path stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"FD"] error: NULL] 
+		 //                        pathsMatchingExtensions:[NSArray arrayWithObjects:@"fd",nil]];
+		//get waveforms file
+					
+		NSEnumerator *enumerator = [dir_contents objectEnumerator];
+		id file;
+		header H;
+		//float *tmp_data,*tmp_data2;
+					
+		
+		while(file = [enumerator nextObject] )
+		{
+			if(([file hasPrefix:filebase] )) //&& ([[file stringByDeletingPathExtension]))
 			{
-				return;
-			}
-            
-            //geth the base path
-            //TODO: This does not work if there are underscores in the file name
-			//find the last occurrence of "_"
-            NSRange range = [[path lastPathComponent] rangeOfString:@"_" options:NSBackwardsSearch];
-			filebase = [[path lastPathComponent] substringToIndex:range.location]; 
-            currentBaseName = [[NSString stringWithString:filebase] retain];
-            //set the current directory of the process to the the one pointed to by the load dialog
-            [[NSFileManager defaultManager] changeCurrentDirectoryPath:directory];
-            //get all feature files, i.e. files ending in .fd from the FD directory
-            //NSArray *dir_contents = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath:[[path stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"FD"] error: NULL] 
-             //                        pathsMatchingExtensions:[NSArray arrayWithObjects:@"fd",nil]];
-            //get waveforms file
-                        
-            NSEnumerator *enumerator = [dir_contents objectEnumerator];
-            id file;
-            header H;
-            //float *tmp_data,*tmp_data2;
-                        
-            
-            while(file = [enumerator nextObject] )
-            {
-                if(([file hasPrefix:filebase] )) //&& ([[file stringByDeletingPathExtension]))
-                {
-                    //check if this file contains a valid feature
-					if( [[file stringByDeletingPathExtension] isEqualToString:filebase] )
+				//check if this file contains a valid feature
+				if( [[file stringByDeletingPathExtension] isEqualToString:filebase] )
+				{
+					//skip
+					continue;
+				}
+				char *filename = [[NSString pathWithComponents: [NSArray arrayWithObjects: directory,file,nil]] cStringUsingEncoding:NSASCIIStringEncoding];
+				H = *readFeatureHeader(filename, &H);
+				
+				tmp_data = NSZoneMalloc([self zone], H.rows*H.cols*sizeof(float));
+				tmp_data2 = NSZoneMalloc([self zone], H.rows*H.cols*sizeof(float));
+				tmp_data = readFeatureData(filename, tmp_data);
+				if(tmp_data == NULL)
+				{
+					//create an alert
+					NSAlert *alert = [NSAlert alertWithMessageText:@"Feature file could not be loaded" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@""];
+					[alert runModal];
+					NSZoneFree([self zone], tmp_data);
+					return;
+					
+				}
+				//transpose
+				for(i=0;i<H.rows;i++)
+				{ 
+					for(j=0;j<H.cols;j++)
 					{
-						//skip
-						continue;
+						tmp_data2[j*H.rows+i] = tmp_data[i*H.cols+j];
 					}
-					char *filename = [[NSString pathWithComponents: [NSArray arrayWithObjects: directory,file,nil]] cStringUsingEncoding:NSASCIIStringEncoding];
-                    H = *readFeatureHeader(filename, &H);
-                    
-                    tmp_data = malloc(H.rows*H.cols*sizeof(float));
-                    tmp_data2 = malloc(H.rows*H.cols*sizeof(float));
-                    tmp_data = readFeatureData(filename, tmp_data);
-                    if(tmp_data == NULL)
-                    {
-                        //create an alert
-                        NSAlert *alert = [NSAlert alertWithMessageText:@"Feature file could not be loaded" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@""];
-                        [alert runModal];
-                        free(tmp_data);
-                        return;
-                        
-                    }
-                    //transpose
-                    for(i=0;i<H.rows;i++)
-                    { 
-                        for(j=0;j<H.cols;j++)
-                        {
-                            tmp_data2[j*H.rows+i] = tmp_data[i*H.cols+j];
-                        }
-                    }
-                    //scale
-                    //vDSP_vsdiv(
-                    [data appendBytes:tmp_data2 length: H.rows*H.cols*sizeof(float)];
-                    free(tmp_data);
-                    free(tmp_data2);
-                    cols+=H.rows;
-                    //feature names
-                    //get basename
-                    NSString *fn = [[[[file lastPathComponent] componentsSeparatedByString:@"_"] lastObject] stringByDeletingPathExtension]; 
-                    for(j=0;j<H.rows;j++)
-                    {
-                        [feature_names addObject: [fn stringByAppendingFormat:@"%d",j+1]];
-                    }
-                    
-                }
-                
-                /*need to reshape the data
-                tmp_data = malloc([data length]);
-                float *tmp_data2 = [data bytes];
-               
-                for(i=0;i<H.rows;i++)
-                { 
-                    for(j=0;j<tmp_cols;j++)
-                    {
-                        tmp_data[i*tmp_cols+j] = tmp_data_2[j%H.cols+]
-                    }
-                }*/
-                rows = H.cols;
-            }
-            //need to reshape
-            tmp_data = malloc(rows*cols*sizeof(float));
-            tmp_data2 = (float*)[data bytes];
-            for(i=0;i<rows;i++)
-            {
-                for(k=0;k<cols/H.rows;k++)
-                {
-                    for(j=0;j<H.rows;j++)
-                    {
-                        tmp_data[i*cols+k*H.rows+j] = tmp_data2[k*rows*H.rows + i*H.rows+j];
-                    }
-                }
-            }
-            //free(temp_data);
-        }
-        
-        else if([[[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:1] isEqualToString:@"fet"]) 
-        {
-            //the file is a .fet file; it will have all the features written in ascii format, one row per line
-            //the first line contains the number of columns
-            filebase = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:0];
-			NSLog(@"LastComponent: %@",[path lastPathComponent]);
-            currentBaseName = [[NSString stringWithString:filebase] retain];
+				}
+				//scale
+				//vDSP_vsdiv(
+				[data appendBytes:tmp_data2 length: H.rows*H.cols*sizeof(float)];
+				NSZoneFree([self zone], tmp_data);
+				NSZoneFree([self zone], tmp_data2);
+				cols+=H.rows;
+				//feature names
+				//get basename
+				NSString *fn = [[[[file lastPathComponent] componentsSeparatedByString:@"_"] lastObject] stringByDeletingPathExtension]; 
+				for(j=0;j<H.rows;j++)
+				{
+					[feature_names addObject: [fn stringByAppendingFormat:@"%d",j+1]];
+				}
+				
+			}
+			
+			/*need to reshape the data
+			tmp_data = malloc([data length]);
+			float *tmp_data2 = [data bytes];
+		   
+			for(i=0;i<H.rows;i++)
+			{ 
+				for(j=0;j<tmp_cols;j++)
+				{
+					tmp_data[i*tmp_cols+j] = tmp_data_2[j%H.cols+]
+				}
+			}*/
+			rows = H.cols;
+		}
+		//need to reshape
+		tmp_data = NSZoneMalloc([self zone], rows*cols*sizeof(float));
+		tmp_data2 = (float*)[data bytes];
+		for(i=0;i<rows;i++)
+		{
+			for(k=0;k<cols/H.rows;k++)
+			{
+				for(j=0;j<H.rows;j++)
+				{
+					tmp_data[i*cols+k*H.rows+j] = tmp_data2[k*rows*H.rows + i*H.rows+j];
+				}
+			}
+		}
+		//free(temp_data);
+	}
+	
+	else if([[[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:1] isEqualToString:@"fet"]) 
+	{
+		//the file is a .fet file; it will have all the features written in ascii format, one row per line
+		//the first line contains the number of columns
+		filebase = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:0];
+		NSLog(@"LastComponent: %@",[path lastPathComponent]);
+		currentBaseName = [[NSString stringWithString:filebase] retain];
 
-            NSArray *lines = [[NSString stringWithContentsOfFile:path] componentsSeparatedByString:@"\n"];
-            cols = [[lines objectAtIndex:0] intValue];
-            //check if last line is empty
-            if( [[lines lastObject] isEqualToString:@""] )
-            {
-                rows = [lines count]-2;
-            }
-            else
-            {
-                rows = [lines count]-1;
-            }
-            tmp_data = malloc(rows*cols*sizeof(float));
-            int i,j;
-            for(i=0;i<rows;i++)
-            {
-                NSScanner *tokens = [NSScanner scannerWithString: [lines objectAtIndex:i+1]];
-                //skip all whitespace characters
-                [tokens setCharactersToBeSkipped:[NSCharacterSet whitespaceCharacterSet]];
-                for(j=0;j<cols;j++)
-                {
-                    [tokens scanFloat:tmp_data+i*cols+j];
-                }
-            }
-            [data appendBytes:tmp_data length:rows*cols*sizeof(float)];
-            tmp_data2 = (float*)[data bytes];
-            //free(tmp_data);
-            //we don't know what the features are, so just call them by the the column
-            for(j=0;j<cols;j++)
-            {
-                [feature_names addObject: [NSString stringWithFormat:@"feature%d", j]];
-            }
-        }
-        //float *tmp_data = malloc(rows*cols*sizeof(float));
-        //tmp_data2 = [data bytes];    
-        NSRange range;
-        range.location = 0;
-        range.length = rows*cols*sizeof(float);
-        
-        //scale data
-        float max,min,l;
-        for(i=0;i<cols;i++)
-        {
-            //find max
-            vDSP_maxv(tmp_data+i,cols,&max,rows);
-            //find min
-            vDSP_minv(tmp_data+i,cols,&min,rows);
-            //scale the data
-            l = max-min;
-            /*min *=-1;
-            vDSP_addv(tmp_data2+i,cols,&min,
-            vDSP_vsdiv(tmp_data2+i,cols,&l,tmp_data+i,cols,rows*cols);*/
-            for(j=0;j<rows;j++)
-            {
-                tmp_data[j*cols+i] = 2*(tmp_data[j*cols+i]-min)/l-1;
-            }
-        }
-        [data replaceBytesInRange:range withBytes:tmp_data length: rows*cols*sizeof(float)];
-        free(tmp_data);
-        [fw createVertices:data withRows:rows andColumns:cols];
-        //[fw loadVertices: [openPanel URL]];
-        [dim1 addItemsWithObjectValues:feature_names];
-        [dim2 addItemsWithObjectValues:feature_names];
-        [dim3 addItemsWithObjectValues:feature_names];
-        dataloaded = YES;
-        
-        //get time data
-		//NSLog(@"XYZF: Is this going to work?");
-		//NSLog(@"Filebase: %@",filebase);
-        NSArray *waveformfiles = [[[[NSFileManager defaultManager] contentsOfDirectoryAtPath: directory error: nil] 
-                                   pathsMatchingExtensions:[NSArray arrayWithObjects:@"bin",nil]] filteredArrayUsingPredicate:
-                                  [NSPredicate predicateWithFormat:@"SELF BEGINSWITH %@", filebase]];
-        //NSString *waveformsPath = @"";
-        if( [waveformfiles count] == 1 )
-        {
-            [self setWaveformsFile: [waveformfiles objectAtIndex:0]];
-            char *waveformsPath = [waveformsFile cStringUsingEncoding: NSASCIIStringEncoding];
-            nptHeader spikeHeader;
-            spikeHeader = *getSpikeInfo(waveformsPath, &spikeHeader);
-            unsigned long long int *times = malloc(rows*sizeof(unsigned long long int));
-            unsigned int *times_indices = malloc(rows*sizeof(unsigned int));
-            for(i=0;i<rows;i++)
-            {
-                times_indices[i] = i;
-            }
-            times = getTimes(waveformsPath, &spikeHeader, times_indices, rows, times);
-            timestamps = [[NSData dataWithBytes:times length:rows*sizeof(unsigned long long int)] retain];
-            free(times);
-            free(times_indices);
-        }
+		NSArray *lines = [[NSString stringWithContentsOfFile:path] componentsSeparatedByString:@"\n"];
+		cols = [[lines objectAtIndex:0] intValue];
+		//check if last line is empty
+		if( [[lines lastObject] isEqualToString:@""] )
+		{
+			rows = [lines count]-2;
+		}
+		else
+		{
+			rows = [lines count]-1;
+		}
+		tmp_data = malloc(rows*cols*sizeof(float));
+		int i,j;
+		for(i=0;i<rows;i++)
+		{
+			NSScanner *tokens = [NSScanner scannerWithString: [lines objectAtIndex:i+1]];
+			//skip all whitespace characters
+			[tokens setCharactersToBeSkipped:[NSCharacterSet whitespaceCharacterSet]];
+			for(j=0;j<cols;j++)
+			{
+				[tokens scanFloat:tmp_data+i*cols+j];
+			}
+		}
+		[data appendBytes:tmp_data length:rows*cols*sizeof(float)];
+		tmp_data2 = (float*)[data bytes];
+		//free(tmp_data);
+		//we don't know what the features are, so just call them by the the column
+		for(j=0;j<cols;j++)
+		{
+			[feature_names addObject: [NSString stringWithFormat:@"feature%d", j]];
+		}
+	}
+	//float *tmp_data = malloc(rows*cols*sizeof(float));
+	//tmp_data2 = [data bytes];    
+	NSRange range;
+	range.location = 0;
+	range.length = rows*cols*sizeof(float);
+	
+	//scale data
+	float max,min,l;
+	for(i=0;i<cols;i++)
+	{
+		//find max
+		vDSP_maxv(tmp_data+i,cols,&max,rows);
+		//find min
+		vDSP_minv(tmp_data+i,cols,&min,rows);
+		//scale the data
+		l = max-min;
+		/*min *=-1;
+		vDSP_addv(tmp_data2+i,cols,&min,
+		vDSP_vsdiv(tmp_data2+i,cols,&l,tmp_data+i,cols,rows*cols);*/
+		for(j=0;j<rows;j++)
+		{
+			tmp_data[j*cols+i] = 2*(tmp_data[j*cols+i]-min)/l-1;
+		}
+	}
+	[data replaceBytesInRange:range withBytes:tmp_data length: rows*cols*sizeof(float)];
+	NSZoneFree([self zone], tmp_data);
+	[fw createVertices:data withRows:rows andColumns:cols];
+	//[fw loadVertices: [openPanel URL]];
+	[dim1 addItemsWithObjectValues:feature_names];
+	[dim2 addItemsWithObjectValues:feature_names];
+	[dim3 addItemsWithObjectValues:feature_names];
+	dataloaded = YES;
+	
+	//get time data
+	//NSLog(@"XYZF: Is this going to work?");
+	//NSLog(@"Filebase: %@",filebase);
+	if ([self waveformsFile] == NULL )
+	{
+		NSArray *waveformfiles = [[[[NSFileManager defaultManager] contentsOfDirectoryAtPath: directory error: nil] 
+								   pathsMatchingExtensions:[NSArray arrayWithObjects:@"bin",nil]] filteredArrayUsingPredicate:
+								  [NSPredicate predicateWithFormat:@"SELF BEGINSWITH %@", filebase]];
+		//NSString *waveformsPath = @"";
+		if( [waveformfiles count] == 1 )
+		{
+			[self setWaveformsFile: [waveformfiles objectAtIndex:0]];
+			char *waveformsPath = [waveformsFile cStringUsingEncoding: NSASCIIStringEncoding];
+			nptHeader spikeHeader;
+			spikeHeader = *getSpikeInfo(waveformsPath, &spikeHeader);
+			unsigned long long int *times = malloc(rows*sizeof(unsigned long long int));
+			unsigned int *times_indices = malloc(rows*sizeof(unsigned int));
+			for(i=0;i<rows;i++)
+			{
+				times_indices[i] = i;
+			}
+			times = getTimes(waveformsPath, &spikeHeader, times_indices, rows, times);
+			timestamps = [[NSData dataWithBytes:times length:rows*sizeof(unsigned long long int)] retain];
+			free(times);
+			free(times_indices);
+		}
+	}
         
 
     //load feature anems
@@ -308,6 +311,11 @@
 	//register featureview for notification about change in highlight
 	[[NSNotificationCenter defaultCenter] addObserver: fw selector:@selector(receiveNotification:) 
 												 name:@"highlight" object: nil];
+	
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) 
+												 name:@"setFeatures" object:nil];
+	
+	
 
 	//only reset clusters if data has already been loaded
     if( ([self Clusters] != NULL) && (dataloaded == YES ) )
@@ -338,7 +346,7 @@
 
 - (void)openClusterFile:(NSString*)path;
 {
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
+    [[NSNotificationCenter defaultCenter] removeObserver: self name: @"ClusterStateChanged" object: nil];
     //remove all the all clusters
     //[self removeAllObjectsFromClusters];
     //NSString *filename = [[openPanel URL] path];
@@ -580,7 +588,7 @@
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(ClusterStateChanged:)
                                                  name:@"ClusterStateChanged" object:nil];
-    //check for model file
+	    //check for model file
     NSString *modelFilePath = [path stringByReplacingOccurrencesOfString: extension withString: @"model"];
     if ([[NSFileManager defaultManager] fileExistsAtPath: modelFilePath ] )
     {
@@ -684,10 +692,8 @@
 			
 
         }
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) 
-													 name:@"setFeatures" object:nil];
-    }
-           
+	}
+		
     
 }
 
@@ -820,7 +826,7 @@
 {
 	if( [[notification name] isEqualToString:@"setFeatures"] )
 	{
-		[self setAvailableFeatures:[notification object]];
+		[self setAvailableFeatures:[[notification userInfo] objectForKey:@"channels"]];
 	}
 }
 
@@ -851,16 +857,17 @@
 	//notify that soemthing changed
 	[self changeDim1:dim1];
 	[dim2 selectItemAtIndex:1];
-	[dim3 selectItemAtIndex:2];
+	[self changeDim2:dim2];
 
-						
+	[dim3 selectItemAtIndex:2];
+	[self changeDim3:dim3];			
 	
 }
 
 - (IBAction) changeAllClusters: (id)sender
 {
     //Temporarily remove notifcations
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"ClusterStateChanged" object: nil];
     //NSNumber *state = [NSNumber numberWithInt:[sender state]];
     
     if([sender state] == 0 )
@@ -901,7 +908,7 @@
         NSEnumerator *clusterEnumerator = [candidates objectEnumerator];
         id aCluster;
         //turn off notifcation while we rearrange the clusters
-        [[NSNotificationCenter defaultCenter] removeObserver:self];
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:@"ClusterStateChanged" object: nil];
 
         while(aCluster = [clusterEnumerator nextObject] )
         {
