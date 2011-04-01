@@ -29,8 +29,10 @@ int cols;
 static float *minmax;
 static float scale;
 static float rotatex,rotatey,rotatez;
+static float originx,originy,originz;
 
 static void pushVertices();
+static void drawBox();
 static void modifyVertices(GLfloat *vertex_data);
 static void modifyIndices(GLuint *index_data);
 static void modifyColors(GLfloat *color_data);
@@ -78,6 +80,7 @@ static BOOL dataloaded;
 -(void) zoomIn;
 -(void) zoomOut;
 -(void) resetZoom;
+//-(void) drawBox;
 -(NSData*)getVertexData;
 //-(void) pushVertices;
 

@@ -29,6 +29,9 @@
 	rotatex = 0.0;
 	rotatey = 0.0;
 	rotatez = 0.0;
+	originx = 0.0;
+	originy = 0.0;
+	originz = 0.0;
     
     NSOpenGLPixelFormatAttribute attrs[] =
     {
@@ -569,13 +572,78 @@ static void pushVertices()
 }
 static void drawFrame()
 {
-    glColor3f(1.0f,0.85f,0.35f);
-    glBegin(GL_TRIANGLES);
-    glVertex3f(vertices[0], vertices[1],vertices[2]);
-    glVertex3f(vertices[4],vertices[5],vertices[6]);
-    glVertex3f(vertices[8],vertices[9],vertices[10]);
-    glEnd();
+	//finally connect the corners
+	glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+	glLineWidth(1.0);
+	int i;
+	float d = 0;
+	for(i=0;i<10;i++)
+	{
+		d = 0.2*i;
+		glBegin(GL_LINES);
+		//y
+		glVertex3f(-.99+d, -.99, -.99);
+		glVertex3f(-.99+d, 1.01, -.99);
+		
+		glVertex3f(-.99, -.99, -.99+d);
+		glVertex3f(-.99, 1.01, -.99+d);
+
+		//z
+		glVertex3f(-.99+d, -.99, -0.99);
+		glVertex3f(-.99+d, -.99, 1.01);
+		
+		glVertex3f(-.99, -.99+d, -0.99);
+		glVertex3f(-.99, -.99+d, 1.01);
+		
+		//x
+		glVertex3f(-.99, -0.99, -.99+d);
+		glVertex3f(1.01, -.99, -.99+d);
+				   
+	    glVertex3f(-.99, -.99+d, -0.99);
+	    glVertex3f(1.01, -.99+d, -.99);
+		
+		/*glVertex3f(1.0, 1.0, 1.0);
+		 glVertex3f(1.0, 1.0, -1.0);*/
+		
+		glEnd();
+	}
+    glColor4f(0.5f,0.85f,0.35f,0.3f);
     
+	//front size
+	//glBegin(GL_LINE_LOOP);
+    /*glBegin(GL_QUADS);
+	glVertex3f(-1.0, -1.0, 1.0);
+	glVertex3f(1.0,-1.0,1.0);
+	glVertex3f(1.0,1.0,1.0);
+	glVertex3f(-1.0,1.0,1.0);
+	glEnd();*/
+	//back side
+	glBegin(GL_QUADS);
+	glVertex3f(-1.0, -1.0, -1.0);
+	glVertex3f(1.0,-1.0,-1.0);
+	glVertex3f(1.0,1.0,-1.0);
+	glVertex3f(-1.0,1.0,-1.0);
+	
+    glEnd();
+	
+	//floor
+	glBegin(GL_QUADS);
+	glVertex3f(-1.0, -1.0, -1.0);
+	glVertex3f(1.0,-1.0,-1.0);
+	glVertex3f(1.0,-1.0,1.0);
+	glVertex3f(-1.0,-1.0,1.0);
+	glEnd();
+	
+	//side
+	glBegin(GL_QUADS);
+	glVertex3f(-1.0, -1.0, -1.0);
+	glVertex3f(-1.0, 1.0, -1.0);
+	glVertex3f(-1.0, 1.0, 1.0);
+	glVertex3f(-1.0, -1.0, 1.0);
+
+	
+	glEnd();
+	    
 }
 
 static void drawAnObject()
@@ -614,18 +682,28 @@ static void drawAnObject()
     glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
     //glDepthRange(minmax[4],minmax[5]);
     //}
-    glClearColor(0,0,0,0);
+    glClearColor(1,1,1,1);
     glClear(GL_COLOR_BUFFER_BIT);
+	
     glClear(GL_DEPTH_BUFFER_BIT);
     if(dataloaded)
     {
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(scale*1.1*minmax[2*draw_dims[0]], scale*1.1*minmax[2*draw_dims[0]+1], scale*1.1*minmax[2*draw_dims[1]], 
-				scale*1.1*minmax[2*draw_dims[1]+1], scale*1.1*minmax[2*draw_dims[2]], scale*1.1*minmax[2*draw_dims[2]+1]);
 		glRotatef(rotatey,0, 1, 0);
 		glRotatef(rotatez, 0, 0,1);
+		glMatrixMode(GL_PROJECTION);
+				glTranslatef(originx, originy, originz);
+		glOrtho(scale*1.1*minmax[2*draw_dims[0]], scale*1.1*minmax[2*draw_dims[0]+1], scale*1.1*minmax[2*draw_dims[1]], 
+				scale*1.1*minmax[2*draw_dims[1]+1], scale*1.1*minmax[2*draw_dims[2]], scale*1.1*minmax[2*draw_dims[2]+1]);
+		
         drawAnObject();
+		glLoadIdentity();
+		glRotatef(rotatey,0, 1, 0);
+		glRotatef(rotatez, 0, 0,1);
+		glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 
+				1.1*minmax[2*draw_dims[1]+1], minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
+		
+		drawFrame();
+		
         //drawFrame();
     }
     glFlush();
@@ -676,7 +754,7 @@ static void drawAnObject()
 
 -(void)zoomIn
 {
-	scale = scale*1.1;
+	scale = scale*0.9;
 	//[[self openGLContext] makeCurrentContext];
 
 	//glMatrixMode(GL_MODELVIEW);
@@ -688,7 +766,7 @@ static void drawAnObject()
 
 -(void)zoomOut
 {
-	scale = scale*0.9;
+	scale = scale*1.1;
 	[self setNeedsDisplay:YES];
 
 }
@@ -792,7 +870,7 @@ static void drawAnObject()
     [rotation replaceBytesInRange:range withBytes:&rot];*/
     //rotate about y-axis
     //glRotated(-5, 0, 1, 0);
-	rotatey+=5;
+	rotatey-=5;
     //[self setNeedsDisplay:YES];
 	[self display];
 
@@ -895,6 +973,55 @@ static void drawAnObject()
 		glScaled(scale, scale, scale);
 		[self setNeedsDisplay: YES];*/
 	}
+}
+
+-(void)mouseDragged:(NSEvent *)theEvent
+{
+	//shift the origin by some amount
+	BOOL needDisplay = NO;
+	if( [theEvent deltaX] < -1 )
+	{
+		originx-=0.1;
+		needDisplay = YES;
+	}
+	else if( [theEvent deltaX] > 1 )
+	{
+		originx+=0.1;
+		needDisplay = YES;
+
+	}
+	if( [theEvent deltaY] < -1 )
+	{
+		originy+=0.1;
+		needDisplay = YES;
+
+	}
+	else if( [theEvent deltaY] > 1 )
+	{
+		originy-=0.1;
+		needDisplay = YES;
+
+	}
+	[self setNeedsDisplay:needDisplay];
+			  
+}
+
+-(void)rightMouseDragged:(NSEvent *)theEvent
+{
+	BOOL needDisplay = NO;
+	if( [theEvent deltaY] < -1 )
+	{
+		originz-=0.1;
+		needDisplay = YES;
+	}
+	else if( [theEvent deltaY] > 1 )
+	{
+		originz+=0.1;
+		needDisplay = YES;
+		
+	}
+	[self setNeedsDisplay:needDisplay];
+	
 }
 
 -(void)dealloc
