@@ -26,6 +26,9 @@
     minmax[3] = 1;
     minmax[4] = -1;
     minmax[5] = 1;
+	rotatex = 0.0;
+	rotatey = 0.0;
+	rotatez = 0.0;
     
     NSOpenGLPixelFormatAttribute attrs[] =
     {
@@ -227,6 +230,7 @@
         minmax[2*cl] = -1.5;
         minmax[2*cl+1] = 1.5;
     }
+	scale = 1.0;
     //minmax = getMinMax(minmax, vertices, rows, cols);
     draw_dims[0] = 0;
     draw_dims[1] = 1;
@@ -317,6 +321,7 @@
         nindices += new_size;
         //glBufferData(GL_ELEMENT_ARRAY_BUFFER, new_size*sizeof(GLuint), tmp_indices, GL_DYNAMIC_DRAW);
         glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+		//TODO: Change the viewport to scale to the new set of points
         [self setNeedsDisplay:YES];
     }
 }
@@ -614,6 +619,12 @@ static void drawAnObject()
     glClear(GL_DEPTH_BUFFER_BIT);
     if(dataloaded)
     {
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(scale*1.1*minmax[2*draw_dims[0]], scale*1.1*minmax[2*draw_dims[0]+1], scale*1.1*minmax[2*draw_dims[1]], 
+				scale*1.1*minmax[2*draw_dims[1]+1], scale*1.1*minmax[2*draw_dims[2]], scale*1.1*minmax[2*draw_dims[2]+1]);
+		glRotatef(rotatey,0, 1, 0);
+		glRotatef(rotatez, 0, 0,1);
         drawAnObject();
         //drawFrame();
     }
@@ -663,6 +674,32 @@ static void drawAnObject()
     [self setNeedsDisplay:YES];    
 }
 
+-(void)zoomIn
+{
+	scale = scale*1.1;
+	//[[self openGLContext] makeCurrentContext];
+
+	//glMatrixMode(GL_MODELVIEW);
+	//glMatrixMode(GL_PROJECTION);
+	//glLoadIdentity();
+	//glScaled(scale, scale, scale);
+	[self setNeedsDisplay:YES];
+}
+
+-(void)zoomOut
+{
+	scale = scale*0.9;
+	[self setNeedsDisplay:YES];
+
+}
+
+-(void)resetZoom
+{
+	scale = 1.0;
+	[self setNeedsDisplay:YES];
+
+}
+
 -(void) receiveNotification:(NSNotification*)notification
 {
     if([[notification name] isEqualToString:@"highlight"])
@@ -679,7 +716,14 @@ static void drawAnObject()
     if ([theEvent modifierFlags] & NSNumericPadKeyMask) {
         [self interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
     } else {
-        [self keyDown:theEvent];
+        if( [[theEvent characters] isEqualToString:@"+" ] )
+		{
+			[self zoomIn];
+		}
+		else if ([[ theEvent characters] isEqualToString:@"-"] )
+		{
+			[self zoomOut];
+		}
     }
 }
 
@@ -694,7 +738,8 @@ static void drawAnObject()
     rot-=5.0;
     [rotation replaceBytesInRange:range withBytes:&rot];*/
 	//glMatrixMode(GL_MODELVIEW);
-    glRotated(-5, 0, 0, 1);
+    //glRotated(-5, 0, 0, 1);
+	rotatez+=-5;
     //[self setNeedsDisplay:YES];
 	[self display];
 }
@@ -712,7 +757,8 @@ static void drawAnObject()
 	//only rotate if the current context belongs to me
 	//if([[NSOpenGLContext currentContext] isEqualTo:[self openGLContext]])
 	//{
-	glRotated(5, 0, 0, 1);
+	//glRotated(5, 0, 0, 1);
+	rotatez+=5;
 	//[self setNeedsDisplay:YES];
 	[self display];
 	//}
@@ -729,7 +775,8 @@ static void drawAnObject()
     rot+=5.0;
     [rotation replaceBytesInRange:range withBytes:&rot];
     //rotate about y-axis*/
-    glRotated(5, 0, 1, 0);
+    //glRotated(5, 0, 1, 0);
+	rotatey+=5;
     //[self setNeedsDisplay:YES];
 	[self display];
 }
@@ -744,7 +791,8 @@ static void drawAnObject()
     rot-=5.0;
     [rotation replaceBytesInRange:range withBytes:&rot];*/
     //rotate about y-axis
-    glRotated(-5, 0, 1, 0);
+    //glRotated(-5, 0, 1, 0);
+	rotatey+=5;
     //[self setNeedsDisplay:YES];
 	[self display];
 
@@ -833,6 +881,19 @@ static void drawAnObject()
 	else if ([theEvent deltaY] < -1 )
 	{
 		[self moveDown:self];
+	}
+}
+
+-(void)magnifyWithEvent:(NSEvent *)event
+{
+	if( [event type] == NSEventTypeMagnify )
+	{
+		/*scale = scale+0.01*[event magnification];
+		[[self openGLContext] makeCurrentContext];
+		glMatrixMode(GL_MODELVIEW);
+		//glLoadIdentity();
+		glScaled(scale, scale, scale);
+		[self setNeedsDisplay: YES];*/
 	}
 }
 

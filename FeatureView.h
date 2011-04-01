@@ -27,6 +27,8 @@ int ndraw_dims;
 int rows;
 int cols;
 static float *minmax;
+static float scale;
+static float rotatex,rotatey,rotatez;
 
 static void pushVertices();
 static void modifyVertices(GLfloat *vertex_data);
@@ -73,6 +75,9 @@ static BOOL dataloaded;
 -(void) rotateY;
 -(void) rotateX;
 -(void) rotateZ;
+-(void) zoomIn;
+-(void) zoomOut;
+-(void) resetZoom;
 -(NSData*)getVertexData;
 //-(void) pushVertices;
 
