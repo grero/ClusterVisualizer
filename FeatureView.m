@@ -577,7 +577,7 @@ static void drawFrame()
 	glLineWidth(1.0);
 	int i;
 	float d = 0;
-	for(i=0;i<10;i++)
+	for(i=0;i<=10;i++)
 	{
 		d = 0.2*i;
 		glBegin(GL_LINES);
@@ -607,7 +607,9 @@ static void drawFrame()
 		
 		glEnd();
 	}
-    glColor4f(0.5f,0.85f,0.35f,0.3f);
+	
+	
+    glColor4f(0.5f,0.85f,0.35f,0.1f);
     
 	//front size
 	//glBegin(GL_LINE_LOOP);
@@ -618,6 +620,7 @@ static void drawFrame()
 	glVertex3f(-1.0,1.0,1.0);
 	glEnd();*/
 	//back side
+	/*
 	glBegin(GL_QUADS);
 	glVertex3f(-1.0, -1.0, -1.0);
 	glVertex3f(1.0,-1.0,-1.0);
@@ -642,7 +645,7 @@ static void drawFrame()
 	glVertex3f(-1.0, -1.0, 1.0);
 
 	
-	glEnd();
+	glEnd();*/
 	    
 }
 
@@ -688,13 +691,15 @@ static void drawAnObject()
     glClear(GL_DEPTH_BUFFER_BIT);
     if(dataloaded)
     {
+		glMatrixMode(GL_PROJECTION);
+
+		glLoadIdentity();
 		glRotatef(rotatey,0, 1, 0);
 		glRotatef(rotatez, 0, 0,1);
-		glMatrixMode(GL_PROJECTION);
-				glTranslatef(originx, originy, originz);
 		glOrtho(scale*1.1*minmax[2*draw_dims[0]], scale*1.1*minmax[2*draw_dims[0]+1], scale*1.1*minmax[2*draw_dims[1]], 
 				scale*1.1*minmax[2*draw_dims[1]+1], scale*1.1*minmax[2*draw_dims[2]], scale*1.1*minmax[2*draw_dims[2]+1]);
-		
+		glTranslatef(originx, originy, originz);
+
         drawAnObject();
 		glLoadIdentity();
 		glRotatef(rotatey,0, 1, 0);
@@ -723,7 +728,7 @@ static void drawAnObject()
     
     [context makeCurrentContext];
     glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
-    glClearColor(0,0, 0, 0);
+    glClearColor(1,1, 1, 1);
     glClearDepth(1.0);
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
