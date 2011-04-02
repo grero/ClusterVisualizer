@@ -479,7 +479,7 @@
 			}
 			free(cids);
 			free(npoints);
-			free(cluster_colors);
+			//free(cluster_colors);
 
 			//tell the view to change the colors
 		}
