@@ -313,18 +313,53 @@
                 j+=1;
             }
         }*/
+		float *centroid = NSZoneMalloc([self zone], 3*sizeof(float));
+		float *cluster_minmax = NSZoneCalloc([self zone], 6,sizeof(float));
+		
         for(j=0;j<new_size;j++)
         {
             tmp_indices[nindices+j] = points[j];
-        
+			//compute centroid
+			centroid[0] += vertices[points[j]*cols + draw_dims[0]];
+			centroid[1] += vertices[points[j]*cols + draw_dims[1]];
+			centroid[2] += vertices[points[j]*cols + draw_dims[2]];
+			//compute min/max
+			cluster_minmax[0] = MIN(cluster_minmax[0],vertices[points[j]*cols + draw_dims[0]]);
+			cluster_minmax[1] = MAX(cluster_minmax[1],vertices[points[j]*cols + draw_dims[0]]);
+			
+			cluster_minmax[2] = MIN(cluster_minmax[2],vertices[points[j]*cols + draw_dims[1]]);
+			cluster_minmax[3] = MAX(cluster_minmax[3],vertices[points[j]*cols + draw_dims[1]]);
+			
+			cluster_minmax[4] = MIN(cluster_minmax[4],vertices[points[j]*cols + draw_dims[2]]);
+			cluster_minmax[5] = MAX(cluster_minmax[5],vertices[points[j]*cols + draw_dims[2]]);
+			
+
         }
-        [indexset addIndexes: [cluster indices]];
+		scale = 1.0;
+		for(j=0;j<3;j++)
+		{
+			scale = MAX(scale,1.0/(cluster_minmax[2*j+1]-cluster_minmax[2*j]));		
+		}
+		scale = 1.0/scale;
+						
+		
         //this does not work for a 64 bit application, as NSUInteger is then 64 bit, while the tm_indices is 32 bit.
         //int count = [indexset getIndexes:(NSUInteger*)tmp_indices maxCount:nindices+new_size inIndexRange:nil];
-        nindices += new_size;
         //glBufferData(GL_ELEMENT_ARRAY_BUFFER, new_size*sizeof(GLuint), tmp_indices, GL_DYNAMIC_DRAW);
         glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+		nindices += new_size;
+
+		//normalize
+		centroid[0]/=new_size;
+		centroid[1]/=new_size;
+		centroid[2]/=new_size;
+		originx = -centroid[0];
+		originy = -centroid[1];
+		originz = -centroid[1];
+        NSZoneFree([self zone], centroid);
+		[indexset addIndexes: [cluster indices]];
 		//TODO: Change the viewport to scale to the new set of points
+		//calculate the centroid of the cluster in the current space
         [self setNeedsDisplay:YES];
     }
 }
@@ -376,6 +411,10 @@
                 nindices=0;
         }
         glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+		//reset origin
+		originx = 0.0;
+		originy = 0.0;
+		originz = 0.0;
         [self setNeedsDisplay:YES];
 
     }
@@ -691,21 +730,40 @@ static void drawAnObject()
     glClear(GL_DEPTH_BUFFER_BIT);
     if(dataloaded)
     {
-		glMatrixMode(GL_PROJECTION);
+		//glMatrixMode(GL_PROJECTION);
 
+		//glLoadIdentity();
+		//glRotatef(rotatey,0, 1, 0);
+		//glRotatef(rotatez, 0, 0,1);
+		//glOrtho(scale*1.1*minmax[2*draw_dims[0]], scale*1.1*minmax[2*draw_dims[0]+1], scale*1.1*minmax[2*draw_dims[1]], 
+		//		scale*1.1*minmax[2*draw_dims[1]+1], scale*1.1*minmax[2*draw_dims[2]], scale*1.1*minmax[2*draw_dims[2]+1]);
+		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
-		glRotatef(rotatey,0, 1, 0);
-		glRotatef(rotatez, 0, 0,1);
-		glOrtho(scale*1.1*minmax[2*draw_dims[0]], scale*1.1*minmax[2*draw_dims[0]+1], scale*1.1*minmax[2*draw_dims[1]], 
-				scale*1.1*minmax[2*draw_dims[1]+1], scale*1.1*minmax[2*draw_dims[2]], scale*1.1*minmax[2*draw_dims[2]+1]);
 		glTranslatef(originx, originy, originz);
-
-        drawAnObject();
+		glScalef(scale, scale,scale);
+		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		glRotatef(rotatey,0, 1, 0);
-		glRotatef(rotatez, 0, 0,1);
 		glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 
 				1.1*minmax[2*draw_dims[1]+1], minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
+		glRotatef(rotatey,0, 1, 0);
+		glRotatef(rotatez, 0, 0,1);
+        
+		drawAnObject();
+		/*
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		//glRotatef(rotatey,0, 1, 0);
+		//glRotatef(rotatez, 0, 0,1);
+		glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 
+				1.1*minmax[2*draw_dims[1]+1], minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();*/
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		glTranslatef(originx/2, originy/2, originz/2);
+		glScalef(scale, scale, scale);
+		
+
 		
 		drawFrame();
 		
