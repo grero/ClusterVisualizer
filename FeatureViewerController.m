@@ -74,6 +74,7 @@
 	int cols=0;
 	int rows = 0;
 	int i,j,k;
+	BOOL anyLoaded = NO;
 	NSMutableArray *feature_names = [NSMutableArray arrayWithCapacity:16];
 	NSString *filebase;
 	if( [[path pathExtension] isEqualToString:@"fd"])
@@ -150,6 +151,8 @@
 				{
 					[feature_names addObject: [fn stringByAppendingFormat:@"%d",j+1]];
 				}
+				//notify that we have indeed loaded something
+				anyLoaded = YES;
 				
 			}
 			
@@ -165,6 +168,10 @@
 				}
 			}*/
 			rows = H.cols;
+		}
+		if( anyLoaded == NO)
+		{
+			return;
 		}
 		//need to reshape
 		tmp_data = NSZoneMalloc([self zone], rows*cols*sizeof(float));
