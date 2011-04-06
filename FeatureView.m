@@ -31,7 +31,7 @@
 	rotatez = 0.0;
 	originx = 0.0;
 	originy = 0.0;
-	originz = 0.0;
+	originz = -2.0;
     
     NSOpenGLPixelFormatAttribute attrs[] =
     {
@@ -296,6 +296,7 @@
     int cid = [cluster.name intValue];
     //do this in a very inane way for now, just to see if it works
     int i;
+	[[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
     GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
     if(tmp_indices!=NULL)
@@ -353,9 +354,9 @@
 		centroid[0]/=new_size;
 		centroid[1]/=new_size;
 		centroid[2]/=new_size;
-		originx = -centroid[0];
-		originy = -centroid[1];
-		originz = -centroid[1];
+		originx = centroid[0];
+		originy = centroid[1];
+		originz = centroid[1];
         NSZoneFree([self zone], centroid);
 		[indexset addIndexes: [cluster indices]];
 		//TODO: Change the viewport to scale to the new set of points
@@ -366,6 +367,7 @@
 
 -(void) hideCluster: (Cluster *)cluster
 {
+	[[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
     GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
     if(tmp_indices != NULL)
@@ -414,8 +416,8 @@
 		//reset origin
 		originx = 0.0;
 		originy = 0.0;
-		originz = 0.0;
-        [self setNeedsDisplay:YES];
+		originz = -2.0;        
+		[self setNeedsDisplay:YES];
 
     }
 }
@@ -490,19 +492,19 @@
 
 -(void) rotateY
 {
-    glRotated(5, 0, 1, 0);
+    //glRotated(5, 0, 1, 0);
     [self setNeedsDisplay:YES];
 }
 
 -(void) rotateX
 {
-    glRotated(5, 1, 0, 0);
+    //glRotated(5, 1, 0, 0);
     [self setNeedsDisplay:YES];
 }
 
 -(void) rotateZ
 {
-    glRotated(5, 0, 0, 1);
+    //glRotated(5, 0, 0, 1);
     [self setNeedsDisplay:YES];
 }
 
@@ -584,10 +586,10 @@ static void pushVertices()
     //set up index buffer
     int k = 0;
     
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
+    //glMatrixMode(GL_PROJECTION);
+    //glLoadIdentity();
     //glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
-    glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
+    //glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
 
     glGenBuffers(1,&indexBuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -612,7 +614,7 @@ static void pushVertices()
 static void drawFrame()
 {
 	//finally connect the corners
-	glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+	glColor4f(0.5f,0.85f,0.35f,1.0f);
 	glLineWidth(1.0);
 	int i;
 	float d = 0;
@@ -648,7 +650,7 @@ static void drawFrame()
 	}
 	
 	
-    glColor4f(0.5f,0.85f,0.35f,0.1f);
+    //glColor4f(0.5f,0.85f,0.35f,0.1f);
     
 	//front size
 	//glBegin(GL_LINE_LOOP);
@@ -721,10 +723,10 @@ static void drawAnObject()
     [context makeCurrentContext];
     //if(bounds != [self bounds] )
     //{
-    glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
+    //glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
     //glDepthRange(minmax[4],minmax[5]);
     //}
-    glClearColor(1,1,1,1);
+    glClearColor(0,0,0,0);
     glClear(GL_COLOR_BUFFER_BIT);
 	
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -737,18 +739,21 @@ static void drawAnObject()
 		//glRotatef(rotatez, 0, 0,1);
 		//glOrtho(scale*1.1*minmax[2*draw_dims[0]], scale*1.1*minmax[2*draw_dims[0]+1], scale*1.1*minmax[2*draw_dims[1]], 
 		//		scale*1.1*minmax[2*draw_dims[1]+1], scale*1.1*minmax[2*draw_dims[2]], scale*1.1*minmax[2*draw_dims[2]+1]);
-		glMatrixMode(GL_MODELVIEW);
+		
+		//TODO: Don't do this; use gluLookAt
+		//gluLookAt(100, 100, 100, 0, 0, 0, 0, 1, 0);
+		//glScalef(scale, scale,scale);
+		//glMatrixMode(GL_PROJECTION);
+		//glLoadIdentity();
+		//glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 
+		//		1.1*minmax[2*draw_dims[1]+1], minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
+		//glFrustum(1.5*minmax[2*draw_dims[0]], 1.5*minmax[2*draw_dims[0]+1], 1.5*minmax[2*draw_dims[1]], 
+		//		   1.5*minmax[2*draw_dims[1]+1], 1.5*minmax[2*draw_dims[2]], 1.5*minmax[2*draw_dims[2]+1]);
+		//glFrustum(-2, 2, -2,2, 2, 6);
+        glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		glTranslatef(originx, originy, originz);
-		glScalef(scale, scale,scale);
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 
-				1.1*minmax[2*draw_dims[1]+1], minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
-		glRotatef(rotatey,0, 1, 0);
-		glRotatef(rotatez, 0, 0,1);
-        
-		drawAnObject();
+
 		/*
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
@@ -758,13 +763,20 @@ static void drawAnObject()
 				1.1*minmax[2*draw_dims[1]+1], minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();*/
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		glTranslatef(originx/2, originy/2, originz/2);
-		glScalef(scale, scale, scale);
-		
+		//glMatrixMode(GL_MODELVIEW);
+		//glLoadIdentity();
+		//glTranslatef(originx/2, originy/2, originz/2);
+		//glTranslatef(0, 0, -2.0);
+		//glTranslatef(originx, originy, originz);
 
-		
+
+		glRotatef(rotatey,0, 1, 0);
+		glRotatef(rotatez, 0, 0,1);
+
+		//glScalef(scale, scale, scale);
+
+		drawAnObject();
+
 		drawFrame();
 		
         //drawFrame();
@@ -785,8 +797,9 @@ static void drawAnObject()
     NSRect bounds = [self bounds];
     
     [context makeCurrentContext];
-    glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
-    glClearColor(1,1, 1, 1);
+    
+
+    glClearColor(0,0, 0, 0);
     glClearDepth(1.0);
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
@@ -795,8 +808,13 @@ static void drawAnObject()
     glEnable(GL_BLEND);
     glEnable(GL_POINT_SMOOTH);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+	glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
+
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
+	glFrustum(-1, 1, -1,1, 1, 5);
+	gluLookAt(0, 0, 2.0, 0, 0, 0.0, 0, 1, 0);
+
     [context flushBuffer];
     //[self update];
     
@@ -808,7 +826,13 @@ static void drawAnObject()
     //reshape the view
     NSRect bounds = [self bounds];
     [[self openGLContext] makeCurrentContext];
-    glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
+	glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
+
+	glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+	glFrustum(-1, 1, -1,1, 1, 5);
+	gluLookAt(0, 0, 2.0, 0, 0, 0.0, 0, 1, 0);
+
     //glMatrixMode(GL_PROJECTION);
     //glLoadIdentity();
     //glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
@@ -817,7 +841,9 @@ static void drawAnObject()
 
 -(void)zoomIn
 {
-	scale = scale*0.9;
+	//scale = scale*0.9;
+	originz+=0.1;
+
 	//[[self openGLContext] makeCurrentContext];
 
 	//glMatrixMode(GL_MODELVIEW);
@@ -829,14 +855,15 @@ static void drawAnObject()
 
 -(void)zoomOut
 {
-	scale = scale*1.1;
+	//scale = scale*1.1;
+	originz-=0.1;
 	[self setNeedsDisplay:YES];
 
 }
 
 -(void)resetZoom
 {
-	scale = 1.0;
+	//scale = 1.0;
 	[self setNeedsDisplay:YES];
 
 }
