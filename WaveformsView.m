@@ -129,6 +129,7 @@
 
 -(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints andColor: (NSData*)color;
 {
+	//TODO: modify this should that multiple clusters can be drawn in the same view, with each cluster a different color
     wavesize = channels*timepoints;
     waveIndexSize = channels*(2*timepoints-2);
     nWfIndices = nwaves*wavesize;
@@ -156,6 +157,7 @@
     unsigned int offset = 0;
     //3 dimensions X 2
     wfMinmax = calloc(6,sizeof(float));
+	chMinMax = NSZoneCalloc([self zone], 2*chs, sizeof(float));
     channelHop = 10;
     //copy wfVertices
     float dz = (100.0-1.0)/num_spikes;
@@ -183,8 +185,15 @@
                 {
                     wfMinmax[3] = tmp[offset];
                 }
-                
-                
+				//compute max/min per channel
+                if ( tmp[offset] < chMinMax[2*j] )
+                {
+					chMinMax[2*j] = tmp[offset];
+				}
+				else if ( tmp[offset] > chMinMax[2*j+1] )
+				{
+					chMinMax[2*j+1] = tmp[offset];
+				}
             }
             
         }
@@ -195,6 +204,8 @@
 	xmax = wfMinmax[1];
     wfMinmax[4] = -1.0;//0.1;
     wfMinmax[5] = 1.0;//100;//nwaves+2;
+	ymin = wfMinmax[2];
+	ymax = wfMinmax[3];
     //create indices
     
     //here we have to be a bit clever; if we want to draw as lines, every vertex will be connected
@@ -513,7 +524,7 @@ static void wfDrawAnObject()
 		glLoadIdentity();
 		/*glOrtho(1.05*xmin-0.05*xmax, 1.05*xmin-0.05*xmax, 1.05*wfMinmax[2]-0.05*wfMinmax[3], 
 				1.05*wfMinmax[3]-0.05*wfMinmax[2], wfMinmax[4], wfMinmax[5]);*/
-        glOrtho(xmin, xmax, 1.1*wfMinmax[2], 1.1*wfMinmax[3], 1.1*wfMinmax[4], 1.1*wfMinmax[5]);
+        glOrtho(xmin, xmax, 1.1*ymin, 1.1*ymax, 1.1*wfMinmax[4], 1.1*wfMinmax[5]);
 		wfDrawAnObject();
         //[self drawLabels];
         //drawFrame();
@@ -983,8 +994,10 @@ static void wfDrawAnObject()
 			{
 				xmin = (GLfloat)(((int)minChannel)*(timepts+channelHop));
 				xmax = (GLfloat)(((int)(maxChannel+1))*(timepts+channelHop));
-				
-				
+				//compute the maximum
+				vDSP_maxv(chMinMax+2*(int)minChannel, 2, &ymin, (int)(maxChannel-minChannel));
+				vDSP_minv(chMinMax+2*(int)minChannel+1, 2, &ymax, (int)(maxChannel-minChannel));
+
 				[self setNeedsDisplay:YES];
 			}
 			//TODO: I should make sure the channels are contiguous
@@ -1003,6 +1016,8 @@ static void wfDrawAnObject()
 			//indicate we want to restore zoom
 			xmin = wfMinmax[0];
 			xmax = wfMinmax[1];
+			ymin = wfMinmax[2];
+			ymax = wfMinmax[3];
 			//restore feature dimensions
 			int i;
 			NSMutableArray *channels = [NSMutableArray arrayWithCapacity:chs];
