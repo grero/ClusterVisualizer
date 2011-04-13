@@ -84,6 +84,7 @@
 
 -(void) _surfaceNeedsUpdate:(NSNotification*)notification
 {
+	[self reshape];
     [self update];
 }
                                                    
@@ -274,9 +275,9 @@
         //set openGL viewport based on vertices
 		//make sure we are in the current context
         [[self openGLContext] makeCurrentContext];
-		glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
+		//glMatrixMode(GL_PROJECTION);
+        //glLoadIdentity();
+        //glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
         
         //get the data from the GPU
         glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
