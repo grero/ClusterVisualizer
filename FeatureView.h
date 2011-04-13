@@ -80,6 +80,7 @@ static BOOL dataloaded;
 -(void) zoomIn;
 -(void) zoomOut;
 -(void) resetZoom;
+-(void) changeZoom;
 //-(void) drawBox;
 -(NSData*)getVertexData;
 //-(void) pushVertices;

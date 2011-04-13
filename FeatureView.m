@@ -32,6 +32,7 @@
 	originx = 0.0;
 	originy = 0.0;
 	originz = -2.0;
+	scale = 1.0;
     
     NSOpenGLPixelFormatAttribute attrs[] =
     {
@@ -314,16 +315,16 @@
                 j+=1;
             }
         }*/
-		float *centroid = NSZoneMalloc([self zone], 3*sizeof(float));
+		//float *centroid = NSZoneMalloc([self zone], 3*sizeof(float));
 		float *cluster_minmax = NSZoneCalloc([self zone], 6,sizeof(float));
 		
         for(j=0;j<new_size;j++)
         {
             tmp_indices[nindices+j] = points[j];
 			//compute centroid
-			centroid[0] += vertices[points[j]*cols + draw_dims[0]];
-			centroid[1] += vertices[points[j]*cols + draw_dims[1]];
-			centroid[2] += vertices[points[j]*cols + draw_dims[2]];
+			//centroid[0] += vertices[points[j]*cols + draw_dims[0]];
+			//centroid[1] += vertices[points[j]*cols + draw_dims[1]];
+			//centroid[2] += vertices[points[j]*cols + draw_dims[2]];
 			//compute min/max
 			cluster_minmax[0] = MIN(cluster_minmax[0],vertices[points[j]*cols + draw_dims[0]]);
 			cluster_minmax[1] = MAX(cluster_minmax[1],vertices[points[j]*cols + draw_dims[0]]);
@@ -351,17 +352,18 @@
 		nindices += new_size;
 
 		//normalize
-		centroid[0]/=new_size;
-		centroid[1]/=new_size;
-		centroid[2]/=new_size;
-		originx = centroid[0];
-		originy = centroid[1];
-		originz = centroid[1];
-        NSZoneFree([self zone], centroid);
+		//centroid[0]/=new_size;
+		//centroid[1]/=new_size;
+		//centroid[2]/=new_size;
+		//originx = -centroid[0];
+		//originy = -centroid[1];
+		//originz = -centroid[1];
+        //NSZoneFree([self zone], centroid);
 		[indexset addIndexes: [cluster indices]];
 		//TODO: Change the viewport to scale to the new set of points
 		//calculate the centroid of the cluster in the current space
-        [self setNeedsDisplay:YES];
+		[self changeZoom];
+        //[self setNeedsDisplay:YES];
     }
 }
 
@@ -730,7 +732,7 @@ static void drawAnObject()
     glClear(GL_COLOR_BUFFER_BIT);
 	
     glClear(GL_DEPTH_BUFFER_BIT);
-    if(dataloaded)
+	if(dataloaded)
     {
 		//glMatrixMode(GL_PROJECTION);
 
@@ -812,7 +814,7 @@ static void drawAnObject()
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-	glFrustum(-1, 1, -1,1, 1, 5);
+	glFrustum(-1*scale, 1*scale, -1*scale,1*scale, 2, 6);
 	gluLookAt(0, 0, 2.0, 0, 0, 0.0, 0, 1, 0);
 
     [context flushBuffer];
@@ -830,7 +832,7 @@ static void drawAnObject()
 
 	glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-	glFrustum(-1, 1, -1,1, 1, 5);
+	glFrustum(-1*scale, 1*scale, -1*scale,1*scale, 2, 6);
 	gluLookAt(0, 0, 2.0, 0, 0, 0.0, 0, 1, 0);
 
     //glMatrixMode(GL_PROJECTION);
@@ -841,33 +843,34 @@ static void drawAnObject()
 
 -(void)zoomIn
 {
-	//scale = scale*0.9;
-	originz+=0.1;
-
-	//[[self openGLContext] makeCurrentContext];
-
-	//glMatrixMode(GL_MODELVIEW);
-	//glMatrixMode(GL_PROJECTION);
-	//glLoadIdentity();
-	//glScaled(scale, scale, scale);
-	[self setNeedsDisplay:YES];
+	scale = scale*0.9;
+	[self changeZoom];
 }
 
 -(void)zoomOut
 {
-	//scale = scale*1.1;
-	originz-=0.1;
-	[self setNeedsDisplay:YES];
-
+	scale = scale*1.1;
+	[self changeZoom];
 }
 
 -(void)resetZoom
 {
-	//scale = 1.0;
-	[self setNeedsDisplay:YES];
+	scale = 1.0;
+	[self changeZoom];
 
 }
 
+-(void) changeZoom
+{
+	//to be called after zoom factor has changed
+	glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+	glFrustum(-1*scale, 1*scale, -1*scale,1*scale, 2, 6);
+	gluLookAt(0, 0, 2.0, 0, 0, 0.0, 0, 1, 0);
+	
+	[self setNeedsDisplay:YES];
+	
+}
 -(void) receiveNotification:(NSNotification*)notification
 {
     if([[notification name] isEqualToString:@"highlight"])
