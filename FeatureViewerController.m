@@ -104,7 +104,7 @@
 		header H;
 		//float *tmp_data,*tmp_data2;
 					
-		
+		//TODO: parallelize this
 		while(file = [enumerator nextObject] )
 		{
 			if(([file hasPrefix:filebase] )) //&& ([[file stringByDeletingPathExtension]))
@@ -341,7 +341,7 @@
     //set the basePath to the current basepath so that only cluster files compatible with the currently loaded feature files are allowed
     
 	[[openPanel delegate] setBasePath: currentBaseName];
-    [[openPanel delegate] setExtensions: [NSArray arrayWithObjects: @"clu",@"fv",@"overlap",nil]];
+    [[openPanel delegate] setExtensions: [NSArray arrayWithObjects: @"clu",@"fv",@"overlap",@"cut",nil]];
     int result = [openPanel runModal];
     if( result == NSOKButton )
     {
@@ -400,6 +400,11 @@
 	{
         if( [extension isEqualToString:@"cut"] || [extension isEqualToString:@"clu"] )
         {
+			int offset = 1;
+			if( [extension isEqualToString:@"cut"] )
+			{
+				offset = 0;
+			}
         
 			char *fname = [path cStringUsingEncoding:NSASCIIStringEncoding];
 			//TODO: Check if there is also an overlap present; if so, load it as well
@@ -408,18 +413,18 @@
 			 H = *readFeatureHeader("../../test2.hdf5", &H);
 			 int rows = H.rows;
 			 */
-			unsigned int *cids = malloc((rows+1)*sizeof(unsigned int));
+			int *cids = NSZoneMalloc([self zone], (rows+1)*sizeof(int));
 			cids = readClusterIds(fname, cids);
 			//find the maximum cluster number
 			//TODO: this is quick and dirty; should try and speed this up
-			unsigned int maxCluster = 0;
+			int maxCluster = 0;
 			int i;
 
 			for(i=0;i<rows;i++)
 			{
-				if( cids[i+1] > maxCluster )
+				if( cids[i+offset] > maxCluster )
 				{
-					maxCluster = cids[i+1];
+					maxCluster = cids[i+offset];
 				}
 			}
 			//since we are using 0-based indexing, the number of clusters is maxCluster+1
@@ -432,7 +437,10 @@
 			cluster_colors = NSZoneMalloc([self zone],rows*3*sizeof(float));
 			for(i=0;i<rows;i++)
 			{
-				npoints[cids[i+1]]+=1;
+				if( cids[i+offset] >= 0 )
+				{
+					npoints[cids[i+offset]]+=1;
+				}
 			}
 			for(i=0;i<maxCluster;i++)
 			{
@@ -459,7 +467,7 @@
 				
 				for(j=0;j<rows;j++)
 				{
-					if(cids[j+1]==i)
+					if(cids[j+offset]==i)
 					{
 						points[k] = (unsigned int)j;
 						//mask[j] = 1;
@@ -484,7 +492,7 @@
 				
 				[tempArray addObject:cluster];
 			}
-			free(cids);
+			NSZoneFree([self zone], cids);
 			free(npoints);
 			//free(cluster_colors);
 
@@ -674,10 +682,11 @@
         //convert to float
         float *fwaveforms = malloc(wfSize*sizeof(float));
         vDSP_vflt16(waveforms, 1, fwaveforms, 1, wfSize);
+		free(waveforms);
+
         [[wfv window] orderFront: self];
         [wfv createVertices:[NSData dataWithBytes:fwaveforms length:wfSize*sizeof(float)] withNumberOfWaves: npoints channels: (NSUInteger)spikeHeader.channels andTimePoints: (NSUInteger)spikeHeader.timepts 
                    andColor:[cluster color]];
-        free(waveforms);
         free(fwaveforms);
 		nchannels = spikeHeader.channels;
         if(timestamps==NULL)

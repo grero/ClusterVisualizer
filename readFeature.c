@@ -111,19 +111,22 @@ float *getMinMax(float *minmax, float *data, int nrows,int ncols)
     return minmax;
 }
 
-unsigned int *readClusterIds(char *fname, unsigned int *cids)
+ int *readClusterIds(char *fname,  int *cids)
 {
     FILE *fid;
-    unsigned int buffer;
+    int buffer;
     char line[80];
     int i = 0;
     fid = fopen(fname,"rt");
     
     while ( fgets(line, 80, fid) != NULL)
     {
-        sscanf(line, "%d",&buffer);
-        cids[i] = buffer;
-        i+=1;
+		if( line[0] != '%' )
+		{
+			sscanf(line, "%d",&buffer);
+			cids[i] = buffer;
+			i+=1;
+		}
     }
     fclose(fid);
     
