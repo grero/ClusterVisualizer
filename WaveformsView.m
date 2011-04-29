@@ -119,15 +119,17 @@
 {
     if( [[self openGLContext] view] == self)
     {
+		[self reshape];
         [[self openGLContext] update];
         //TODO: Something happens here; somehow the view doesn't get upated properly when the window is resized.
         //[[self openGLContext] flushBuffer];
+		
     }
 }
 
 
 
--(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints andColor: (NSData*)color;
+-(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints andColor: (NSData*)color andOrder: (NSData*)order;
 {
 	//TODO: modify this should that multiple clusters can be drawn in the same view, with each cluster a different color
     wavesize = channels*timepoints;
@@ -161,43 +163,91 @@
     channelHop = 10;
     //copy wfVertices
     float dz = (100.0-1.0)/num_spikes;
-    for(i=0;i<nwaves;i++)
-    {
-        for(j=0;j<channels;j++)
-        {
-            for(k=0;k<timepoints;k++)
-            {
-                offset = ((i*channels+j)*timepoints + k);
-                //x
-                //wfVertices[offset] = tmp[offset];
-                wfVertices[3*offset] = j*(timepoints+channelHop)+k+channelHop;
-                //y
-                wfVertices[3*offset+1] = tmp[offset];
-                //z
-                wfVertices[3*offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
-                
-                //calculate wfMinmax
-                if (tmp[offset] < wfMinmax[2] )
-                {
-                    wfMinmax[2] = tmp[offset];
-                }
-                if (tmp[offset] > wfMinmax[3] )
-                {
-                    wfMinmax[3] = tmp[offset];
-                }
-				//compute max/min per channel
-                if ( tmp[offset] < chMinMax[2*j] )
-                {
-					chMinMax[2*j] = tmp[offset];
-				}
-				else if ( tmp[offset] > chMinMax[2*j+1] )
+	//allow for rearranging channels here
+	if( order == NULL )
+	{
+		for(i=0;i<nwaves;i++)
+		{
+			for(j=0;j<channels;j++)
+			{
+				for(k=0;k<timepoints;k++)
 				{
-					chMinMax[2*j+1] = tmp[offset];
+					offset = ((i*channels+j)*timepoints + k);
+					//x
+					//wfVertices[offset] = tmp[offset];
+					wfVertices[3*offset] = j*(timepoints+channelHop)+k+channelHop;
+					//y
+					wfVertices[3*offset+1] = tmp[offset];
+					//z
+					wfVertices[3*offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
+					
+					//calculate wfMinmax
+					if (tmp[offset] < wfMinmax[2] )
+					{
+						wfMinmax[2] = tmp[offset];
+					}
+					if (tmp[offset] > wfMinmax[3] )
+					{
+						wfMinmax[3] = tmp[offset];
+					}
+					//compute max/min per channel
+					if ( tmp[offset] < chMinMax[2*j] )
+					{
+						chMinMax[2*j] = tmp[offset];
+					}
+					else if ( tmp[offset] > chMinMax[2*j+1] )
+					{
+						chMinMax[2*j+1] = tmp[offset];
+					}
 				}
-            }
-            
-        }
-    }
+				
+			}
+		}
+	}
+	else 
+	{
+		unsigned int* reorder_index  = (unsigned int*)[order bytes];
+		
+		for(i=0;i<nwaves;i++)
+		{
+			for(j=0;j<channels;j++)
+			{
+				for(k=0;k<timepoints;k++)
+				{
+					offset = ((i*channels+reorder_index[j])*timepoints + k);
+					//x
+					//wfVertices[offset] = tmp[offset];
+					wfVertices[3*offset] = j*(timepoints+channelHop)+k+channelHop;
+					//y
+					wfVertices[3*offset+1] = tmp[offset];
+					//z
+					wfVertices[3*offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
+					
+					//calculate wfMinmax
+					if (tmp[offset] < wfMinmax[2] )
+					{
+						wfMinmax[2] = tmp[offset];
+					}
+					if (tmp[offset] > wfMinmax[3] )
+					{
+						wfMinmax[3] = tmp[offset];
+					}
+					//compute max/min per channel
+					if ( tmp[offset] < chMinMax[2*j] )
+					{
+						chMinMax[2*j] = tmp[offset];
+					}
+					else if ( tmp[offset] > chMinMax[2*j+1] )
+					{
+						chMinMax[2*j+1] = tmp[offset];
+					}
+				}
+				
+			}
+		}
+		
+	}
+
     wfMinmax[0] = 0;
     wfMinmax[1] = channels*(timepoints+channelHop);
 	xmin = 0;
@@ -740,7 +790,7 @@ static void wfDrawAnObject()
     NSRect viewBounds = [self bounds];
     //scale to data coordinates
     dataPoint.x = (currentPoint.x*(xmax-xmin))/viewBounds.size.width+xmin;
-    dataPoint.y = (currentPoint.y*(1.1*wfMinmax[3]-1.1*wfMinmax[2]))/viewBounds.size.height+1.1*wfMinmax[2];
+    dataPoint.y = (currentPoint.y*(1.1*ymax-1.1*ymin))/viewBounds.size.height+1.1*ymin;
     //here, we can simply figure out the smallest distance between the vector defined by
     //(dataPoint.x,dataPoint.y) and the waveforms vectors
     
@@ -995,8 +1045,8 @@ static void wfDrawAnObject()
 				xmin = (GLfloat)(((int)minChannel)*(timepts+channelHop));
 				xmax = (GLfloat)(((int)(maxChannel+1))*(timepts+channelHop));
 				//compute the maximum
-				vDSP_maxv(chMinMax+2*(int)minChannel, 2, &ymin, (int)(maxChannel-minChannel));
-				vDSP_minv(chMinMax+2*(int)minChannel+1, 2, &ymax, (int)(maxChannel-minChannel));
+				vDSP_minv(chMinMax+2*(int)minChannel, 2, &ymin, (int)(maxChannel-minChannel));
+				vDSP_maxv(chMinMax+2*(int)minChannel+1, 2, &ymax, (int)(maxChannel-minChannel));
 
 				[self setNeedsDisplay:YES];
 			}

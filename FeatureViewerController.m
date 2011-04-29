@@ -670,6 +670,23 @@
     }
     if (waveformsFile != NULL)
     {
+		//TODO: Look for reorder file in the same directory
+		NSString *reorderPath = [[[self waveformsFile] stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"reorder.txt"];
+		NSMutableData *reorder_index = NULL;
+		if ([[NSFileManager defaultManager] fileExistsAtPath:reorderPath ] )
+		{
+			NSArray *reorder = [[NSString stringWithContentsOfFile:reorderPath] componentsSeparatedByString:@" "];
+			int count = [reorder count];
+			reorder_index = [NSMutableData dataWithCapacity:count*sizeof(unsigned int)];
+			int i;
+			unsigned int T = 0;
+			for(i=0;i<count;i++)
+			{
+				T = [[reorder objectAtIndex:i] integerValue]-1;
+				[reorder_index appendBytes:&T length:sizeof(T)]; 
+			}
+		}
+		
         char *path = [[self waveformsFile] cStringUsingEncoding:NSASCIIStringEncoding];         
         unsigned int npoints = [[cluster npoints] unsignedIntValue];
         
@@ -683,10 +700,10 @@
         float *fwaveforms = malloc(wfSize*sizeof(float));
         vDSP_vflt16(waveforms, 1, fwaveforms, 1, wfSize);
 		free(waveforms);
-
+		
         [[wfv window] orderFront: self];
         [wfv createVertices:[NSData dataWithBytes:fwaveforms length:wfSize*sizeof(float)] withNumberOfWaves: npoints channels: (NSUInteger)spikeHeader.channels andTimePoints: (NSUInteger)spikeHeader.timepts 
-                   andColor:[cluster color]];
+                   andColor:[cluster color] andOrder:reorder_index];
         free(fwaveforms);
 		nchannels = spikeHeader.channels;
         if(timestamps==NULL)
