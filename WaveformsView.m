@@ -164,9 +164,15 @@
     //copy wfVertices
     float dz = (100.0-1.0)/num_spikes;
 	//allow for rearranging channels here
+	//TODO: use dispatch here
 	if( order == NULL )
 	{
+		
 		for(i=0;i<nwaves;i++)
+		//dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, NULL);
+		//dispatch_apply(nwaves, queue, ^(size_t i){
+			//int j,k;
+		//	unsigned int offset;
 		{
 			for(j=0;j<channels;j++)
 			{
@@ -202,7 +208,7 @@
 				}
 				
 			}
-		}
+		}//);
 	}
 	else 
 	{
@@ -548,7 +554,7 @@ static void wfDrawAnObject()
         NSAttributedString *label;
         label = [[[NSAttributedString alloc] initWithString:[NSString stringWithFormat: @"%.1f",&y]  attributes:normal9Attribs] autorelease];
         GLString *glabel;
-        glabel = [[GLString alloc] initWithAttributedString:label withTextColor:[NSColor colorWithDeviceRed:1.0f green:1.0f blue:1.0f alpha:1.0f] withBoxColor:[NSColor colorWithDeviceRed:0.4f green:0.4f blue:0.0f alpha:0.0f] withBorderColor:[NSColor colorWithDeviceRed:0.8f green:0.8f blue:0.0f alpha:0.0f]];
+        glabel = [[GLString alloc] initWithAttributedString:label withTextColor:[NSColor colorWithDeviceRed:0.5f green:0.5f blue:0.56f alpha:1.0f] withBoxColor:[NSColor colorWithDeviceRed:0.4f green:0.4f blue:0.0f alpha:0.0f] withBorderColor:[NSColor colorWithDeviceRed:0.8f green:0.8f blue:0.0f alpha:0.0f]];
         [glabel drawAtPoint:NSMakePoint (xmargin, y)];
         
     }
@@ -576,8 +582,12 @@ static void wfDrawAnObject()
 				1.05*wfMinmax[3]-0.05*wfMinmax[2], wfMinmax[4], wfMinmax[5]);*/
         glOrtho(xmin, xmax, 1.1*ymin, 1.1*ymax, 1.1*wfMinmax[4], 1.1*wfMinmax[5]);
 		wfDrawAnObject();
-        //[self drawLabels];
-        //drawFrame();
+		//glPushMatrix();
+		//glScalef(1.0/(xmax-xmin),1.0/(ymax-ymin),1.0);
+		//[self drawLabels];
+		//glPopMatrix();
+		
+                //drawFrame();
     }
     glFlush();
     [context flushBuffer];}
@@ -1078,6 +1088,16 @@ static void wfDrawAnObject()
 			[[NSNotificationCenter defaultCenter] postNotificationName:@"setFeatures" object:self userInfo: 
 			 [NSDictionary dictionaryWithObjectsAndKeys:channels, @"channels",nil]];
 			[self setNeedsDisplay:YES];
+		}
+		//TODO: this should be changed; just a test for now
+		else if ( [[theEvent characters] isEqualToString:@"k"] )
+		{
+			NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+									  [NSData dataWithBytesNoCopy:wfVertices length:3*num_spikes*wavesize*sizeof(GLfloat)],
+									  @"data",[NSNumber numberWithUnsignedInt:chs],@"channels",
+									  [NSNumber numberWithUnsignedInt:timepts],@"timepoints",nil];
+			//post notification
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"computeSpikeWidth" object: self userInfo:userInfo];
 		}
         //[self keyDown:theEvent];
     }

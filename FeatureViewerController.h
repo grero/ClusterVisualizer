@@ -17,6 +17,7 @@
 #import "ProgressPanel.h"
 #import "HistogramView.h"
 #import "fileReaders.h"
+#import "computeFeatures.h"
 
 @interface FeatureViewerController : NSController {
     
@@ -78,8 +79,12 @@
 -(void) openClusterFile:(NSString *)path;
 -(void) setAvailableFeatures:(NSArray*)channels;
 -(void) receiveNotification:(NSNotification*)notification;
+//This might go away
+-(void) computeFeature:(NSData*)waveforms withChannels:(NSUInteger)channels andTimepoints:(NSUInteger)timepoints;
+//
 - (IBAction) loadFeatureFile: (id)sender;
 - (IBAction) loadClusterIds: (id)sender;
+
 //- (IBAction) loadWaveforms: (id)sender;
 - (IBAction) changeDim1: (id)sender;
 - (IBAction) changeDim2: (id)sender;

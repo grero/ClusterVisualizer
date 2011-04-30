@@ -706,7 +706,9 @@
                    andColor:[cluster color] andOrder:reorder_index];
         free(fwaveforms);
 		nchannels = spikeHeader.channels;
-        if(timestamps==NULL)
+		//setup self to recieve notification on feature computation
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:@"computeSpikeWidth" object:nil];
+		if(timestamps==NULL)
         {
             //load time stamps if not already loaded
             unsigned long long int *times = malloc(spikeHeader.num_spikes*sizeof(unsigned long long int));
@@ -860,6 +862,12 @@
 	if( [[notification name] isEqualToString:@"setFeatures"] )
 	{
 		[self setAvailableFeatures:[[notification userInfo] objectForKey:@"channels"]];
+	}
+	else if ( [[notification name] isEqualToString:@"computeSpikeWidth"] )
+	{
+		[self computeFeature:[[notification userInfo] objectForKey: @"data"] 
+				withChannels:[[[notification userInfo] objectForKey:@"channels"] unsignedIntValue]
+			   andTimepoints:[[[notification userInfo] objectForKey:@"timepoints"] unsignedIntValue]];
 	}
 }
 
@@ -1066,13 +1074,14 @@
             [fw highlightPoints:params];
              */
             [[fw highlightedPoints] setLength:0];
-            if([[wfv window] isVisible])
-            {
-                [wfv hideWaveforms:[wfv highlightWaves]];
-                [[wfv highlightWaves] setLength: 0];
-            }
-            [fw setNeedsDisplay:YES];
-        }
+		}
+		if([[wfv window] isVisible])
+		{
+			[wfv hideWaveforms:[wfv highlightWaves]];
+			[[wfv highlightWaves] setLength: 0];
+		}
+		[fw setNeedsDisplay:YES];
+		
     }
     else if( [selection isEqualToString:@"Make Template"] )
     {
@@ -1335,6 +1344,81 @@
                             [NSKeyedArchiver archiveRootObject: [self Clusters] toFile:[NSString stringWithFormat:@"%@.fv",currentBaseName]];
     }];
     [queue addOperation:op];
+}
+
+-(void) computeFeature:(NSData*)waveforms withChannels:(NSUInteger)channels andTimepoints:(NSUInteger)timepoints
+{
+	//allocate array for features
+	NSUInteger s = [waveforms length];
+	NSUInteger nwaves = s/(3*channels*timepoints*sizeof(float));
+	float *spwidth = NSZoneMalloc([self zone], nwaves*channels*sizeof(float));
+	float *wfdata = (float*)[waveforms bytes];
+	spwidth = computeSpikeWidth(wfdata, 3*timepoints, channels*nwaves, spwidth);
+	
+	float *sparea = NSZoneMalloc([self zone], nwaves*channels*sizeof(float));
+	sparea = computeSpikeArea(wfdata,3*timepoints,channels*nwaves,sparea);
+	
+	float *fv = NSZoneMalloc([self zone], 2*nwaves*channels*sizeof(float));
+	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, NULL);
+	dispatch_apply(nwaves, q, ^(size_t i)
+	//for(i=0;i<nwaves;i++)
+	{
+		int j;
+		//write the columns feature by feature, i.e. first area, then width
+		for(j=0;j<channels;j++)
+		{
+			fv[i*2*channels+j] = sparea[i*channels+j];
+		}
+		for(j=0;j<channels;j++)
+		{
+			fv[i*2*channels+channels+j] = spwidth[i*channels+j];
+		}
+	});
+	
+	//scale each feature
+	int l = 0;
+	float mx,mi;
+	for(l=0;l<2*channels;l++)
+	{
+		vDSP_maxv(fv+l, 2*channels, &mx, nwaves);
+		vDSP_minv(fv+l, 2*channels, &mi, nwaves);
+		//now decide which is the biggest
+		mi = fabsf(mi);
+		if( mi > mx)
+		{
+			mx = mi; 
+		}
+		vDSP_vsdiv(fv+l, 2*channels,&mx,fv+l,2*channels,nwaves);
+	}
+	
+	//we dont need the individual features any more
+	NSZoneFree([self zone], spwidth);
+	NSZoneFree([self zone], sparea);
+	[fw createVertices:[NSData dataWithBytes: fv length: 2*channels*nwaves] withRows:nwaves andColumns:2*channels];
+	//set the feature Names
+	if( featureNames == NULL )
+	{
+		featureNames = [[NSMutableArray arrayWithCapacity:2*channels] retain];
+	}
+	[featureNames removeAllObjects];
+	int ch = 0;
+	for(ch=0;ch<channels;ch++)
+	{
+		[featureNames addObject: [NSString stringWithFormat:@"Area%d", ch+1]];
+	}
+	for(ch=0;ch<channels;ch++)
+	{
+		[featureNames addObject: [NSString stringWithFormat:@"SpikeWidth%d", ch+1]];
+	}
+	
+	[dim1 removeAllItems];
+	[dim1 addItemsWithObjectValues:featureNames];
+	
+	[dim2 removeAllItems];
+	[dim2 addItemsWithObjectValues:featureNames];
+	
+	[dim3 removeAllItems];
+	[dim3 addItemsWithObjectValues:featureNames];
 }
 
 -(void)dealloc
