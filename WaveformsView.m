@@ -134,7 +134,8 @@
 	//TODO: modify this should that multiple clusters can be drawn in the same view, with each cluster a different color
     wavesize = channels*timepoints;
     waveIndexSize = channels*(2*timepoints-2);
-    nWfIndices = nwaves*wavesize;
+	//+1 to make room for mean waveform
+    nWfIndices = (nwaves+1)*wavesize;
     nWfVertices = nWfIndices;
     num_spikes = nwaves;
     chs = channels;
@@ -145,7 +146,7 @@
         [[self highlightWaves] setLength:0];
         [self setHighlightWaves:NULL];
     }
-    if(wfDataloaded)
+    if ((wfDataloaded) && (wfVertices != NULL ) )
     {
         wfVertices = realloc(wfVertices, nWfVertices*3*sizeof(GLfloat));
     }
@@ -157,12 +158,13 @@
     
     int i,j,k;
     unsigned int offset = 0;
+	unsigned int moffset = 0;
     //3 dimensions X 2
     wfMinmax = calloc(6,sizeof(float));
 	chMinMax = NSZoneCalloc([self zone], 2*chs, sizeof(float));
     channelHop = 10;
     //copy wfVertices
-    float dz = (100.0-1.0)/num_spikes;
+    //float dz = (100.0-1.0)/num_spikes;
 	//allow for rearranging channels here
 	//TODO: use dispatch here
 	if( order == NULL )
@@ -179,6 +181,8 @@
 				for(k=0;k<timepoints;k++)
 				{
 					offset = ((i*channels+j)*timepoints + k);
+					moffset = ((nwaves*channels+j)*timepoints + k);
+
 					//x
 					//wfVertices[offset] = tmp[offset];
 					wfVertices[3*offset] = j*(timepoints+channelHop)+k+channelHop;
@@ -186,7 +190,11 @@
 					wfVertices[3*offset+1] = tmp[offset];
 					//z
 					wfVertices[3*offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
-					
+					//mean
+					//this line is strictly not necessary
+					wfVertices[3*moffset] = wfVertices[3*offset];
+					wfVertices[3*moffset+1] =(i*(wfVertices[3*moffset+1])+tmp[offset])/(i+1);
+					wfVertices[3*moffset+2] = 1.0;
 					//calculate wfMinmax
 					if (tmp[offset] < wfMinmax[2] )
 					{
@@ -221,6 +229,8 @@
 				for(k=0;k<timepoints;k++)
 				{
 					offset = ((i*channels+reorder_index[j])*timepoints + k);
+					moffset = ((nwaves*channels+j)*timepoints + k);
+
 					//x
 					//wfVertices[offset] = tmp[offset];
 					wfVertices[3*offset] = j*(timepoints+channelHop)+k+channelHop;
@@ -228,6 +238,12 @@
 					wfVertices[3*offset+1] = tmp[offset];
 					//z
 					wfVertices[3*offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
+					
+					//mean
+					//this line is strictly not necessary
+					wfVertices[3*moffset] = wfVertices[3*offset];
+					wfVertices[3*moffset+1] =(i*(wfVertices[3*moffset+1])+tmp[offset])/(i+1);
+					wfVertices[3*moffset+2] = 1.0;
 					
 					//calculate wfMinmax
 					if (tmp[offset] < wfMinmax[2] )
@@ -253,8 +269,8 @@
 		}
 		
 	}
-
-    wfMinmax[0] = 0;
+	
+	wfMinmax[0] = 0;
     wfMinmax[1] = channels*(timepoints+channelHop);
 	xmin = 0;
 	xmax = wfMinmax[1];
@@ -272,8 +288,9 @@
     //each channel will have 2*pointsPerChannel-2 points
     unsigned int pointsPerChannel = 2*timepoints-2;
     //unsigned int offset = 0;
-    nWfIndices = nwaves*channels*pointsPerChannel;
-    if(wfDataloaded)
+	//+1 to accommodate mean waveform
+    nWfIndices = (nwaves+1)*channels*pointsPerChannel;
+    if( (wfDataloaded) && (wfIndices != NULL ))
     {
         wfIndices = realloc(wfIndices, nWfIndices*sizeof(GLuint));
 
@@ -283,7 +300,7 @@
 
     }
 
-    for(i=0;i<nwaves;i++)
+    for(i=0;i<nwaves+1;i++)
     {
         for(j=0;j<channels;j++)
         {
@@ -378,6 +395,15 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
         color_data[3*i+1] = gcolor[1];//use_colors[3*cids[i+1]+1];
         color_data[3*i+2] = gcolor[2];//use_colors[3*cids[i+1]+2];
     }
+	//change mean color
+	unsigned int offset = 0;
+	for(i=0;i<wavesize;i++)
+	{
+		offset = 3*(nWfVertices-wavesize+i);
+		color_data[offset] = 1.0-0.5*gcolor[0];
+		color_data[offset+1] = 1.0-0.5*gcolor[1];
+		color_data[offset+2] = 1.0-0.5*gcolor[2];
+	}
 }
 
 -(void) highlightChannels:(NSArray*)channels
