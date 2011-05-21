@@ -42,7 +42,8 @@ float *computeSpikeWidth(float *input, unsigned int stride, unsigned int N, floa
 	{
 		B[l] = l*0.25;
 	}
-	void (^aBlock)(size_t) = ^(size_t wf){
+	
+	dispatch_apply(N, queue, ^(size_t wf){
 		int i = 0;
 		int s,e;
 		float m  =0.0;
@@ -70,21 +71,21 @@ float *computeSpikeWidth(float *input, unsigned int stride, unsigned int N, floa
 		//determine the width of the peak
 		s = 0;
 		//while( (s < stride ) && (input[wf*stride+3*s+1] > 0.5*m ) )
-		while( (s < M ) && (C[s] > 0.5*m ) )
+		while( (s < M-1 ) && (C[s] > 0.5*m ) )
 		{
 			s++;
 		}
 		//while( (s < stride) && (input[wf*stride+3*e+1] < 0.5*m) )
-		while( (s < M) && (C[e] < 0.5*m) )
+		while( (e < M-1) && (C[e] < 0.5*m) )
 		{
 			e++;
 		}
 		//assume for now 30kHz sample rate
 		//TODO: make this general
-		output[wf] = (B[e]-B[s])/30.0;
+		m = (B[e]-B[s])/30.0;
+		output[wf] = m;
 		free(C);
-	};
-	dispatch_apply(N, queue, aBlock);
+	});
 	free(B);
 	//scale
 	return output;

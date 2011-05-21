@@ -44,6 +44,8 @@
            each feature file to get both the data and the feature names
      */
      NSOpenPanel *openPanel = [NSOpenPanel openPanel];
+	[openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
+	[[openPanel delegate] setExtensions: [NSArray arrayWithObjects:@"fd",@"fet",nil]];
     [openPanel setAllowsMultipleSelection:NO];
     [openPanel setCanChooseDirectories: YES];
     int result = [openPanel runModal];
@@ -1351,13 +1353,16 @@
 	//allocate array for features
 	NSUInteger s = [waveforms length];
 	NSUInteger nwaves = s/(3*channels*timepoints*sizeof(float));
-	float *spwidth = NSZoneMalloc([self zone], nwaves*channels*sizeof(float));
-	float *wfdata = (float*)[waveforms bytes];
-	spwidth = computeSpikeWidth(wfdata, 3*timepoints, channels*nwaves, spwidth);
 	
+	float *wfdata = (float*)[waveforms bytes];
 	float *sparea = NSZoneMalloc([self zone], nwaves*channels*sizeof(float));
 	sparea = computeSpikeArea(wfdata,3*timepoints,channels*nwaves,sparea);
+
+	//float *spwidth = NSZoneMalloc([self zone], nwaves*channels*sizeof(float));
+	float *spwidth = malloc(nwaves*channels*sizeof(float));
+	spwidth = computeSpikeWidth(wfdata, 3*timepoints, channels*nwaves, spwidth);
 	
+		
 	float *fv = NSZoneMalloc([self zone], 2*nwaves*channels*sizeof(float));
 	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, NULL);
 	dispatch_apply(nwaves, q, ^(size_t i)
@@ -1392,7 +1397,8 @@
 	}
 	
 	//we dont need the individual features any more
-	NSZoneFree([self zone], spwidth);
+	//NSZoneFree([self zone], spwidth);
+	free(spwidth);
 	NSZoneFree([self zone], sparea);
 	[fw createVertices:[NSData dataWithBytes: fv length: 2*channels*nwaves] withRows:nwaves andColumns:2*channels];
 	//set the feature Names
