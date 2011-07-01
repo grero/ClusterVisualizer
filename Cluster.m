@@ -316,6 +316,11 @@
     
 }
 
+-(void)computeFeatureRanges:(NSData*)data
+{
+	//data should contain the features over which to compute the ranges
+}
+
 -(void)removePoints:(NSData*)rpoints
 {
     unsigned int* _rpoints = (unsigned int*)[rpoints bytes];

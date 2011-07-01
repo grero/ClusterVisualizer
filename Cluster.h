@@ -28,6 +28,7 @@
     NSNumber *lRatio,*isolationDistance;
     NSData *ISIs;
     NSData *isiIdx;
+	NSData *featureRanges;
     NSMutableData *mask;
     NSImage *waveformsImage;
     
@@ -54,6 +55,7 @@
 @property(retain,readwrite) NSData *isiIdx;
 @property(retain,readwrite) NSMutableData *mask;
 @property(retain,readwrite) NSImage *waveformsImage;
+@property(retain,readwrite) NSData *featureRanges;
 
 -(void)createName;
 -(void)makeInactive;
@@ -67,6 +69,7 @@
 -(void)computeLRatio:(NSData*)data;
 -(void)computeIsolationDistance:(NSData*)data;
 -(NSDictionary*)computeXCorr:(Cluster*)cluster timepoints:(NSData*)timepts;
+-(void)computeFeatureRanges:(NSData*)data;
 -(void)removePoints:(NSData*)rpoints;
 -(void)addPoints:(NSData*)rpoints;
 
