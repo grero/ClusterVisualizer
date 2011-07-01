@@ -18,6 +18,7 @@
 #import "HistogramView.h"
 #import "fileReaders.h"
 #import "computeFeatures.h"
+#import "RasterView.h"
 
 @interface FeatureViewerController : NSController {
     
@@ -49,6 +50,7 @@
     IBOutlet NSPopUpButton *selectClusterOption;  
     IBOutlet ProgressPanel *progressPanel;
     IBOutlet HistogramView *histView;
+	IBOutlet RasterView *rasterView;
     
     
 }
@@ -100,6 +102,8 @@
 @property (assign) IBOutlet NSComboBox *dim2;
 @property (assign) IBOutlet NSComboBox *dim3;
 @property (assign) IBOutlet HistogramView *histView;
+@property (assign) IBOutlet RasterView *rasterView;
+
 @property (retain,readwrite) NSMutableArray *Clusters;
 @property (retain,readwrite) NSMutableArray *ClusterOptions;
 @property (retain, readwrite) NSPredicate *isValidCluster;
