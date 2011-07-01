@@ -29,7 +29,10 @@
     dataloaded = NO;
     queue = [[[NSOperationQueue alloc] init] retain];
 	currentBaseName = NULL;
+	timestamps = NULL;
     [self setFilterClustersPredicate:[NSPredicate predicateWithFormat: @"valid==YES"]];
+	//load the nibs
+	
 }
 
 -(BOOL) acceptsFirstResponder
@@ -601,7 +604,27 @@
     //                                         @"Compute Isolation Distance",nil]];
     //[self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",nil]];
     
-    [allActive setState:1];
+    //draw image of all clusters
+	NSEnumerator *clusterEn = [[self Clusters] objectEnumerator];
+	id cluster;
+	while( (cluster=[clusterEn nextObject] ) ) 
+	{
+		if( [[cluster clusterId] unsignedIntValue] > 0 )
+		{
+			[self loadWaveforms: cluster];
+			//make sure we also update the waverormsImage
+			if([cluster waveformsImage] == NULL)
+			{
+				NSImage *img = [[self wfv] image];
+				[cluster setWaveformsImage:img];
+			}
+		}
+		
+	}
+	[[wfv window] orderOut: self];
+
+	[allActive setState:1];
+	
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(ClusterStateChanged:)
                                                  name:@"ClusterStateChanged" object:nil];
@@ -668,6 +691,7 @@
             //test
             //Cluster *cluster = [Clusters objectAtIndex: 3];
             [self setWaveformsFile:[[openPanel URL] path]];
+			[[wfv window] orderFront: self];
         }
     }
     if (waveformsFile != NULL)
@@ -722,13 +746,16 @@
             }
             times = getTimes(path, &spikeHeader, times_indices, spikeHeader.num_spikes, times);
             timestamps = [[NSData dataWithBytes:times length:spikeHeader.num_spikes*sizeof(unsigned long long int)] retain];
-            free(times);
+			            free(times);
             free(times_indices);
             //add the ISI options to cluster options
             [selectClusterOption addItemWithTitle:@"Shortest ISI"];
 			
 
         }
+		//[rasterView createVertices:timestamps];
+		//[[rasterView window] orderFront:self];
+
 	}
 		
     
@@ -968,6 +995,7 @@
     else if ( [selection isEqualToString:@"Show waveforms"] )
     {
         [self loadWaveforms:[self activeCluster]];
+		[[wfv window] orderFront: self];
         //make sure we also update the waverormsImage
         if([[self activeCluster] waveformsImage] == NULL)
         {
