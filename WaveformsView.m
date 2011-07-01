@@ -624,7 +624,8 @@ static void wfDrawAnObject()
     NSRect bounds = [self bounds];
     [[self openGLContext] makeCurrentContext];
     glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
-    [self setNeedsDisplay:YES];    
+    //[self display];
+	//[self setNeedsDisplay:YES];    
     
 }
 
