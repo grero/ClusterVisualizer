@@ -17,7 +17,14 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
 	// Insert code here to initialize your application
+	[NSBundle loadNibNamed: @"RasterWindow" owner: controller];
+}
 
+- (void)application:(NSApplication*)theApplication openFiles:(NSArray*)filenames
+{
+
+	[self application: theApplication openFile:[filenames objectAtIndex:0]];
+	
 }
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
@@ -36,6 +43,11 @@
         return YES;
     }
     else if( [[filename pathExtension] isEqualToString:@"fv"] )
+    {
+        [controller openClusterFile:filename];
+        return YES;
+    }
+	else if( [[filename pathExtension] isEqualToString:@"cut"] )
     {
         [controller openClusterFile:filename];
         return YES;
