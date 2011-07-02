@@ -39,7 +39,7 @@
     NSString *currentBaseName;
     NSString *waveformsFile;
     NSOperationQueue *queue;
-    NSTimer *archiveTimer;
+    NSTimer *archiveTimer, *cycleTimer;
     IBOutlet FeatureView *fw;
     IBOutlet WaveformsView *wfv;
     IBOutlet NSComboBox *dim1;
@@ -94,6 +94,8 @@
 - (IBAction) changeAllClusters: (id)sender;
 - (IBAction) performClusterOption: (id)sender;
 - (IBAction) saveClusters:(id)sender;
+- (IBAction) cycleDims: (id)sender;
+-(void)cycleDimensionsUsingTimer:(NSTimer*)timer;
 
 //@property (assign) IBOutlet NSWindow *window;
 @property (assign) IBOutlet FeatureView *fw;

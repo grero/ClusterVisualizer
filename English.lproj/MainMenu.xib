@@ -2,22 +2,23 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="7.10">
 	<data>
 		<int key="IBDocument.SystemTarget">1060</int>
-		<string key="IBDocument.SystemVersion">10H574</string>
-		<string key="IBDocument.InterfaceBuilderVersion">804</string>
-		<string key="IBDocument.AppKitVersion">1038.35</string>
+		<string key="IBDocument.SystemVersion">10K540</string>
+		<string key="IBDocument.InterfaceBuilderVersion">851</string>
+		<string key="IBDocument.AppKitVersion">1038.36</string>
 		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">804</string>
+			<string key="NS.object.0">851</string>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="372"/>
-			<integer value="24"/>
-			<integer value="857"/>
 			<integer value="718"/>
 			<integer value="925"/>
+			<integer value="29"/>
+			<integer value="945"/>
+			<integer value="372"/>
 			<integer value="646"/>
+			<integer value="857"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -1317,7 +1318,7 @@
 			<object class="NSWindowTemplate" id="972006081">
 				<int key="NSWindowStyleMask">15</int>
 				<int key="NSWindowBacking">2</int>
-				<string key="NSWindowRect">{{335, 104}, {791, 646}}</string>
+				<string key="NSWindowRect">{{335, 104}, {826, 646}}</string>
 				<int key="NSWTFlags">1954021376</int>
 				<string key="NSWindowTitle">FeatureViewer</string>
 				<string key="NSWindowClass">NSWindow</string>
@@ -1331,14 +1332,14 @@
 						<object class="NSCustomView" id="899121013">
 							<reference key="NSNextResponder" ref="439893737"/>
 							<int key="NSvFlags">274</int>
-							<string key="NSFrame">{{228, 20}, {543, 576}}</string>
+							<string key="NSFrame">{{228, 20}, {578, 578}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
 							<string key="NSClassName">FeatureView</string>
 						</object>
 						<object class="NSButton" id="644717327">
 							<reference key="NSNextResponder" ref="439893737"/>
 							<int key="NSvFlags">268</int>
-							<string key="NSFrame">{{18, 570}, {100, 28}}</string>
+							<string key="NSFrame">{{18, 570}, {93, 28}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="894479466">
@@ -1873,8 +1874,28 @@
 								<int key="NSArrowPosition">2</int>
 							</object>
 						</object>
+						<object class="NSButton" id="1018268506">
+							<reference key="NSNextResponder" ref="439893737"/>
+							<int key="NSvFlags">268</int>
+							<string key="NSFrame">{{113, 570}, {93, 28}}</string>
+							<reference key="NSSuperview" ref="439893737"/>
+							<bool key="NSEnabled">YES</bool>
+							<object class="NSButtonCell" key="NSCell" id="674560360">
+								<int key="NSCellFlags">67239424</int>
+								<int key="NSCellFlags2">134217728</int>
+								<string key="NSContents">Cycle features</string>
+								<reference key="NSSupport" ref="24"/>
+								<reference key="NSControlView" ref="1018268506"/>
+								<int key="NSButtonFlags">-2038152961</int>
+								<int key="NSButtonFlags2">130</int>
+								<string key="NSAlternateContents"/>
+								<string key="NSKeyEquivalent"/>
+								<int key="NSPeriodicDelay">400</int>
+								<int key="NSPeriodicInterval">75</int>
+							</object>
+						</object>
 					</object>
-					<string key="NSFrameSize">{791, 646}</string>
+					<string key="NSFrameSize">{826, 646}</string>
 					<reference key="NSSuperview"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
@@ -1995,10 +2016,10 @@
 				<bool key="NSClearsFilterPredicateOnInsertion">YES</bool>
 			</object>
 			<object class="NSWindowTemplate" id="794953996">
-				<int key="NSWindowStyleMask">31</int>
+				<int key="NSWindowStyleMask">29</int>
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{140, 251}, {362, 207}}</string>
-				<int key="NSWTFlags">-1535639552</int>
+				<int key="NSWTFlags">-461897728</int>
 				<string key="NSWindowTitle">Cluster waveforms</string>
 				<string key="NSWindowClass">WaveformsPanel</string>
 				<nil key="NSViewClass"/>
@@ -3315,6 +3336,34 @@
 				<string key="NSScreenRect">{{0, 0}, {1280, 778}}</string>
 				<string key="NSMaxSize">{1.79769e+308, 1.79769e+308}</string>
 			</object>
+			<object class="NSWindowTemplate" id="687160252">
+				<int key="NSWindowStyleMask">31</int>
+				<int key="NSWindowBacking">2</int>
+				<string key="NSWindowRect">{{140, 81}, {353, 377}}</string>
+				<int key="NSWTFlags">-1535639552</int>
+				<string key="NSWindowTitle">XCorr</string>
+				<string key="NSWindowClass">NSPanel</string>
+				<nil key="NSViewClass"/>
+				<string key="NSWindowContentMaxSize">{1.79769e+308, 1.79769e+308}</string>
+				<object class="NSView" key="NSWindowView" id="310021748">
+					<reference key="NSNextResponder"/>
+					<int key="NSvFlags">256</int>
+					<object class="NSMutableArray" key="NSSubviews">
+						<bool key="EncodedWithXMLCoder">YES</bool>
+						<object class="NSCustomView" id="233865534">
+							<reference key="NSNextResponder" ref="310021748"/>
+							<int key="NSvFlags">274</int>
+							<string key="NSFrame">{{20, 20}, {313, 337}}</string>
+							<reference key="NSSuperview" ref="310021748"/>
+							<string key="NSClassName">HistogramView</string>
+						</object>
+					</object>
+					<string key="NSFrameSize">{353, 377}</string>
+					<reference key="NSSuperview"/>
+				</object>
+				<string key="NSScreenRect">{{0, 0}, {1280, 778}}</string>
+				<string key="NSMaxSize">{1.79769e+308, 1.79769e+308}</string>
+			</object>
 		</object>
 		<object class="IBObjectContainer" key="IBDocument.Objects">
 			<object class="NSMutableArray" key="connectionRecords">
@@ -4380,6 +4429,22 @@
 					</object>
 					<int key="connectionID">944</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">histView</string>
+						<reference key="source" ref="577388468"/>
+						<reference key="destination" ref="233865534"/>
+					</object>
+					<int key="connectionID">948</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">cycleDims:</string>
+						<reference key="source" ref="577388468"/>
+						<reference key="destination" ref="1018268506"/>
+					</object>
+					<int key="connectionID">955</int>
+				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<object class="NSArray" key="orderedObjects">
@@ -4724,6 +4789,7 @@
 							<reference ref="332633016"/>
 							<reference ref="644717327"/>
 							<reference ref="900355133"/>
+							<reference ref="1018268506"/>
 						</object>
 						<reference key="parent" ref="972006081"/>
 					</object>
@@ -6032,6 +6098,43 @@
 						<reference key="object" ref="13236304"/>
 						<reference key="parent" ref="431967856"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">945</int>
+						<reference key="object" ref="687160252"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="310021748"/>
+						</object>
+						<reference key="parent" ref="0"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">946</int>
+						<reference key="object" ref="310021748"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="233865534"/>
+						</object>
+						<reference key="parent" ref="687160252"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">947</int>
+						<reference key="object" ref="233865534"/>
+						<reference key="parent" ref="310021748"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">953</int>
+						<reference key="object" ref="1018268506"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="674560360"/>
+						</object>
+						<reference key="parent" ref="439893737"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">954</int>
+						<reference key="object" ref="674560360"/>
+						<reference key="parent" ref="1018268506"/>
+					</object>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="flattenedProperties">
@@ -6394,6 +6497,15 @@
 					<string>937.IBPluginDependency</string>
 					<string>937.IBViewBoundsToFrameTransform</string>
 					<string>938.IBPluginDependency</string>
+					<string>945.IBEditorWindowLastContentRect</string>
+					<string>945.IBPluginDependency</string>
+					<string>945.IBWindowTemplateEditedContentRect</string>
+					<string>945.NSWindowTemplate.visibleAtLaunch</string>
+					<string>946.IBPluginDependency</string>
+					<string>947.IBPluginDependency</string>
+					<string>947.IBViewBoundsToFrameTransform</string>
+					<string>953.IBPluginDependency</string>
+					<string>954.IBPluginDependency</string>
 				</object>
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
@@ -6452,7 +6564,7 @@
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
-					<string>{{515, 442}, {254, 283}}</string>
+					<string>{{505, 448}, {254, 283}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{{187, 434}, {243, 243}}</string>
@@ -6497,17 +6609,17 @@
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
-					<string>{{454, 658}, {194, 73}}</string>
+					<string>{{665, 658}, {194, 73}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{{525, 802}, {197, 73}}</string>
-					<string>{{118, 731}, {468, 20}}</string>
+					<string>{{329, 731}, {468, 20}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
 					<string>{74, 862}</string>
 					<string>{{6, 978}, {478, 20}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{625, 682}, {231, 43}}</string>
+					<string>{{615, 688}, {231, 43}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{475, 832}, {234, 43}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -6526,15 +6638,15 @@
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
-					<string>{{305, 36}, {791, 646}}</string>
+					<string>{{650, 106}, {826, 646}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{305, 36}, {791, 646}}</string>
+					<string>{{650, 106}, {826, 646}}</string>
 					<integer value="1"/>
 					<string>{{33, 99}, {480, 360}}</string>
 					<string>{3.40282e+38, 3.40282e+38}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{559, 682}, {83, 43}}</string>
+					<string>{{549, 688}, {83, 43}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>{{523, 2}, {178, 283}}</string>
@@ -6674,9 +6786,9 @@
 						<bytes key="NSTransformStruct">P4AAAL+AAABC/gAAw++AAA</bytes>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{301, 495}, {362, 207}}</string>
+					<string>{{329, 496}, {362, 207}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{301, 495}, {362, 207}}</string>
+					<string>{{329, 496}, {362, 207}}</string>
 					<boolean value="NO"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -6689,9 +6801,9 @@
 					<reference ref="1055251159"/>
 					<real value="0.0"/>
 					<real value="0.0"/>
-					<string>{{185, 353}, {522, 126}}</string>
+					<string>{{329, 353}, {522, 126}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{185, 353}, {522, 126}}</string>
+					<string>{{329, 353}, {522, 126}}</string>
 					<boolean value="NO"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -6765,6 +6877,17 @@
 						<bytes key="NSTransformStruct">AUIYAABBuAAAA</bytes>
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>{{459, 261}, {353, 377}}</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>{{459, 261}, {353, 377}}</string>
+					<boolean value="NO"/>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<object class="NSAffineTransform">
+						<bytes key="NSTransformStruct">AUGgAABBoAAAA</bytes>
+					</object>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="unlocalizedProperties">
@@ -6783,7 +6906,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">944</int>
+			<int key="maxID">955</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -6799,6 +6922,17 @@
 				<object class="IBPartialClassDescription">
 					<string key="className">FeatureViewerAppDelegate</string>
 					<string key="superclassName">NSObject</string>
+					<object class="NSMutableDictionary" key="outlets">
+						<string key="NS.key.0">controller</string>
+						<string key="NS.object.0">FeatureViewerController</string>
+					</object>
+					<object class="NSMutableDictionary" key="toOneOutletInfosByName">
+						<string key="NS.key.0">controller</string>
+						<object class="IBToOneOutletInfo" key="NS.object.0">
+							<string key="name">controller</string>
+							<string key="candidateClassName">FeatureViewerController</string>
+						</object>
+					</object>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">FeatureViewerAppDelegate.h</string>
@@ -6815,6 +6949,7 @@
 							<string>changeDim1:</string>
 							<string>changeDim2:</string>
 							<string>changeDim3:</string>
+							<string>cycleDims:</string>
 							<string>loadClusterIds:</string>
 							<string>loadFeatureFile:</string>
 							<string>performClusterOption:</string>
@@ -6822,6 +6957,7 @@
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -6840,6 +6976,7 @@
 							<string>changeDim1:</string>
 							<string>changeDim2:</string>
 							<string>changeDim3:</string>
+							<string>cycleDims:</string>
 							<string>loadClusterIds:</string>
 							<string>loadFeatureFile:</string>
 							<string>performClusterOption:</string>
@@ -6861,6 +6998,10 @@
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">changeDim3:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">cycleDims:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
@@ -6891,7 +7032,9 @@
 							<string>dim3</string>
 							<string>filterClustersPanel</string>
 							<string>fw</string>
+							<string>histView</string>
 							<string>progressPanel</string>
+							<string>rasterView</string>
 							<string>selectClusterOption</string>
 							<string>wfv</string>
 						</object>
@@ -6903,7 +7046,9 @@
 							<string>NSComboBox</string>
 							<string>NSPanel</string>
 							<string>FeatureView</string>
+							<string>HistogramView</string>
 							<string>ProgressPanel</string>
+							<string>RasterView</string>
 							<string>NSPopUpButton</string>
 							<string>WaveformsView</string>
 						</object>
@@ -6918,7 +7063,9 @@
 							<string>dim3</string>
 							<string>filterClustersPanel</string>
 							<string>fw</string>
+							<string>histView</string>
 							<string>progressPanel</string>
+							<string>rasterView</string>
 							<string>selectClusterOption</string>
 							<string>wfv</string>
 						</object>
@@ -6949,8 +7096,16 @@
 								<string key="candidateClassName">FeatureView</string>
 							</object>
 							<object class="IBToOneOutletInfo">
+								<string key="name">histView</string>
+								<string key="candidateClassName">HistogramView</string>
+							</object>
+							<object class="IBToOneOutletInfo">
 								<string key="name">progressPanel</string>
 								<string key="candidateClassName">ProgressPanel</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">rasterView</string>
+								<string key="candidateClassName">RasterView</string>
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">selectClusterOption</string>
@@ -7660,6 +7815,14 @@
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
+					<string key="className">HistogramView</string>
+					<string key="superclassName">NSView</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">HistogramView.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
 					<string key="className">ProgressPanel</string>
 					<string key="superclassName">NSPanel</string>
 					<object class="NSMutableDictionary" key="outlets">
@@ -7700,6 +7863,14 @@
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">
+					<string key="className">RasterView</string>
+					<string key="superclassName">NSView</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">RasterView.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
 					<string key="className">WaveformsPanel</string>
 					<string key="superclassName">NSPanel</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
@@ -7713,28 +7884,6 @@
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">WaveformsView.h</string>
-					</object>
-				</object>
-			</object>
-			<object class="NSMutableArray" key="referencedPartialClassDescriptionsV3.1+">
-				<bool key="EncodedWithXMLCoder">YES</bool>
-				<object class="IBPartialClassDescription">
-					<string key="className">FeatureViewerAppDelegate</string>
-					<string key="superclassName">NSObject</string>
-					<object class="NSMutableDictionary" key="outlets">
-						<string key="NS.key.0">controller</string>
-						<string key="NS.object.0">FeatureViewerController</string>
-					</object>
-					<object class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<string key="NS.key.0">controller</string>
-						<object class="IBToOneOutletInfo" key="NS.object.0">
-							<string key="name">controller</string>
-							<string key="candidateClassName">FeatureViewerController</string>
-						</object>
-					</object>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBDocumentRelativeSource</string>
-						<string key="minorKey">../../../../../../../Users/NUS/Documents/programming/Cocoa/FeatureViewer/FeatureViewerAppDelegate.h</string>
 					</object>
 				</object>
 			</object>

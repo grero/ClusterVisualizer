@@ -886,6 +886,85 @@
 	
 }
 
+- (IBAction) cycleDims: (id)sender
+{
+	if( cycleTimer == NULL )
+	{
+		int currentDim1 = [featureNames indexOfObject:[dim1 objectValueOfSelectedItem]];
+		int currentDim2 = [featureNames indexOfObject:[dim2 objectValueOfSelectedItem]];
+		int currentDim3 = [featureNames indexOfObject:[dim3 objectValueOfSelectedItem]];
+
+		NSMutableDictionary *info = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+									 [NSNumber numberWithInt:currentDim1],@"currentDim1", [NSNumber numberWithInt:currentDim2], @"currentDim2",
+									 [NSNumber numberWithInt:currentDim3], @"currentDim3",nil];
+		cycleTimer = [NSTimer scheduledTimerWithTimeInterval:0.5 target:self selector:@selector(cycleDimensionsUsingTimer:) userInfo: info repeats: YES];
+	}
+	else 
+	{
+		//the time is already running, and we wish to stop it; do this by first invalidating the timer, then setting it to NULL
+		[cycleTimer invalidate];
+		cycleTimer = NULL;
+	}
+}
+
+-(void)cycleDimensionsUsingTimer:(NSTimer*)timer
+{
+	//cycles through dimensions
+	//get the currently shown dimensions from the timer's userInfo object
+	//the integer currentDim is a linear index indicating which features are currently being drawn
+	int nrows = [featureNames count];
+	int currentDim1= [[[timer userInfo] objectForKey: @"currentDim1"] intValue];
+	int currentDim2= [[[timer userInfo] objectForKey: @"currentDim2"] intValue];
+	int currentDim3= [[[timer userInfo] objectForKey: @"currentDim3"] intValue];
+	//3 columns of features
+	//int row = currentDim/3;
+	//int col = currentDim % 3;
+	//int row = currentDim%nrows;
+	//int col = currentDim/nrows;
+	//stop the time if we are at the end
+	//if( (row== nrows-1) && (col ==2) )
+	if( currentDim1 == nrows-1 )
+	{
+		//if we have stepped through everything
+		[timer invalidate];
+	}
+	else 
+	{
+		//TODO: a bit inefficient; change this
+		[dim1 selectItemAtIndex:currentDim1];
+		[dim1 setObjectValue:[dim1 objectValueOfSelectedItem]];
+		[self changeDim1:dim1];
+		
+		
+		[dim2 selectItemAtIndex:currentDim2];
+		[dim2 setObjectValue:[dim2 objectValueOfSelectedItem]];
+		[self changeDim2:dim2];
+
+		
+		[dim3 selectItemAtIndex:currentDim3];
+		[dim3 setObjectValue:[dim3 objectValueOfSelectedItem]];
+		[self changeDim3:dim3];
+
+
+		currentDim3+=1;
+		if ( currentDim3 == nrows-1 )
+		{
+			currentDim2 +=1;
+			currentDim3 = currentDim2+1;
+
+		}
+		if (currentDim2 == nrows-1 )
+		{
+			currentDim1+=1;
+			currentDim2 = currentDim1+1;
+			
+		}
+		[[timer userInfo] setObject: [NSNumber numberWithInt:currentDim1] forKey: @"currentDim1"];
+		[[timer userInfo] setObject: [NSNumber numberWithInt:currentDim2] forKey: @"currentDim2"];
+		[[timer userInfo] setObject: [NSNumber numberWithInt:currentDim3] forKey: @"currentDim3"];
+	}
+}
+
 -(void) receiveNotification:(NSNotification*)notification
 {
 	if( [[notification name] isEqualToString:@"setFeatures"] )
@@ -1260,7 +1339,13 @@
     //capture key event, rotate view : left/right -> y-axis, up/down -> x-axis
     if ([theEvent modifierFlags] & NSNumericPadKeyMask) {
         [self interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
-    } else {
+    }
+	else if ([[theEvent characters] isEqualToString: @"p"])
+	{
+		//setup a timer that will cycle through the different feature dimensions
+		NSTimer *_timer = [NSTimer scheduledTimerWithTimeInterval:1 target: fw selector:@selector(selectDimensions:) userInfo: nil repeats:YES];
+	}
+	else {
         [self keyDown:theEvent];
     }
 }
