@@ -31,6 +31,7 @@
 @synthesize isiIdx;
 @synthesize mask;
 @synthesize waveformsImage;
+@synthesize featureDims;
 
 -(void)setActive:(NSInteger)value
 {
@@ -211,6 +212,22 @@
     
 }
 
+-(void)computeFeatureMean:(NSData*)data
+{
+	uint64_t datasize = [data length];
+	int cols = featureDims;
+	uint64_t rows = datasize/(cols*sizeof(float));
+	float *_mean = malloc(cols*sizeof(float));
+	float *_data = (float*)[data bytes];
+	int i;
+	//compute mean for each dimension
+	for(i=0;i<cols;i++)
+	{
+		vDSP_meanv(_data+i, cols, _mean+i, rows);
+	}
+	mean = [[NSData dataWithBytes:_mean length:sizeof(_mean)] retain];
+}
+
 -(void)computeIsolationDistance:(NSData*)data
 {
     unsigned int n = [npoints unsignedIntValue];
@@ -222,44 +239,48 @@
     }
     float *_data = (float*)[data bytes];
     float *_mean = (float*)[[self mean] bytes];
-    unsigned int ndim = (unsigned int)([[self mean] length]/sizeof(float));
-    unsigned int _npoints = (unsigned int)([data length]/(ndim*sizeof(float)));
-    float *d = malloc(ndim*sizeof(float));
-        unsigned int N = _npoints-n;
-  
-    float *D = malloc(N*sizeof(float));
-    float q;
-    int i,k,found,j;
-    k = 0;
-    j = 0;
-    for(i=0;i<_npoints;i++)
-    {
-        found = 0;
-        //this works because the indices are sorted
-        if(i==_points[j])
-        {
-            found=1;
-            j+=1;
-        }
-       
-        if(found==0)
-        {
-            //compute the distance
-            vDSP_vsub(_mean,1,_data+i*ndim,1,d,1,ndim);
-            //sum of squares
-            vDSP_svesq(d,1,&q,ndim);
-            D[k] = sqrt(q);
-            k+=1;
-        }
-    }
-    //sort
-    vDSP_vsort(D,N,1);
-    //isolation distance is the distance to the n'th closest point not in this cluster,
-    //where n is the number of points in this cluster
-    [self setIsolationDistance: [NSNumber numberWithFloat:D[n-1]]];
-    free(d);
-    free(D);
-            
+	if( _mean != NULL )
+	{
+				
+	
+		unsigned int ndim = (unsigned int)([[self mean] length]/sizeof(float));
+		unsigned int _npoints = (unsigned int)([data length]/(ndim*sizeof(float)));
+		float *d = malloc(ndim*sizeof(float));
+			unsigned int N = _npoints-n;
+	  
+		float *D = malloc(N*sizeof(float));
+		float q;
+		int i,k,found,j;
+		k = 0;
+		j = 0;
+		for(i=0;i<_npoints;i++)
+		{
+			found = 0;
+			//this works because the indices are sorted
+			if(i==_points[j])
+			{
+				found=1;
+				j+=1;
+			}
+		   
+			if(found==0)
+			{
+				//compute the distance
+				vDSP_vsub(_mean,1,_data+i*ndim,1,d,1,ndim);
+				//sum of squares
+				vDSP_svesq(d,1,&q,ndim);
+				D[k] = sqrt(q);
+				k+=1;
+			}
+		}
+		//sort
+		vDSP_vsort(D,N,1);
+		//isolation distance is the distance to the n'th closest point not in this cluster,
+		//where n is the number of points in this cluster
+		[self setIsolationDistance: [NSNumber numberWithFloat:D[n-1]]];
+		free(d);
+		free(D);
+	}
 }
 
 -(NSDictionary*)computeXCorr:(Cluster*)cluster timepoints:(NSData*)timepts;

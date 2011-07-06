@@ -27,6 +27,7 @@
     Cluster *activeCluster;
     NSArray *clusterModel;
     NSPredicate *isValidCluster, *filterClustersPredicate;
+	NSIndexSet *selectedClusters;
     NSMutableArray *clustersSortDescriptors;
     NSSortDescriptor *clustersSortDescriptor;
     NSData *vertex_data;
@@ -95,6 +96,7 @@
 - (IBAction) performClusterOption: (id)sender;
 - (IBAction) saveClusters:(id)sender;
 - (IBAction) cycleDims: (id)sender;
+- (IBAction) clusterThumbClicked: (id)sender;
 -(void)cycleDimensionsUsingTimer:(NSTimer*)timer;
 
 //@property (assign) IBOutlet NSWindow *window;
@@ -114,4 +116,5 @@
 @property (retain, readwrite) NSMutableArray *clustersSortDescriptors;
 @property (retain, readwrite) NSString *waveformsFile;
 @property (assign,readwrite) Cluster *activeCluster;
+@property (assign,readwrite) NSIndexSet *selectedClusters;
 @end

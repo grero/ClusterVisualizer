@@ -22,6 +22,7 @@
 @synthesize clustersSortDescriptors;
 @synthesize waveformsFile;
 @synthesize activeCluster;
+@synthesize selectedClusters;
 
 -(void)awakeFromNib
 {
@@ -593,7 +594,7 @@
     
     [selectClusterOption removeAllItems];
     NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",
-                               @"Show waveforms",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",nil];
+                               @"Show waveforms",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",nil];
     if(timestamps!=NULL)
     {
         //only allow isi computation if timestamps are loaded
@@ -605,6 +606,7 @@
     //[self setClusterOptions:[NSArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Show waveforms",@"Filter clusters",nil]];
     
     //draw image of all clusters
+	
 	NSEnumerator *clusterEn = [[self Clusters] objectEnumerator];
 	id cluster;
 	while( (cluster=[clusterEn nextObject] ) ) 
@@ -619,10 +621,12 @@
 				[cluster setWaveformsImage:img];
 			}
 		}
+		//add set the feature dimension
+		[cluster setFeatureDims: params.cols];
 		
 	}
 	[[wfv window] orderOut: self];
-
+	[self performComputation:@"Compute Feature Mean" usingSelector:@selector(computeFeatureMean:)];
 	[allActive setState:1];
 	
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -633,7 +637,7 @@
     if ([[NSFileManager defaultManager] fileExistsAtPath: modelFilePath ] )
     {
         [self readClusterModel:modelFilePath];
-        [options addObject: @"Compute Isolation Distance"];
+        [options addObject: @"Compute L-ratio"];
     }
     [selectClusterOption addItemsWithTitles:options];
     //once we have loaded the clusters, start up a timer that will ensure that data gets arhived automatically every 5 minutes
@@ -1037,6 +1041,28 @@
     
 }
 
+- (IBAction) clusterThumbClicked: (id)sender
+{
+	[self loadWaveforms:[self activeCluster]];
+	[[wfv window] orderFront: self];
+	//make sure we also update the waverormsImage
+	if([[self activeCluster] waveformsImage] == NULL)
+	{
+		NSImage *img = [[self wfv] image];
+		[[self activeCluster] setWaveformsImage:img];
+	}
+	NSInteger idx = [selectClusterOption indexOfSelectedItem];
+	NSString *selection = [selectClusterOption titleOfSelectedItem];
+	NSString *new_selection = [selection stringByReplacingOccurrencesOfString:@"Show" withString:@"Hide"];
+	[selectClusterOption removeItemAtIndex:idx];
+	[selectClusterOption insertItemWithTitle:new_selection atIndex:idx];
+	//make sure the waveforms view receives notification of highlights
+	[[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) 
+												 name:@"highlight" object:nil];
+	
+	
+}
+
 - (IBAction) performClusterOption: (id)sender
 {
     NSString *selection = [sender titleOfSelectedItem];
@@ -1188,6 +1214,7 @@
 		{
 			[wfv hideWaveforms:[wfv highlightWaves]];
 			[[wfv highlightWaves] setLength: 0];
+			//might as well just redraw
 		}
 		[fw setNeedsDisplay:YES];
 		
@@ -1540,6 +1567,33 @@
 	[dim3 addItemsWithObjectValues:featureNames];
 }
 
+-(void)setSelectedClusters:(NSIndexSet *)indexes
+{
+	//this should be called when a cluster is selected (by clicking on the thumbnail).Draw the waveforms of (the first) selected cluster
+	NSUInteger firstIndex = [indexes firstIndex];
+	if( firstIndex < [Clusters count] )
+	{
+		Cluster *firstCluster = [Clusters objectAtIndex:firstIndex];
+		[self loadWaveforms: firstCluster];
+		[[wfv window] orderFront: self];
+		//make sure we also update the waverormsImage
+		if([firstCluster waveformsImage] == NULL)
+		{
+			NSImage *img = [[self wfv] image];
+			[firstCluster setWaveformsImage:img];
+		}
+		NSInteger idx = [selectClusterOption indexOfSelectedItem];
+		NSString *selection = [selectClusterOption titleOfSelectedItem];
+		NSString *new_selection = [selection stringByReplacingOccurrencesOfString:@"Show" withString:@"Hide"];
+		[selectClusterOption removeItemAtIndex:idx];
+		[selectClusterOption insertItemWithTitle:new_selection atIndex:idx];
+		//make sure the waveforms view receives notification of highlights
+		[[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) 
+													 name:@"highlight" object:nil];
+		
+	}
+	
+}
 -(void)dealloc
 {
     [timestamps release];

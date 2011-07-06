@@ -31,6 +31,7 @@
 	NSData *featureRanges;
     NSMutableData *mask;
     NSImage *waveformsImage;
+	NSInteger featureDims;
     
 
 }
@@ -56,6 +57,7 @@
 @property(retain,readwrite) NSMutableData *mask;
 @property(retain,readwrite) NSImage *waveformsImage;
 @property(retain,readwrite) NSData *featureRanges;
+@property(assign,readwrite) NSInteger featureDims;
 
 -(void)createName;
 -(void)makeInactive;
@@ -65,6 +67,7 @@
 
 -(void)makeInvalid;
 -(void)makeValid;
+-(void)computeFeatureMean:(NSData*)data;
 -(void)computeISIs:(NSData*)timestamps;
 -(void)computeLRatio:(NSData*)data;
 -(void)computeIsolationDistance:(NSData*)data;
