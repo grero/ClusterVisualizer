@@ -8,6 +8,7 @@
  */
 #include <hdf5.h>
 #include <hdf5_hl.h>
+#include <matio.h>
 
 typedef struct {
     int ndim;
@@ -16,8 +17,10 @@ typedef struct {
 } header;
 
 header *readFeatureHeader(char *fname, header *H);
+header *readMatlabFeatureHeader(char *fname, header *H);
 float *readFeatureFile(char *fname,float *data);
 float *readFeatureData(char *fname,float *data);
+float *readMatlabFeatureData(char *fname, float*data);
 char *readFeatureNames(char *fname, char *data);
 float *getMinMax(float *minmax,float *data, int nrows,int ncols);
 int *readClusterIds(char *fname,  int *cids);

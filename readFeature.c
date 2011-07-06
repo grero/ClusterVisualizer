@@ -19,6 +19,11 @@ header *readFeatureHeader(char *fname, header *H)
     char dset_name[100];
     size_t name_size;
     file_id = H5Fopen (fname, H5F_ACC_RDONLY, H5P_DEFAULT);
+	if( file_id < 0 )
+	{
+		H = readMatlabFeatureHeader(fname, H);
+		return H;
+	}
     status = H5LTget_dataset_info(file_id,"/FeatureData",dims,NULL,NULL);
     status = H5Gget_num_objs(file_id,&nsets);
     H->rows = dims[0];
@@ -39,6 +44,29 @@ header *readFeatureHeader(char *fname, header *H)
     H->ndim = 2;*/
         
     return H;
+}
+
+header *readMatlabFeatureHeader(char *fname, header *H)
+{
+	matvar_t *matvar;
+	mat_t *mat;
+	
+	//open file
+	mat = Mat_Open(fname,MAT_ACC_RDONLY);
+	if (mat==NULL) {
+		H->ndim=0;
+		H->rows=-1;
+		H->cols=1;
+		return H;
+	}
+	matvar = Mat_VarReadInfo(mat,"FeatureData");
+	H->ndim = matvar->rank;
+	size_t *dims = matvar->dims;
+	//swap these since we want to read in row major order
+	H->rows = dims[1];
+	H->cols = dims[0];
+	Mat_Close(mat);
+	return H;
 }
 
 float *readFeatureFile(char *fname,float *data)
@@ -69,11 +97,44 @@ float *readFeatureData(char *fname,float *data)
     hsize_t nsets;
     hsize_t dims[2] = {0,0};
     file_id = H5Fopen (fname, H5F_ACC_RDONLY, H5P_DEFAULT);
+	if (file_id < 0 )
+	{
+		data = readMatlabFeatureData(fname, data);
+		return data;
+	}
     status = H5LTread_dataset_float(file_id,"/FeatureData",data);
     if (status == -1)
         data = NULL;
     return data;
     
+}
+
+float *readMatlabFeatureData(char *fname,float *data)
+{
+	matvar_t *matvar;
+	mat_t *mat;
+	
+	//open file
+	mat = Mat_Open(fname,MAT_ACC_RDONLY);
+	matvar = Mat_VarReadInfo(mat,"FeatureData");
+	int err = Mat_VarReadDataAll(mat,matvar);
+	int nel = (matvar->nbytes)/(matvar->data_size);
+	double *_data = matvar->data;
+	int i,j;
+	int rows,cols;
+	rows = matvar->dims[0];
+	cols = matvar->dims[1];
+	//copy and transpose
+	for(i=0;i<rows;i++)
+	{
+		for(j=0;j<cols;j++)
+		{
+			data[i*cols+j] = (float)_data[j*rows+i];
+		}
+	}
+	Mat_VarFree(matvar);
+	Mat_Close(mat);
+	return data;
 }
 
 char *readFeatureNames(char *fname, char *data)
