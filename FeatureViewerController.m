@@ -23,6 +23,7 @@
 @synthesize waveformsFile;
 @synthesize activeCluster;
 @synthesize selectedClusters;
+@synthesize selectedWaveform;
 
 -(void)awakeFromNib
 {
@@ -32,6 +33,11 @@
 	currentBaseName = NULL;
 	timestamps = NULL;
     [self setFilterClustersPredicate:[NSPredicate predicateWithFormat: @"valid==YES"]];
+	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
+												 name:@"showInput" object: nil];
+	//[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
+	//											 name:@"highlight" object: nil];
+
 	//load the nibs
 	
 }
@@ -322,8 +328,9 @@
     [dim3 selectItemAtIndex:2];
 	featureNames = [[NSMutableArray arrayWithArray:feature_names] retain];
 	//register featureview for notification about change in highlight
+	//feature view only received notification from waveforms view
 	[[NSNotificationCenter defaultCenter] addObserver: fw selector:@selector(receiveNotification:) 
-												 name:@"highlight" object: nil];
+												 name:@"highlight" object: [self wfv]];
 	
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) 
 												 name:@"setFeatures" object:nil];
@@ -927,7 +934,7 @@
 	//int col = currentDim/nrows;
 	//stop the time if we are at the end
 	//if( (row== nrows-1) && (col ==2) )
-	if( currentDim1 == nrows-1 )
+	if( currentDim1 >= nrows-1 )
 	{
 		//if we have stepped through everything
 		[timer invalidate];
@@ -951,13 +958,13 @@
 
 
 		currentDim3+=1;
-		if ( currentDim3 == nrows-1 )
+		if ( currentDim3 >= nrows )
 		{
 			currentDim2 +=1;
 			currentDim3 = currentDim2+1;
 
 		}
-		if (currentDim2 == nrows-1 )
+		if (currentDim2 >= nrows )
 		{
 			currentDim1+=1;
 			currentDim2 = currentDim1+1;
@@ -981,6 +988,26 @@
 				withChannels:[[[notification userInfo] objectForKey:@"channels"] unsignedIntValue]
 			   andTimepoints:[[[notification userInfo] objectForKey:@"timepoints"] unsignedIntValue]];
 	}
+	else if ( [[notification name] isEqualToString:@"showInput" ] )
+	{
+		//show the input panel
+		NSNumber *number = [[notification userInfo] objectForKey:@"selected"];
+		
+		[self setSelectedWaveform: [number stringValue]];
+		[inputPanel makeKeyAndOrderFront:self];
+	}
+	else if ([[notification name] isEqualToString:@"highlight" ] )
+	{
+		//grab the points and convert to string
+		unsigned int *points = (unsigned int*)[[[notification object] objectForKey:@"points"] bytes];
+		[self setSelectedWaveform: [NSString stringWithFormat:@"%u",points[0]]];
+		//check if visible
+		if( [inputPanel isVisible] == NO )
+		{
+			[inputPanel makeKeyAndOrderFront:self];
+		}
+	}
+	
 }
 
 -(void) setAvailableFeatures:(NSArray*)channels
@@ -1124,6 +1151,7 @@
         [sender insertItemWithTitle:new_selection atIndex:idx];
         [[NSNotificationCenter defaultCenter] removeObserver: [self wfv] name: @"highlight" object: nil];
         [[[self wfv] window] orderOut:self];
+		[inputPanel orderOut:self];
         
     }
     else if( [selection isEqualToString:@"Filter clusters"] )
@@ -1372,6 +1400,14 @@
 		//setup a timer that will cycle through the different feature dimensions
 		NSTimer *_timer = [NSTimer scheduledTimerWithTimeInterval:1 target: fw selector:@selector(selectDimensions:) userInfo: nil repeats:YES];
 	}
+	/*
+	else if ([NSNumberFormatter numberFromString: [theEvent characters]] != nil )
+	{
+		//typed in a number; interpret as choosing waveforms, show waveforms chooser
+		[self setSelectedWaveform: [NSNumberFormatter numberFromString: [theEvent characters]]];
+		//show the panel
+		[ inputPanel orderFront:self];
+	}*/
 	else {
         [self keyDown:theEvent];
     }
@@ -1594,6 +1630,26 @@
 	}
 	
 }
+
+-(void)setSelectedWaveform:(NSString *)wf
+{
+	
+	//[inputPanel orderOut:self];
+	//this is experimental
+	//get a number
+	NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+	NSNumber *number = [formatter numberFromString:wf]; 
+	unsigned int point = [number unsignedIntValue];
+	if( point < [[[self activeCluster] npoints] unsignedIntValue] )
+	{
+		selectedWaveform = [[NSString stringWithString:wf] retain];
+		NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:[NSData dataWithBytes:&point length:sizeof(unsigned int)],@"points",nil];
+		[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:self userInfo:userInfo];
+	}
+	[formatter release];
+	//
+}
+
 -(void)dealloc
 {
     [timestamps release];

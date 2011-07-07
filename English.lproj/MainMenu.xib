@@ -12,13 +12,14 @@
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="718"/>
-			<integer value="925"/>
 			<integer value="29"/>
-			<integer value="945"/>
-			<integer value="372"/>
-			<integer value="646"/>
+			<integer value="933"/>
 			<integer value="857"/>
+			<integer value="646"/>
+			<integer value="925"/>
+			<integer value="945"/>
+			<integer value="641"/>
+			<integer value="965"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -3364,6 +3365,51 @@
 				<string key="NSScreenRect">{{0, 0}, {1280, 778}}</string>
 				<string key="NSMaxSize">{1.79769e+308, 1.79769e+308}</string>
 			</object>
+			<object class="NSWindowTemplate" id="1000299278">
+				<int key="NSWindowStyleMask">8209</int>
+				<int key="NSWindowBacking">2</int>
+				<string key="NSWindowRect">{{131, 390}, {136, 39}}</string>
+				<int key="NSWTFlags">-461896704</int>
+				<string key="NSWindowTitle">Waveform</string>
+				<string key="NSWindowClass">NSPanel</string>
+				<nil key="NSViewClass"/>
+				<string key="NSWindowContentMaxSize">{136, 39}</string>
+				<string key="NSWindowContentMinSize">{136, 39}</string>
+				<object class="NSView" key="NSWindowView" id="129914619">
+					<reference key="NSNextResponder"/>
+					<int key="NSvFlags">256</int>
+					<object class="NSMutableArray" key="NSSubviews">
+						<bool key="EncodedWithXMLCoder">YES</bool>
+						<object class="NSTextField" id="755222859">
+							<reference key="NSNextResponder" ref="129914619"/>
+							<int key="NSvFlags">258</int>
+							<string key="NSFrame">{{20, 10}, {96, 22}}</string>
+							<reference key="NSSuperview" ref="129914619"/>
+							<bool key="NSEnabled">YES</bool>
+							<object class="NSTextFieldCell" key="NSCell" id="262913256">
+								<int key="NSCellFlags">-1804468671</int>
+								<int key="NSCellFlags2">272630784</int>
+								<string key="NSContents"/>
+								<reference key="NSSupport" ref="167969011"/>
+								<reference key="NSControlView" ref="755222859"/>
+								<bool key="NSDrawsBackground">YES</bool>
+								<reference key="NSBackgroundColor" ref="616254679"/>
+								<object class="NSColor" key="NSTextColor">
+									<int key="NSColorSpace">6</int>
+									<string key="NSCatalogName">System</string>
+									<string key="NSColorName">textColor</string>
+									<reference key="NSColor" ref="1055251159"/>
+								</object>
+							</object>
+						</object>
+					</object>
+					<string key="NSFrameSize">{136, 39}</string>
+					<reference key="NSSuperview"/>
+				</object>
+				<string key="NSScreenRect">{{0, 0}, {1280, 778}}</string>
+				<string key="NSMinSize">{136, 58}</string>
+				<string key="NSMaxSize">{136, 58}</string>
+			</object>
 		</object>
 		<object class="IBObjectContainer" key="IBDocument.Objects">
 			<object class="NSMutableArray" key="connectionRecords">
@@ -4377,23 +4423,6 @@
 					<int key="connectionID">929</int>
 				</object>
 				<object class="IBConnectionRecord">
-					<object class="IBBindingConnection" key="connection">
-						<string key="label">sortDescriptors: clustersSortDescriptors</string>
-						<reference key="source" ref="735487136"/>
-						<reference key="destination" ref="577388468"/>
-						<object class="NSNibBindingConnector" key="connector">
-							<reference key="NSSource" ref="735487136"/>
-							<reference key="NSDestination" ref="577388468"/>
-							<string key="NSLabel">sortDescriptors: clustersSortDescriptors</string>
-							<string key="NSBinding">sortDescriptors</string>
-							<string key="NSKeyPath">clustersSortDescriptors</string>
-							<reference key="NSPreviousConnector" ref="1191"/>
-							<int key="NSNibBindingConnectorVersion">2</int>
-						</object>
-					</object>
-					<int key="connectionID">932</int>
-				</object>
-				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
 						<string key="label">wfv</string>
 						<reference key="source" ref="577388468"/>
@@ -4444,6 +4473,55 @@
 						<reference key="destination" ref="1018268506"/>
 					</object>
 					<int key="connectionID">955</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">clusterThumbClicked:</string>
+						<reference key="source" ref="577388468"/>
+						<reference key="destination" ref="431967856"/>
+					</object>
+					<int key="connectionID">962</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBBindingConnection" key="connection">
+						<string key="label">sortDescriptors: clustersSortDescriptors</string>
+						<reference key="source" ref="735487136"/>
+						<reference key="destination" ref="577388468"/>
+						<object class="NSNibBindingConnector" key="connector">
+							<reference key="NSSource" ref="735487136"/>
+							<reference key="NSDestination" ref="577388468"/>
+							<string key="NSLabel">sortDescriptors: clustersSortDescriptors</string>
+							<string key="NSBinding">sortDescriptors</string>
+							<string key="NSKeyPath">clustersSortDescriptors</string>
+							<reference key="NSPreviousConnector" ref="1191"/>
+							<int key="NSNibBindingConnectorVersion">2</int>
+						</object>
+					</object>
+					<int key="connectionID">963</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBBindingConnection" key="connection">
+						<string key="label">value: selectedWaveform</string>
+						<reference key="source" ref="755222859"/>
+						<reference key="destination" ref="577388468"/>
+						<object class="NSNibBindingConnector" key="connector">
+							<reference key="NSSource" ref="755222859"/>
+							<reference key="NSDestination" ref="577388468"/>
+							<string key="NSLabel">value: selectedWaveform</string>
+							<string key="NSBinding">value</string>
+							<string key="NSKeyPath">selectedWaveform</string>
+							<int key="NSNibBindingConnectorVersion">2</int>
+						</object>
+					</object>
+					<int key="connectionID">971</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">inputPanel</string>
+						<reference key="source" ref="577388468"/>
+						<reference key="destination" ref="1000299278"/>
+					</object>
+					<int key="connectionID">972</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -6135,6 +6213,38 @@
 						<reference key="object" ref="674560360"/>
 						<reference key="parent" ref="1018268506"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">964</int>
+						<reference key="object" ref="1000299278"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="129914619"/>
+						</object>
+						<reference key="parent" ref="0"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">965</int>
+						<reference key="object" ref="129914619"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="755222859"/>
+						</object>
+						<reference key="parent" ref="1000299278"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">966</int>
+						<reference key="object" ref="755222859"/>
+						<object class="NSMutableArray" key="children">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<reference ref="262913256"/>
+						</object>
+						<reference key="parent" ref="129914619"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">967</int>
+						<reference key="object" ref="262913256"/>
+						<reference key="parent" ref="755222859"/>
+					</object>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="flattenedProperties">
@@ -6506,6 +6616,18 @@
 					<string>947.IBViewBoundsToFrameTransform</string>
 					<string>953.IBPluginDependency</string>
 					<string>954.IBPluginDependency</string>
+					<string>964.IBEditorWindowLastContentRect</string>
+					<string>964.IBPluginDependency</string>
+					<string>964.IBWindowTemplateEditedContentRect</string>
+					<string>964.NSWindowTemplate.visibleAtLaunch</string>
+					<string>964.windowTemplate.hasMaxSize</string>
+					<string>964.windowTemplate.hasMinSize</string>
+					<string>964.windowTemplate.maxSize</string>
+					<string>964.windowTemplate.minSize</string>
+					<string>965.IBPluginDependency</string>
+					<string>966.IBPluginDependency</string>
+					<string>966.IBViewBoundsToFrameTransform</string>
+					<string>967.IBPluginDependency</string>
 				</object>
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
@@ -6638,9 +6760,9 @@
 					<integer value="1"/>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<integer value="1"/>
-					<string>{{650, 106}, {826, 646}}</string>
+					<string>{{353, 110}, {826, 646}}</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
-					<string>{{650, 106}, {826, 646}}</string>
+					<string>{{353, 110}, {826, 646}}</string>
 					<integer value="1"/>
 					<string>{{33, 99}, {480, 360}}</string>
 					<string>{3.40282e+38, 3.40282e+38}</string>
@@ -6888,6 +7010,20 @@
 					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>{{581, 614}, {136, 39}}</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>{{581, 614}, {136, 39}}</string>
+					<boolean value="NO"/>
+					<boolean value="YES"/>
+					<boolean value="YES"/>
+					<string>{136, 39}</string>
+					<string>{136, 39}</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<object class="NSAffineTransform">
+						<bytes key="NSTransformStruct">P4AAAL+AAABBoAAAwfAAAA</bytes>
+					</object>
+					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 				</object>
 			</object>
 			<object class="NSMutableDictionary" key="unlocalizedProperties">
@@ -6906,7 +7042,7 @@
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">955</int>
+			<int key="maxID">972</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -6949,6 +7085,8 @@
 							<string>changeDim1:</string>
 							<string>changeDim2:</string>
 							<string>changeDim3:</string>
+							<string>chooseWaveforms:</string>
+							<string>clusterThumbClicked:</string>
 							<string>cycleDims:</string>
 							<string>loadClusterIds:</string>
 							<string>loadFeatureFile:</string>
@@ -6957,6 +7095,8 @@
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -6976,6 +7116,8 @@
 							<string>changeDim1:</string>
 							<string>changeDim2:</string>
 							<string>changeDim3:</string>
+							<string>chooseWaveforms:</string>
+							<string>clusterThumbClicked:</string>
 							<string>cycleDims:</string>
 							<string>loadClusterIds:</string>
 							<string>loadFeatureFile:</string>
@@ -6998,6 +7140,14 @@
 							</object>
 							<object class="IBActionInfo">
 								<string key="name">changeDim3:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">chooseWaveforms:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">clusterThumbClicked:</string>
 								<string key="candidateClassName">id</string>
 							</object>
 							<object class="IBActionInfo">
@@ -7033,6 +7183,7 @@
 							<string>filterClustersPanel</string>
 							<string>fw</string>
 							<string>histView</string>
+							<string>inputPanel</string>
 							<string>progressPanel</string>
 							<string>rasterView</string>
 							<string>selectClusterOption</string>
@@ -7047,6 +7198,7 @@
 							<string>NSPanel</string>
 							<string>FeatureView</string>
 							<string>HistogramView</string>
+							<string>NSPanel</string>
 							<string>ProgressPanel</string>
 							<string>RasterView</string>
 							<string>NSPopUpButton</string>
@@ -7064,6 +7216,7 @@
 							<string>filterClustersPanel</string>
 							<string>fw</string>
 							<string>histView</string>
+							<string>inputPanel</string>
 							<string>progressPanel</string>
 							<string>rasterView</string>
 							<string>selectClusterOption</string>
@@ -7098,6 +7251,10 @@
 							<object class="IBToOneOutletInfo">
 								<string key="name">histView</string>
 								<string key="candidateClassName">HistogramView</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">inputPanel</string>
+								<string key="candidateClassName">NSPanel</string>
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">progressPanel</string>

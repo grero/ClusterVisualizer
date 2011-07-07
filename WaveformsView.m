@@ -413,8 +413,15 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
 
 -(void) highlightWaveforms:(NSData*)wfidx
 {
+	//check if highlightWaves have changed
+	if([wfidx isEqual:highlightWaves] )
+	{
+		return;
+	}
     [[self openGLContext] makeCurrentContext];
     unsigned int* _points = (unsigned int*)[wfidx bytes];
+	//check if bytes have changed at all
+	
     unsigned int _npoints = [wfidx length]/sizeof(unsigned int);
     
     GLfloat zvalue;
@@ -440,7 +447,11 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
     for(i=0;i<_npoints;i++)
     {
         idx = _points[i];
-        vDSP_vfill(&zvalue,_data+(idx*timepts*chs*3)+2,3,timepts*chs);
+		//check that the point is valid
+		if( idx < num_spikes )
+		{
+			vDSP_vfill(&zvalue,_data+(idx*timepts*chs*3)+2,3,timepts*chs);
+		}
     }
     glUnmapBuffer(GL_ARRAY_BUFFER);
     
@@ -468,9 +479,12 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
     for(i=0;i<_npoints;i++)
     {
         idx = _points[i];
-        vDSP_vfill(hcolor,_colors+(idx*wavesize*3),3,wavesize);
-        vDSP_vfill(hcolor+1,_colors+(idx*wavesize*3)+1,3,wavesize);
-        vDSP_vfill(hcolor+2,_colors+(idx*wavesize*3)+2,3,wavesize);
+		if (idx < num_spikes )
+		{
+			vDSP_vfill(hcolor,_colors+(idx*wavesize*3),3,wavesize);
+			vDSP_vfill(hcolor+1,_colors+(idx*wavesize*3)+1,3,wavesize);
+			vDSP_vfill(hcolor+2,_colors+(idx*wavesize*3)+2,3,wavesize);
+		}
     }
     if(highlightWaves != NULL)
     {
@@ -786,7 +800,7 @@ static void wfDrawAnObject()
 {
     if([[notification name] isEqualToString:@"highlight"])
     {
-        [self highlightWaveforms:[[notification object] objectForKey:@"points"]];
+        [self highlightWaveforms:[[notification userInfo] objectForKey:@"points"]];
     }
 }
     
@@ -809,6 +823,7 @@ static void wfDrawAnObject()
 -(void)keyUp:(NSEvent *)theEvent
 {
 	//check if control key was released (hopefully...)
+	NSNumberFormatter *formatter = [NSNumberFormatter defaultFormatterBehavior];
 	if ([ theEvent modifierFlags] & NSControlKeyMask )
 	{
 		unsigned int minChannel = [[highlightedChannels objectAtIndex:0] unsignedIntValue];
@@ -816,6 +831,14 @@ static void wfDrawAnObject()
 		xmin = (GLfloat)(minChannel*(timepts+channelHop));
 		xmax = (GLfloat)(maxChannel*(timepts+channelHop));
 	}
+	else if ([formatter numberFromString: [theEvent characters]] != nil )	
+	{
+		NSString *wf = [theEvent characters];
+		//send off a notification indicating that we should show the waveform picker panel
+		NSDictionary *params  = [NSDictionary dictionaryWithObjectsAndKeys:wf,@"selected",nil];
+		[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:params];
+	}
+
 }
 -(void)mouseUp:(NSEvent *)theEvent
 {
@@ -1175,7 +1198,12 @@ static void wfDrawAnObject()
 	NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
                                                                 [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects: 
                                                                                                                       @"points",@"color",nil]];
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:params];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object: self userInfo: params];
+	unsigned int *idx = (unsigned int*)[hdata bytes];
+	
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:self userInfo: [NSDictionary dictionaryWithObjectsAndKeys:
+																								   [NSNumber numberWithUnsignedInt:idx[0]],
+																								   @"selected",nil]];
 }
 
 -(IBAction)moveRight:(id)sender
@@ -1209,7 +1237,12 @@ static void wfDrawAnObject()
 	NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
                                                                 [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects: 
                                                                                                                       @"points",@"color",nil]];
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:params];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:self userInfo: params];
+	unsigned int *idx = (unsigned int*)[hdata bytes];
+	
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:self userInfo: [NSDictionary dictionaryWithObjectsAndKeys:
+																								   [NSNumber numberWithUnsignedInt:idx[0]],
+																								   @"selected",nil]];
 }	
 
 -(void)dealloc

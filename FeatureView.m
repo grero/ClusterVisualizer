@@ -876,7 +876,7 @@ static void drawAnObject()
 {
     if([[notification name] isEqualToString:@"highlight"])
     {
-        [self highlightPoints:[notification object]];
+        [self highlightPoints:[notification userInfo]];
     }
 }
 
@@ -884,10 +884,21 @@ static void drawAnObject()
 
 - (void)keyDown:(NSEvent *)theEvent
 {
+	NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
     //capture key event, rotate view : left/right -> y-axis, up/down -> x-axis
     if ([theEvent modifierFlags] & NSNumericPadKeyMask) {
         [self interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
-    } else {
+	}
+	else if ([formatter numberFromString: [theEvent characters]] != nil )	
+	{
+		
+		//send off a notification indicating that we should show the waveform picker panel
+		NSDictionary *params  = [NSDictionary dictionaryWithObjectsAndKeys:[theEvent characters],@"selected",nil];
+		[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:self userInfo: params];
+	
+    } 
+	else 
+	{
         if( [[theEvent characters] isEqualToString:@"+" ] )
 		{
 			[self zoomIn];
@@ -897,6 +908,7 @@ static void drawAnObject()
 			[self zoomOut];
 		}
     }
+	[formatter release];
 }
 
 -(IBAction)moveUp:(id)sender
