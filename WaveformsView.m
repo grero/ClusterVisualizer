@@ -420,7 +420,6 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
 	}
     [[self openGLContext] makeCurrentContext];
     unsigned int* _points = (unsigned int*)[wfidx bytes];
-	//check if bytes have changed at all
 	
     unsigned int _npoints = [wfidx length]/sizeof(unsigned int);
     
@@ -749,11 +748,14 @@ static void wfDrawAnObject()
         }
         if(found == 0)
         {
-            //rearrange both indices and vertixes
+            //need to remove the waveform;rearrange both indices and vertixes
+			//TODO: Somethign seems wrong here; the indices will have values referring to the old wfVertices array, but below
+			//we are removing some waveforms; in other words, the indices need to be reset as well. So, we should keep the indices as they are
+			/*
             for(l=0;l<waveIndexSize;l++)
             {
                 tmp_idx[k*waveIndexSize+l] = tmp_idx[i*waveIndexSize+l];
-            }
+            }*/
             for(l=0;l<wavesize;l++)
             {
                 wfVertices[3*(k*wavesize+l)] = wfVertices[3*(i*wavesize+l)];
@@ -938,10 +940,20 @@ static void wfDrawAnObject()
         hdata = [NSMutableData dataWithCapacity:sizeof(unsigned int)];
     }
     [hdata appendBytes:&wfidx length:sizeof(unsigned int)];
-    NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
+    /*NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
                                                                 [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects: 
                                                                                                                       @"points",@"color",nil]];
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:params];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:params];*/
+	NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
+                                                                [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects: 
+                                                                                                                      @"points",@"color",nil]];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object: self userInfo: params];
+	unsigned int *idx = (unsigned int*)[hdata bytes];
+	
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:self userInfo: [NSDictionary dictionaryWithObjectsAndKeys:
+																								   [NSNumber numberWithUnsignedInt:idx[0]],
+																								   @"selected",nil]];
+	
     //[self highlightWaveform:wfidx];
     
 }
