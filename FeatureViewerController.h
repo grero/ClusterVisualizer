@@ -41,6 +41,7 @@
     NSString *waveformsFile;
     NSOperationQueue *queue;
     NSTimer *archiveTimer, *cycleTimer;
+	NSNumber *featureCycleInterval;
 	NSString *selectedWaveform;
     IBOutlet FeatureView *fw;
     IBOutlet WaveformsView *wfv;
@@ -54,6 +55,7 @@
     IBOutlet HistogramView *histView;
 	IBOutlet RasterView *rasterView;
 	IBOutlet NSPanel *inputPanel;
+	IBOutlet NSPanel *cyclePanel;
     
     
 }
@@ -100,6 +102,7 @@
 - (IBAction) cycleDims: (id)sender;
 - (IBAction) clusterThumbClicked: (id)sender;
 - (IBAction) chooseWaveforms: (id)sender;
+- (IBAction) changeCycleInterval: (id)sender;
 -(void)cycleDimensionsUsingTimer:(NSTimer*)timer;
 
 //@property (assign) IBOutlet NSWindow *window;
@@ -121,4 +124,5 @@
 @property (assign,readwrite) Cluster *activeCluster;
 @property (assign,readwrite) NSIndexSet *selectedClusters;
 @property (retain,readwrite) NSString *selectedWaveform;
+@property (retain,readwrite) NSNumber *featureCycleInterval;
 @end

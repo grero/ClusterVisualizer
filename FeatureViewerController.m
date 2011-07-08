@@ -24,6 +24,7 @@
 @synthesize activeCluster;
 @synthesize selectedClusters;
 @synthesize selectedWaveform;
+@synthesize featureCycleInterval;
 
 -(void)awakeFromNib
 {
@@ -39,6 +40,18 @@
 	//											 name:@"highlight" object: nil];
 
 	//load the nibs
+	//setup defaults
+	/*NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	NSNumber *fci = [defaults objectForKey:@"featureCycleInterval"];
+	if(fci == nil )
+	{
+		//no default value was found; use 0.5
+		[defaults registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithFloat:0.5], @"featureCycleInterval",nil]];
+		
+	}*/
+	//[self setFeatureCycleInterval:[defaults objectForKey:@"featureCycleInterval"]];
+	[self setFeatureCycleInterval:[NSNumber numberWithFloat:0.5]];
+
 	
 }
 
@@ -901,6 +914,11 @@
 {
 	if( cycleTimer == NULL )
 	{
+		//show the cyclePanel
+		if( [cyclePanel isVisible] == NO )
+		{
+			[cyclePanel orderFront:self];
+		}
 		int currentDim1 = [featureNames indexOfObject:[dim1 objectValueOfSelectedItem]];
 		int currentDim2 = [featureNames indexOfObject:[dim2 objectValueOfSelectedItem]];
 		int currentDim3 = [featureNames indexOfObject:[dim3 objectValueOfSelectedItem]];
@@ -908,14 +926,28 @@
 		NSMutableDictionary *info = [NSMutableDictionary dictionaryWithObjectsAndKeys:
 									 [NSNumber numberWithInt:currentDim1],@"currentDim1", [NSNumber numberWithInt:currentDim2], @"currentDim2",
 									 [NSNumber numberWithInt:currentDim3], @"currentDim3",nil];
-		cycleTimer = [NSTimer scheduledTimerWithTimeInterval:0.5 target:self selector:@selector(cycleDimensionsUsingTimer:) userInfo: info repeats: YES];
+		cycleTimer = [NSTimer scheduledTimerWithTimeInterval:[[self featureCycleInterval] floatValue] target:self selector:@selector(cycleDimensionsUsingTimer:) userInfo: info repeats: YES];
 	}
 	else 
 	{
+		if( [cyclePanel isVisible] == YES )
+		{
+			[cyclePanel orderOut:self];
+		}
 		//the time is already running, and we wish to stop it; do this by first invalidating the timer, then setting it to NULL
 		[cycleTimer invalidate];
 		cycleTimer = NULL;
 	}
+	
+}
+
+- (IBAction) changeCycleInterval: (id)sender
+{
+	[self setFeatureCycleInterval:[NSNumber numberWithFloat: 1.0/([sender floatValue])]];
+	//reset the timer
+	[cycleTimer invalidate];
+	cycleTimer = NULL;
+	[self cycleDims:self];
 }
 
 -(void)cycleDimensionsUsingTimer:(NSTimer*)timer
