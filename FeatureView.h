@@ -43,6 +43,7 @@ static BOOL dataloaded;
     NSMutableIndexSet *indexset;
     NSMutableData *highlightedPoints;
     NSMutableData *rotation;
+	
     @private
     NSOpenGLContext* _oglContext;
     NSOpenGLPixelFormat* _pixelFormat;
@@ -72,7 +73,7 @@ static BOOL dataloaded;
 -(void) hideAllClusters;
 -(void) showAllClusters;
 -(void) setClusterColors: (GLfloat*)cluster_colors forIndices: (GLuint*)cluster_indices length:(NSUInteger)length;
--(void) highlightPoints:(NSDictionary*)params;
+-(void) highlightPoints:(NSDictionary*)params inCluster: (Cluster*)cluster;
 -(void) receiveNotification:(NSNotification*)notification;
 -(void) rotateY;
 -(void) rotateX;

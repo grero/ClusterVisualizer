@@ -34,7 +34,7 @@
     NSData *timestamps;
 	NSMutableArray *featureNames;
     header params;
-    BOOL dataloaded;
+    BOOL dataloaded,autoLoadWaveforms;
 	NSInteger nchannels;
     //name of current cluster set
     NSString *currentBaseName;
@@ -43,6 +43,7 @@
     NSTimer *archiveTimer, *cycleTimer;
 	NSNumber *featureCycleInterval;
 	NSString *selectedWaveform;
+	NSAttributedString *releaseNotes;
     IBOutlet FeatureView *fw;
     IBOutlet WaveformsView *wfv;
     IBOutlet NSComboBox *dim1;
@@ -56,6 +57,7 @@
 	IBOutlet RasterView *rasterView;
 	IBOutlet NSPanel *inputPanel;
 	IBOutlet NSPanel *cyclePanel;
+	IBOutlet NSArrayController *clusterController;
     
     
 }
@@ -125,4 +127,5 @@
 @property (assign,readwrite) NSIndexSet *selectedClusters;
 @property (retain,readwrite) NSString *selectedWaveform;
 @property (retain,readwrite) NSNumber *featureCycleInterval;
+@property (retain,readwrite) NSAttributedString *releasenotes;
 @end

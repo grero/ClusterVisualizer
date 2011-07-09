@@ -437,24 +437,30 @@
     [self setNeedsDisplay:YES];
 }
 
--(void) highlightPoints:(NSDictionary*)params
+-(void) highlightPoints:(NSDictionary*)params inCluster:(Cluster*)cluster
 {
     //draw selected points in complementary color
     NSData *points = [params objectForKey: @"points"];
-    NSData *color = [params objectForKey:@"color"];
-    unsigned int* _points = (unsigned int*)[points bytes];
+    //NSData *color = [params objectForKey:@"color"];
+    NSData *color = [cluster color];
+	unsigned int* _points = (unsigned int*)[points bytes];
+	unsigned int* _clusterPoints = (unsigned int*)[[cluster points] bytes];
+	unsigned int _nclusterPoints = [[cluster npoints] unsignedIntValue];
     unsigned int _npoints = (unsigned int)([points length]/sizeof(unsigned int));
     //get the indices to redraw
     [[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ARRAY_BUFFER, indexBuffer);
-    GLuint *tmp_idx = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+	//TODO: This doesn't work as long as there are more than one cluster; the indices returned in params only refer to the currently
+	//selected waveforms in the waveformsview
+    //GLuint *tmp_idx = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
     int i;
     GLuint *idx = malloc(_npoints*sizeof(GLuint));
     for(i=0;i<_npoints;i++)
     {
-        idx[i] = tmp_idx[_points[i]];
+        //idx[i] = tmp_idx[_clusterPoints[_points[i]]];
+		idx[i] = _clusterPoints[_points[i]];
     }
-    glUnmapBuffer(GL_ARRAY_BUFFER);
+    //glUnmapBuffer(GL_ARRAY_BUFFER);
     
     GLfloat *_color = (GLfloat*)[color bytes];
     
@@ -876,7 +882,7 @@ static void drawAnObject()
 {
     if([[notification name] isEqualToString:@"highlight"])
     {
-        [self highlightPoints:[notification userInfo]];
+        [self highlightPoints:[notification userInfo] inCluster: [notification object]];
     }
 }
 

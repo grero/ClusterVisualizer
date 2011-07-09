@@ -25,6 +25,7 @@
 @synthesize selectedClusters;
 @synthesize selectedWaveform;
 @synthesize featureCycleInterval;
+@synthesize releasenotes;
 
 -(void)awakeFromNib
 {
@@ -36,8 +37,8 @@
     [self setFilterClustersPredicate:[NSPredicate predicateWithFormat: @"valid==YES"]];
 	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
 												 name:@"showInput" object: nil];
-	//[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
-	//											 name:@"highlight" object: nil];
+	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
+												 name:@"highlight" object: nil];
 
 	//load the nibs
 	//setup defaults
@@ -51,6 +52,11 @@
 	}*/
 	//[self setFeatureCycleInterval:[defaults objectForKey:@"featureCycleInterval"]];
 	[self setFeatureCycleInterval:[NSNumber numberWithFloat:0.5]];
+	//load the releasenotes
+	NSString *rn = [[NSBundle mainBundle] pathForResource:@"release_notes" ofType: @"rtf"];
+	NSAttributedString *reln = [[NSAttributedString alloc] initWithPath:rn documentAttributes:NULL];
+	[self setReleasenotes: reln];
+	autoLoadWaveforms = YES;
 
 	
 }
@@ -290,7 +296,7 @@
 	//get time data
 	//NSLog(@"XYZF: Is this going to work?");
 	//NSLog(@"Filebase: %@",filebase);
-	if ([self waveformsFile] == NULL )
+	if (([self waveformsFile] == NULL ) && (autoLoadWaveforms == YES) )
 	{
 		NSArray *waveformfiles = [[[[NSFileManager defaultManager] contentsOfDirectoryAtPath: directory error: nil] 
 								   pathsMatchingExtensions:[NSArray arrayWithObjects:@"bin",nil]] filteredArrayUsingPredicate:
@@ -342,8 +348,8 @@
 	featureNames = [[NSMutableArray arrayWithArray:feature_names] retain];
 	//register featureview for notification about change in highlight
 	//feature view only received notification from waveforms view
-	[[NSNotificationCenter defaultCenter] addObserver: fw selector:@selector(receiveNotification:) 
-												 name:@"highlight" object: [self wfv]];
+	//[[NSNotificationCenter defaultCenter] addObserver: fw selector:@selector(receiveNotification:) 
+	//											 name:@"highlight" object: [self wfv]];
 	
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) 
 												 name:@"setFeatures" object:nil];
@@ -848,6 +854,9 @@
     {
         [fw showCluster:[notification object]];
         [self setActiveCluster:[notification object]];
+		//we don't want to do this any more since we are using selectedClusters to manage what to draw in
+		//the waveformsview
+		/*
         if([[[self wfv] window] isVisible])
         {
             //if we are showing waveforms
@@ -860,7 +869,7 @@
                 [[self activeCluster] setWaveformsImage:img];
                 
             }
-        }
+        }*/
     }
     else {
         [fw hideCluster: [notification object]];
@@ -1030,6 +1039,7 @@
 	}
 	else if ([[notification name] isEqualToString:@"highlight" ] )
 	{
+		/*
 		//grab the points and convert to string
 		unsigned int *points = (unsigned int*)[[[notification object] objectForKey:@"points"] bytes];
 		[self setSelectedWaveform: [NSString stringWithFormat:@"%u",points[0]]];
@@ -1037,6 +1047,11 @@
 		if( [inputPanel isVisible] == NO )
 		{
 			[inputPanel makeKeyAndOrderFront:self];
+		}*/
+		//A highlight was received from waveformsview; this needs to be passed onto featureView
+		if (([self selectedClusters] != nil) && ([[self selectedClusters] count] >= 1 ) ) 
+		{
+			[[self fw] highlightPoints:[notification userInfo] inCluster:[[self Clusters] objectAtIndex:[selectedClusters firstIndex]]];
 		}
 	}
 	
@@ -1201,6 +1216,7 @@
         //set the sort descript for the controller
         NSMutableArray *descriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"isolationDistance" ascending:NO]];
         [self setClustersSortDescriptors: descriptors];
+		//[self setCluster: [[self Clusters] sortUsingDescriptors:descriptors]];
     }
     else if( [selection isEqualToString:@"Compute Isolation Distance"])
     {
@@ -1252,7 +1268,7 @@
             //add this point to the noise cluster
             [[Clusters objectAtIndex:0] addPoints:[fw highlightedPoints]];
             GLfloat *_color = (GLfloat*)[[[Clusters objectAtIndex:0] color] bytes];
-            GLuint *_points = [[fw highlightedPoints] bytes];
+            GLuint *_points = (GLuint*)[[fw highlightedPoints] bytes];
             GLuint _length = [[fw highlightedPoints] length]/sizeof(unsigned int);
             //set the colors of the new cluster
             [fw setClusterColors:_color forIndices:_points length:_length];
@@ -1641,10 +1657,13 @@
 	NSUInteger firstIndex = [indexes firstIndex];
 	if( firstIndex < [Clusters count] )
 	{
-		Cluster *firstCluster = [Clusters objectAtIndex:firstIndex];
+		//TODO: This does not work if the clusters were sorted in the NSCollectionView, since the index is valid for the sorted and not
+		//the original array
+		//Cluster *firstCluster = [Clusters objectAtIndex:firstIndex];
+		Cluster *firstCluster = [[clusterController selectedObjects] objectAtIndex:0];
 		[self loadWaveforms: firstCluster];
 		[[wfv window] orderFront: self];
-		//make sure we also update the waverormsImage
+		//make sure we also update the waveformsImage
 		if([firstCluster waveformsImage] == NULL)
 		{
 			NSImage *img = [[self wfv] image];
@@ -1658,7 +1677,7 @@
 		//make sure the waveforms view receives notification of highlights
 		[[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) 
 													 name:@"highlight" object:nil];
-		
+		selectedClusters = [[[NSIndexSet alloc] initWithIndexSet:indexes] retain];
 	}
 	
 }
@@ -1686,6 +1705,7 @@
 {
     [timestamps release];
     [queue release];
+	[selectedClusters release];
     [super dealloc];
     
 }
