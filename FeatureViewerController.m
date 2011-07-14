@@ -269,6 +269,8 @@
 	
 	//scale data
 	float max,min,l;
+	//this was not a good idea; scale the whole dataset instead
+	/*
 	for(i=0;i<cols;i++)
 	{
 		//find max
@@ -279,11 +281,21 @@
 		l = max-min;
 		/*min *=-1;
 		vDSP_addv(tmp_data2+i,cols,&min,
-		vDSP_vsdiv(tmp_data2+i,cols,&l,tmp_data+i,cols,rows*cols);*/
+		vDSP_vsdiv(tmp_data2+i,cols,&l,tmp_data+i,cols,rows*cols);
 		for(j=0;j<rows;j++)
 		{
 			tmp_data[j*cols+i] = 2*(tmp_data[j*cols+i]-min)/l-1;
 		}
+	}
+	 */
+	//find max
+	vDSP_maxv(tmp_data,1,&max,rows*cols);
+	//find min
+	vDSP_minv(tmp_data,1,&min,rows*cols);
+	l = max-min;
+	for(j=0;j<rows*cols;j++)
+	{
+		tmp_data[j] = 2*(tmp_data[j]-min)/l-1;
 	}
 	[data replaceBytesInRange:range withBytes:tmp_data length: rows*cols*sizeof(float)];
 	NSZoneFree([self zone], tmp_data);
