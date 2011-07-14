@@ -1101,7 +1101,8 @@
 		NSNumber *number = [[notification userInfo] objectForKey:@"selected"];
 		
 		[self setSelectedWaveform: [number stringValue]];
-		[inputPanel makeKeyAndOrderFront:self];
+		//[inputPanel makeKeyAndOrderFront:self];
+		[inputPanel orderFront:self];
 	}
 	else if ([[notification name] isEqualToString:@"highlight" ] )
 	{
@@ -1757,7 +1758,8 @@
 	NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
 	NSNumber *number = [formatter numberFromString:wf]; 
 	unsigned int point = [number unsignedIntValue];
-	if( point < [[[self activeCluster] npoints] unsignedIntValue] )
+	//if( point < [[[self activeCluster] npoints] unsignedIntValue] )
+	if ( point < [[[[clusterController selectedObjects] objectAtIndex:0] npoints] unsignedIntValue] )
 	{
 		selectedWaveform = [[NSString stringWithString:wf] retain];
 		NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:[NSData dataWithBytes:&point length:sizeof(unsigned int)],@"points",nil];
