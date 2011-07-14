@@ -74,6 +74,7 @@
      */
      NSOpenPanel *openPanel = [NSOpenPanel openPanel];
 	[openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
+	[openPanel setTitle:@"Choose feature file to load"];
 	[[openPanel delegate] setExtensions: [NSArray arrayWithObjects:@"fd",@"fet",nil]];
     [openPanel setAllowsMultipleSelection:NO];
     [openPanel setCanChooseDirectories: YES];
@@ -357,7 +358,7 @@
 	
 
 	//only reset clusters if data has already been loaded
-    if( ([self Clusters] != NULL) && (dataloaded == YES ) )
+    if( ([self Clusters] != nil) && (dataloaded == YES ) )
     {
         [self removeAllObjectsFromClusters];
     }
@@ -401,8 +402,42 @@
         //get the basename
         NSString *basename = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:0];
         NSString *directory = [path stringByDeletingLastPathComponent];
-        NSString *featurePath = [directory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@_.fd", basename]];
-        [self openFeatureFile:featurePath];
+        NSString *featurePath = [directory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@_area.fd", basename]];
+		//set the waveforms file as well
+		NSString *wfFile = [directory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.bin", basename]];
+		if( [[NSFileManager defaultManager] fileExistsAtPath:wfFile] == YES )
+		{
+			[self setWaveformsFile:wfFile];
+		}
+			
+		//check if the path exists
+		if( [[NSFileManager defaultManager] fileExistsAtPath:featurePath] == NO )
+		{
+			//try the FD directory
+			featurePath = [[directory stringByAppendingPathComponent:@"FD"] stringByAppendingPathComponent:
+						   [NSString stringWithFormat:@"%@_area.fd", basename]];
+			
+			if( [[NSFileManager defaultManager] fileExistsAtPath:featurePath] == NO )
+			{
+				//file could not be automatically located; popup a dialog to ask for it
+				[self loadFeatureFile:self];
+				
+			}
+			else {
+				//we found the feature file, so open it
+				[self openFeatureFile:featurePath];
+			}
+
+	
+		}
+		else
+		{
+			[self openFeatureFile:featurePath];
+		}
+		
+		
+		
+        
     }
     if( [extension isEqualToString:@"fv"] )
     {
@@ -438,7 +473,7 @@
 				offset = 0;
 			}
         
-			char *fname = [path cStringUsingEncoding:NSASCIIStringEncoding];
+			//char *fname = [path cStringUsingEncoding:NSASCIIStringEncoding];
 			//TODO: Check if there is also an overlap present; if so, load it as well
 			/*
 			 header H;
@@ -446,7 +481,25 @@
 			 int rows = H.rows;
 			 */
 			int *cids = NSZoneMalloc([self zone], (rows+1)*sizeof(int));
-			cids = readClusterIds(fname, cids);
+			//cids = readClusterIds(fname, cids);
+			NSArray *lines = [[NSString stringWithContentsOfFile:path encoding: NSASCIIStringEncoding error: NULL] componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
+			//iteratae through lines
+			NSEnumerator *lines_enum = [lines objectEnumerator];
+			id line;
+			NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+			int cidx = 0;
+			while ( (line = [lines_enum nextObject] ) )
+			{
+				NSNumber *q = [formatter numberFromString:line];
+				//if line is not a string, q is nil
+				if( q )
+				{
+					cids[cidx] = [q intValue];
+					cidx+=1;
+				}
+				
+			}
+			[formatter release];
 			//find the maximum cluster number
 			//TODO: this is quick and dirty; should try and speed this up
 			int maxCluster = 0;
@@ -712,6 +765,7 @@
         NSOpenPanel *openPanel = [NSOpenPanel openPanel];
         //set a delegate for openPanel so that we can control which files can be opened
         [openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
+		[openPanel setTitle:@"Choose waveforms to load"];
         //set the basePath to the current basepath so that only cluster files compatible with the currently loaded feature files are allowed
         [[openPanel delegate] setBasePath: currentBaseName];
         [[openPanel delegate] setExtensions: [NSArray arrayWithObjects: @"bin",nil]];
@@ -921,7 +975,7 @@
 
 - (IBAction) cycleDims: (id)sender
 {
-	if( cycleTimer == NULL )
+	if( cycleTimer == nil )
 	{
 		//show the cyclePanel
 		if( [cyclePanel isVisible] == NO )
@@ -945,7 +999,7 @@
 		}
 		//the time is already running, and we wish to stop it; do this by first invalidating the timer, then setting it to NULL
 		[cycleTimer invalidate];
-		cycleTimer = NULL;
+		cycleTimer = nil;
 	}
 	
 }
