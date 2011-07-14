@@ -380,14 +380,18 @@
         //new_size = [[cluster indices] count];
         if(new_size>0)
         {
-            int i,j,k,found;
-            i = 0;
             //TODO: The following is a very naiv way of doing intersection. Should fix this 
             //      One way to fix make it more efficient is to make sure the indices are sorted. This can
             //      be done by maintaining a heap, for instance. 
-            for(j=0;j<nindices;j++)
+			//		Also, parallelize the outer loop here.
+			dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+			dispatch_apply(nindices, queue, ^(size_t j)
+            //for(j=0;j<nindices;j++)
             {
+				int i,k,found;
+
                 found = 0;
+				i = 0;
                 for(k=0;k<new_size;k++)
                 {
                     if(tmp_indices[j]==points[k])
@@ -402,7 +406,7 @@
                     tmp_indices[i] = tmp_indices[j];
                     i+=1;
                 }
-            }
+            });
             //alternative to the above: Use IndexSets
             //NSMutableIndexSet *tmp = [NSMutableIndexSet 
             int count = [indexset count];
