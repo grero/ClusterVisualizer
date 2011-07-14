@@ -129,7 +129,9 @@ float *readMatlabFeatureData(char *fname,float *data)
 	{
 		for(j=0;j<cols;j++)
 		{
-			data[i*cols+j] = (float)_data[j*rows+i];
+			//data[i*cols+j] = (float)_data[j*rows+i];
+			data[i*cols+j] = (float)_data[i*cols+j];
+
 		}
 	}
 	Mat_VarFree(matvar);
