@@ -1179,7 +1179,7 @@ static void wfDrawAnObject()
 	}
 }
 
--(IBAction)moveLeft:(id)sender
+-(IBAction)moveRight:(id)sender
 {
 	//shift highlighted waveform downwards
 	NSMutableData *hdata;
@@ -1218,7 +1218,7 @@ static void wfDrawAnObject()
 																								   @"selected",nil]];
 }
 
--(IBAction)moveRight:(id)sender
+-(IBAction)moveLeft:(id)sender
 {
 	//shift highlighted waveform downwards
 	NSMutableData *hdata;
