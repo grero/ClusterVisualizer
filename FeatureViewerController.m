@@ -39,6 +39,9 @@
 												 name:@"showInput" object: nil];
 	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
 												 name:@"highlight" object: nil];
+	
+	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
+												 name:@"performClusterOption" object: nil];
 
 	//load the nibs
 	//setup defaults
@@ -685,7 +688,7 @@
     
     [selectClusterOption removeAllItems];
     NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",
-                               @"Show waveforms",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",nil];
+                               @"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",nil];
     if(timestamps!=NULL)
     {
         //only allow isi computation if timestamps are loaded
@@ -1121,6 +1124,18 @@
 			[[self fw] highlightPoints:[notification userInfo] inCluster:[[self Clusters] objectAtIndex:[selectedClusters firstIndex]]];
 		}
 	}
+	else if ([[notification name] isEqualToString:@"performClusterOption"] )
+	{
+		//set the selected object
+		//check that the option is valid
+		NSUInteger idx = [[selectClusterOption itemTitles] indexOfObject:[[notification userInfo] objectForKey:@"option"]];
+		if (idx != NSNotFound )
+		{
+			[selectClusterOption selectItemAtIndex: idx];
+			[self performClusterOption:selectClusterOption];
+		}
+		//[[self ClusterOptions]] 
+	}
 	
 }
 
@@ -1211,7 +1226,10 @@
     NSPredicate *testForTrue = [NSPredicate predicateWithFormat:@"active == YES"];
     NSArray *candidates = [Clusters filteredArrayUsingPredicate:testForTrue];
     //set the active cluster to the first candidate
-    [self setActiveCluster:[candidates objectAtIndex:0]];
+	if( [candidates count] > 0 )
+	{
+		[self setActiveCluster:[candidates objectAtIndex:0]];
+	}
     if( [selection isEqualToString:@"Merge"] )
     {
         if( [candidates count] ==2 )
@@ -1322,26 +1340,43 @@
         {
             //remove the currently selected waveforms
             unsigned int *selected = (unsigned int*)[[fw highlightedPoints] bytes];
-            //unsigned int nselected = [[fw highlightedPoints] length]/sizeof(unsigned int);
-            [[self activeCluster] setActive:0];
-            [[Clusters objectAtIndex:0] setActive: 0];
+			unsigned int nselected = ([[fw highlightedPoints] length]);
+			if (nselected == 0) {
+				return;
+			}
+            //[[self activeCluster] setActive:0];
+            Cluster *selectedCluster = [[clusterController selectedObjects] objectAtIndex:0];
+			BOOL toggleActive = NO;
+			
+			if( [selectedCluster active] == 1 )
+			{
+				[selectedCluster setActive:0];
+				toggleActive = YES;
+				[fw hideCluster:selectedCluster];
+
+			}
+			//[[Clusters objectAtIndex:0] setActive: 0];
             //[fw hideCluster:[self activeCluster]];
            
             
-            [[self activeCluster ] removePoints:[NSData dataWithBytes: selected length: [[fw highlightedPoints] length]]];
+            [selectedCluster removePoints:[NSData dataWithBytes: selected length: nselected]];
             //recompute ISI
             //TODO: Not necessary to recompute everything here
-            [[self activeCluster] computeISIs:timestamps];
+            [selectedCluster computeISIs:timestamps];
             //add this point to the noise cluster
-            [[Clusters objectAtIndex:0] addPoints:[fw highlightedPoints]];
+            [[Clusters objectAtIndex:0] addPoints:[NSData dataWithBytes: selected length: nselected]];
             GLfloat *_color = (GLfloat*)[[[Clusters objectAtIndex:0] color] bytes];
-            GLuint *_points = (GLuint*)[[fw highlightedPoints] bytes];
-            GLuint _length = [[fw highlightedPoints] length]/sizeof(unsigned int);
+            GLuint *_points = (GLuint*)selected;
+            GLuint _length = nselected/sizeof(unsigned int);
             //set the colors of the new cluster
-            [fw setClusterColors:_color forIndices:_points length:_length];
-            [[self activeCluster] setActive:1];
+            //[fw setClusterColors:_color forIndices:_points length:_length];
+            if( toggleActive == YES )
+			{
+				[selectedCluster setActive:1];
+				[fw showCluster:selectedCluster];
+
+			}
             //[[Clusters objectAtIndex:0] setActive: 1];
-            //[fw showCluster:[self activeCluster]];
             //reset the highlighted waves
             /*
             NSDictionary *params = [NSDictionary dictionaryWithObjects: [NSArray arrayWithObjects:
@@ -1352,12 +1387,17 @@
             [fw highlightPoints:params];
              */
             [[fw highlightedPoints] setLength:0];
-		}
-		if([[wfv window] isVisible])
-		{
-			[wfv hideWaveforms:[wfv highlightWaves]];
-			[[wfv highlightWaves] setLength: 0];
-			//might as well just redraw
+			[fw setHighlightedPoints:NULL];
+		
+			if([[wfv window] isVisible])
+			{
+				/*
+				[wfv hideWaveforms:[wfv highlightWaves]];
+				[[wfv highlightWaves] setLength: 0];
+				[wfv setHighlightWaves:NULL];*/
+				//might as well just redraw. Hell yeah!
+				[self loadWaveforms:selectedCluster];
+			}
 		}
 		[fw setNeedsDisplay:YES];
 		

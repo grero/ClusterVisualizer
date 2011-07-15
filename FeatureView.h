@@ -8,6 +8,7 @@
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/glu.h>
 #import "Cluster.h"
+#import "GLString.h"
 
 
 static GLuint vertexBuffer;
@@ -82,6 +83,7 @@ static BOOL dataloaded;
 -(void) zoomOut;
 -(void) resetZoom;
 -(void) changeZoom;
+-(void) drawLabels;
 //-(void) drawBox;
 -(NSData*)getVertexData;
 //-(void) pushVertices;

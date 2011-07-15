@@ -283,6 +283,19 @@
         glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
         GLfloat *vertex_pointer = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
         modifyVertices(vertex_pointer);
+		//compute min/max
+		float max,min,l;
+		//find max
+		vDSP_maxv(vertex_pointer,1,&max,rows*3);
+		//find min
+		vDSP_minv(vertex_pointer,1,&min,rows*3);
+		l = max-min;
+		int j;
+		for(j=0;j<rows*3;j++)
+		{
+			vertex_pointer[j] = 2*(vertex_pointer[j]-min)/l-1;
+		}
+		//
         glUnmapBuffer(GL_ARRAY_BUFFER);
         /*
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -364,7 +377,7 @@
 		//TODO: Change the viewport to scale to the new set of points
 		//calculate the centroid of the cluster in the current space
 		[self changeZoom];
-        //[self setNeedsDisplay:YES];
+        [self setNeedsDisplay:YES];
     }
 }
 
@@ -380,18 +393,20 @@
         //new_size = [[cluster indices] count];
         if(new_size>0)
         {
-            //TODO: The following is a very naiv way of doing intersection. Should fix this 
+            int i,j,k,found;
+			i = 0;
+			//TODO: The following is a very naiv way of doing intersection. Should fix this 
             //      One way to fix make it more efficient is to make sure the indices are sorted. This can
             //      be done by maintaining a heap, for instance. 
-			//		Also, parallelize the outer loop here.
-			dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-			dispatch_apply(nindices, queue, ^(size_t j)
-            //for(j=0;j<nindices;j++)
+			//dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+			//dispatch_apply(nindices, queue, ^(size_t j)
+			
+            for(j=0;j<nindices;j++)
             {
-				int i,k,found;
+				//int i,k,found;
 
                 found = 0;
-				i = 0;
+				//i = 0;
                 for(k=0;k<new_size;k++)
                 {
                     if(tmp_indices[j]==points[k])
@@ -406,7 +421,7 @@
                     tmp_indices[i] = tmp_indices[j];
                     i+=1;
                 }
-            });
+            }//);
             //alternative to the above: Use IndexSets
             //NSMutableIndexSet *tmp = [NSMutableIndexSet 
             int count = [indexset count];
@@ -728,6 +743,19 @@ static void drawAnObject()
     //Draw nindices elements of type GL_POINTS, use the loaded indexBuffer
     glDrawElements(GL_POINTS, nindices, GL_UNSIGNED_INT,(void*)0);
     //glDrawRangeElement
+}
+
+-(void)drawLabels
+{
+	NSMutableDictionary *normal9Attribs = [NSMutableDictionary dictionary];
+    [normal9Attribs setObject: [NSFont fontWithName: @"Helvetica" size: 9.0f] forKey: NSFontAttributeName];
+	
+	NSAttributedString *label;
+	label = [[[NSAttributedString alloc] initWithString:[NSString stringWithFormat: @"Axis 1"]  attributes:normal9Attribs] autorelease];
+	GLString *glabel;
+	glabel = [[GLString alloc] initWithAttributedString:label withTextColor:[NSColor colorWithDeviceRed:0.5f green:0.5f blue:0.56f alpha:1.0f] withBoxColor:[NSColor colorWithDeviceRed:0.4f green:0.4f blue:0.0f alpha:0.0f] withBorderColor:[NSColor colorWithDeviceRed:0.8f green:0.8f blue:0.0f alpha:0.0f]];
+	[glabel drawAtPoint:NSMakePoint (0.5, 0.5)];
+
 }
 
 -(void) drawRect :(NSRect) bounds

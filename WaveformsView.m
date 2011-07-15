@@ -190,7 +190,7 @@
 					wfVertices[3*offset+1] = tmp[offset];
 					//z
 					wfVertices[3*offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
-					//mean
+					//compute the mean, placing it after all the other waves
 					//this line is strictly not necessary
 					wfVertices[3*moffset] = wfVertices[3*offset];
 					wfVertices[3*moffset+1] =(i*(wfVertices[3*moffset+1])+tmp[offset])/(i+1);
@@ -742,7 +742,9 @@ static void wfDrawAnObject()
         while((found==0) & (j<_npoints))
         {
             if(i==_points[j])
+			{
                 found = 1;
+			}
             //found=(i==_points[j]);
             j+=1;
         }
@@ -751,20 +753,37 @@ static void wfDrawAnObject()
             //need to remove the waveform;rearrange both indices and vertixes
 			//TODO: Somethign seems wrong here; the indices will have values referring to the old wfVertices array, but below
 			//we are removing some waveforms; in other words, the indices need to be reset as well. So, we should keep the indices as they are
-			/*
+			//we are removing points from the cluster, i.e. this will not work
             for(l=0;l<waveIndexSize;l++)
             {
                 tmp_idx[k*waveIndexSize+l] = tmp_idx[i*waveIndexSize+l];
-            }*/
+            }
+			//also, be careful about the mean waveform here
+			/*
             for(l=0;l<wavesize;l++)
             {
                 wfVertices[3*(k*wavesize+l)] = wfVertices[3*(i*wavesize+l)];
                 wfVertices[3*(k*wavesize+l)+1] = wfVertices[3*(i*wavesize+l)+1];
                 wfVertices[3*(k*wavesize+l)+2] = wfVertices[3*(i*wavesize+l)+2];
             }
+			 */
             k+=1;
         }
     }
+	//we have now gotten rid of the extra waveforms; need to shift the mean waveform into place
+	k = num_spikes-_npoints;
+	/*
+	for(l=0;l<wavesize;l++)
+	{
+		wfVertices[3*(k*wavesize+l)] = wfVertices[3*(num_spikes*wavesize+l)];
+		wfVertices[3*(k*wavesize+l)+1] = wfVertices[3*(num_spikes*wavesize+l)+1];
+		wfVertices[3*(k*wavesize+l)+2] = wfVertices[3*(num_spikes*wavesize+l)+2];
+	}*/
+	//reset mean waveform index
+	for(l=0;l<waveIndexSize;l++)
+	{
+		tmp_idx[k*waveIndexSize+l] = tmp_idx[num_spikes*waveIndexSize+l];
+	}
     glUnmapBuffer(GL_ARRAY_BUFFER);
     num_spikes-=_npoints;
     if(num_spikes<0)
@@ -780,9 +799,9 @@ static void wfDrawAnObject()
         nWfIndices = 0;
     //push the vertices again
     //glGenBuffers(1,&wfVertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
+    //glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
     //push data to the current buffer
-    glBufferData(GL_ARRAY_BUFFER, nWfVertices*3*sizeof(GLfloat), wfVertices, GL_DYNAMIC_DRAW);
+    //glBufferData(GL_ARRAY_BUFFER, nWfVertices*3*sizeof(GLfloat), wfVertices, GL_DYNAMIC_DRAW);
     
     [self setNeedsDisplay: YES];
     
@@ -822,10 +841,11 @@ static void wfDrawAnObject()
 	NSNumber *channel = [NSNumber numberWithUnsignedInt:dataPoint.x/(channelHop+timepts)];
 	[highlightedChannels addObject: channel];
 }*/
+/*
 -(void)keyUp:(NSEvent *)theEvent
 {
 	//check if control key was released (hopefully...)
-	NSNumberFormatter *formatter = [NSNumberFormatter defaultFormatterBehavior];
+	NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
 	if ([ theEvent modifierFlags] & NSControlKeyMask )
 	{
 		unsigned int minChannel = [[highlightedChannels objectAtIndex:0] unsignedIntValue];
@@ -840,8 +860,10 @@ static void wfDrawAnObject()
 		NSDictionary *params  = [NSDictionary dictionaryWithObjectsAndKeys:wf,@"selected",nil];
 		[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:params];
 	}
+	[formatter release];
 
 }
+ */
 -(void)mouseUp:(NSEvent *)theEvent
 {
     //get current point in view coordinates
@@ -1103,6 +1125,7 @@ static void wfDrawAnObject()
 
 - (void)keyDown:(NSEvent *)theEvent
 {
+	NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
     if ([theEvent modifierFlags] & NSNumericPadKeyMask) {
         [self interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
     } else {
@@ -1161,10 +1184,37 @@ static void wfDrawAnObject()
 			//post notification
 			[[NSNotificationCenter defaultCenter] postNotificationName:@"computeSpikeWidth" object: self userInfo:userInfo];
 		}
+		else if ([ theEvent modifierFlags] & NSControlKeyMask )
+		{
+			unsigned int minChannel = [[highlightedChannels objectAtIndex:0] unsignedIntValue];
+			unsigned int maxChannel = [[highlightedChannels lastObject] unsignedIntValue];
+			xmin = (GLfloat)(minChannel*(timepts+channelHop));
+			xmax = (GLfloat)(maxChannel*(timepts+channelHop));
+		}
+		else if ([formatter numberFromString: [theEvent characters]] != nil )	
+		{
+			NSString *wf = [theEvent characters];
+			//send off a notification indicating that we should show the waveform picker panel
+			NSDictionary *params  = [NSDictionary dictionaryWithObjectsAndKeys:wf,@"selected",nil];
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:params];
+		}
+		
+		else {
+			[self interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
+		}
+
         //[self keyDown:theEvent];
     }
+	[formatter release];
 }
 
+-(void) deleteBackward:(id)sender
+{
+	//meant for deleting waveforms
+	//alert the application that we want to remove a waveform
+	NSDictionary *userInfo = [NSDictionary dictionaryWithObject:@"Remove waveforms" forKey:@"option"];
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"performClusterOption" object:self userInfo: userInfo];
+}
 //TODO: this is a bit experimental
 -(void)scrollWheel:(NSEvent *)theEvent
 {
