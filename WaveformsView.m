@@ -743,6 +743,34 @@ static void wfDrawAnObject()
     
 }
 
+-(void)showOnlyHighlighted
+{
+	if( [self highlightWaves] != NULL )
+	{
+		unsigned int *_hpoints = (unsigned int*)[[self highlightWaves] bytes];
+		unsigned int _nhpoints = ([[self highlightWaves] length])/sizeof(unsigned int);
+		//create an index with all the other waveforms
+		NSIndexSet *hide = [waveformIndices indexesPassingTest:^(NSUInteger idx, BOOL *stop) 
+		{
+			BOOL found = YES;
+			int j = 0;
+			while( (found == YES ) && (j < _nhpoints) )
+			{
+				if(idx==_hpoints[j] )
+				{
+					found = NO;
+				}
+			}
+			return found;
+		}];
+	
+		unsigned int* _points = malloc(([hide count])*sizeof(unsigned int));
+		[hide getIndexes: _points maxCount: [hide count] inIndexRange: nil];
+		[self hideWaveforms:[NSData dataWithBytes:_points length:[hide count]]];
+		free(_points);
+	}
+}
+
 -(void) hideWaveforms:(NSData*)wfidx
 {
     [[self openGLContext] makeCurrentContext];
@@ -1171,7 +1199,7 @@ static void wfDrawAnObject()
 //Indicate what kind of drag-operation we are going to support
 -(NSDragOperation)draggingSourceOperationMaskForLocal:(BOOL)localDestination
 {
-	return NSDragOperationCopy;
+	return NSDragOperationMove;
 }
 
 - (void)keyDown:(NSEvent *)theEvent
