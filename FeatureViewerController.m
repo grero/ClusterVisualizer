@@ -60,6 +60,16 @@
 	NSAttributedString *reln = [[NSAttributedString alloc] initWithPath:rn documentAttributes:NULL];
 	[self setReleasenotes: reln];
 	autoLoadWaveforms = YES;
+	//set up predicates for filter
+	NSPredicateEditorRowTemplate *row = [[[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions:
+										  [NSArray arrayWithObjects:[NSExpression expressionForKeyPath:@"valid"],[NSExpression expressionForKeyPath: @"active"],nil] rightExpressions:
+										  [NSArray arrayWithObjects:[NSExpression expressionForConstantValue: [NSNumber numberWithInt:1]],[NSExpression expressionForConstantValue:[NSNumber numberWithInt:1]],nil] modifier: NSDirectPredicateModifier operators:
+										  [NSArray arrayWithObjects:[NSNumber numberWithInt: NSEqualToPredicateOperatorType],[NSNumber numberWithInt: NSNotEqualToPredicateOperatorType],nil] options:
+										 NSCaseInsensitivePredicateOption] autorelease];
+										 
+									
+																					
+	[filterPredicates setRowTemplates: [NSArray arrayWithObjects:row,nil]];
 
 	
 }
@@ -1123,6 +1133,12 @@
 		{
 			[[self fw] highlightPoints:[notification userInfo] inCluster:[[self Clusters] objectAtIndex:[selectedClusters firstIndex]]];
 		}
+		else
+		{
+			//no cluster selected
+			[[self fw] highlightPoints:[notification userInfo] inCluster:nil];
+
+		}
 	}
 	else if ([[notification name] isEqualToString:@"performClusterOption"] )
 	{
@@ -1468,7 +1484,7 @@
 
             
         }] componentsJoinedByString:@"\n"];
-        [cidx_string writeToFile:[NSString stringWithFormat: @"%@.clusters",currentBaseName] atomically:YES];
+        [cidx_string writeToFile:[NSString stringWithFormat: @"%@.cut",currentBaseName] atomically:YES];
         //now write a file containing the template clusters
         NSArray *templates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"isTemplate==1"]];
         NSEnumerator *templateEnumerator = [templates objectEnumerator];
@@ -1485,6 +1501,23 @@
         
         [self archiveClusters];
     }
+}
+
+- (IBAction)saveFeatureSpace:(id)sender
+{
+	//save an image of the currently shown figures space
+	//show a panel to choose to file to save to
+	NSSavePanel *savePanel = [NSSavePanel savePanel];
+	//set the suggested file name
+	[savePanel setNameFieldStringValue: [NSString stringWithFormat:@"%@.tiff",currentBaseName]];
+	//show the panel
+	[savePanel beginSheetModalForWindow: [fw window] completionHandler: ^(NSInteger result){
+		if (result == NSFileHandlingPanelOKButton) {
+			NSData *image = [[fw image] TIFFRepresentation];
+			[image writeToFile:[savePanel nameFieldStringValue] atomically:YES];
+		}
+	}];
+		
 }
 
 -(void)mergeCluster: (Cluster *)cluster1 withCluster: (Cluster*)cluster2

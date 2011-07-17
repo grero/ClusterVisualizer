@@ -58,6 +58,7 @@
 	IBOutlet NSPanel *inputPanel;
 	IBOutlet NSPanel *cyclePanel;
 	IBOutlet NSArrayController *clusterController;
+	IBOutlet NSPredicateEditor *filterPredicates;
     
     
 }
@@ -105,6 +106,7 @@
 - (IBAction) clusterThumbClicked: (id)sender;
 - (IBAction) chooseWaveforms: (id)sender;
 - (IBAction) changeCycleInterval: (id)sender;
+- (IBAction)saveFeatureSpace:(id)sender;
 -(void)cycleDimensionsUsingTimer:(NSTimer*)timer;
 
 //@property (assign) IBOutlet NSWindow *window;
