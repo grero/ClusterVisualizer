@@ -1391,12 +1391,12 @@
 		
 			if([[wfv window] isVisible])
 			{
-				/*
+				
 				[wfv hideWaveforms:[wfv highlightWaves]];
 				[[wfv highlightWaves] setLength: 0];
-				[wfv setHighlightWaves:NULL];*/
+				[wfv setHighlightWaves:NULL];
 				//might as well just redraw. Hell yeah!
-				[self loadWaveforms:selectedCluster];
+				//[self loadWaveforms:selectedCluster];
 			}
 		}
 		[fw setNeedsDisplay:YES];

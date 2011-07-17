@@ -46,6 +46,8 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color);
     NSData *drawingColor,*highlightColor;
     NSMutableData *highlightWaves;
 	NSMutableArray *highlightedChannels;
+	//data to hold information on which waveforms are active
+	NSMutableIndexSet *waveformIndices;
     
     
 }
