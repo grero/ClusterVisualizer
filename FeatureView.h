@@ -18,6 +18,7 @@ static GLfloat *vertices;
 static GLfloat *use_vertices;
 static GLfloat *colors;
 static GLfloat *use_colors;
+static GLfloat base_color[3];
 static GLuint *indices;
 static int nvertices;
 static int nindices;
@@ -44,7 +45,6 @@ static BOOL dataloaded;
     NSMutableIndexSet *indexset;
     NSMutableData *highlightedPoints;
     NSMutableData *rotation;
-	
     @private
     NSOpenGLContext* _oglContext;
     NSOpenGLPixelFormat* _pixelFormat;

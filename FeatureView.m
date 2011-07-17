@@ -33,7 +33,9 @@
 	originy = 0.0;
 	originz = -2.0;
 	scale = 1.0;
-    
+    base_color[0] = 1.0f;
+	base_color[1] = 0.85f;
+	base_color[2] = 0.35f;
     NSOpenGLPixelFormatAttribute attrs[] =
     {
         NSOpenGLPFAAllRenderers,YES,
@@ -461,10 +463,23 @@
     //draw selected points in complementary color
     NSData *points = [params objectForKey: @"points"];
     //NSData *color = [params objectForKey:@"color"];
-    NSData *color = [cluster color];
+	//need to make this work when cluster is nil
+	NSData *color;
+	unsigned int* _clusterPoints;
+	if( cluster != nil )
+	{
+		color = [cluster color];
+		_clusterPoints = (unsigned int*)[[cluster points] bytes];
+		unsigned int _nclusterPoints = [[cluster npoints] unsignedIntValue];
+	}
+	else 
+	{
+		color = [NSData dataWithBytes:base_color length:3*sizeof(GLfloat)];
+		//if no cluster is given, just use an index
+		_clusterPoints = NULL;	
+	}
+
 	unsigned int* _points = (unsigned int*)[points bytes];
-	unsigned int* _clusterPoints = (unsigned int*)[[cluster points] bytes];
-	unsigned int _nclusterPoints = [[cluster npoints] unsignedIntValue];
     unsigned int _npoints = (unsigned int)([points length]/sizeof(unsigned int));
     //get the indices to redraw
     [[self openGLContext] makeCurrentContext];
@@ -474,11 +489,23 @@
     //GLuint *tmp_idx = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
     int i;
     GLuint *idx = malloc(_npoints*sizeof(GLuint));
-    for(i=0;i<_npoints;i++)
-    {
-        //idx[i] = tmp_idx[_clusterPoints[_points[i]]];
-		idx[i] = _clusterPoints[_points[i]];
-    }
+	if( _clusterPoints != NULL )
+	{
+		for(i=0;i<_npoints;i++)
+		{
+			//idx[i] = tmp_idx[_clusterPoints[_points[i]]];
+			idx[i] = _clusterPoints[_points[i]];
+		}
+	}
+	else
+	{
+		//if no cluster is given, just use the raw indiex
+		for(i=0;i<_npoints;i++)
+		{
+			//idx[i] = tmp_idx[_clusterPoints[_points[i]]];
+			idx[i] = _points[i];
+		}	
+	}
     //glUnmapBuffer(GL_ARRAY_BUFFER);
     
     GLfloat *_color = (GLfloat*)[color bytes];
@@ -1060,11 +1087,11 @@ static void drawAnObject()
 
 -(void)mouseUp:(NSEvent *)theEvent
 {
-    if([theEvent modifierFlags] == NSCommandKeyMask)
+    if([theEvent modifierFlags] & NSCommandKeyMask)
     {
         //only select points if Command key is pressed
         //get current point in view coordinates
-        NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
+        NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:self];
         //now we will have to figure out which waveform(s) contains this point
         //scale to data coorindates
         NSPoint dataPoint;
@@ -1082,9 +1109,17 @@ static void drawAnObject()
         glGetDoublev (GL_PROJECTION_MATRIX,p);
         glGetIntegerv( GL_VIEWPORT, view );
         double objX,objY,objZ;
-        gluUnProject(currentPoint.x, currentPoint.y, 1, m, p, view, &objX, &objY, &objZ);
-        
-        
+		//get the position of the points in the original data space
+		//note that since window coordinates are using lower left as (0,0), openGL uses upper left
+		NSRect r = [self bounds];
+		float height = r.size.height;
+		//TODO: this doesn't work
+		GLfloat depth[2];
+		//get the z-component
+		glReadPixels(currentPoint.x, height-currentPoint.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, depth);
+        gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[0], m, p, view, &objX, &objY, &objZ);
+        NSLog(@"x: %f, y: %f, z: %f", objX,objY,objZ);
+        //here, we don't really care about the z-value
         //(dataPoint.x,dataPoint.y) and the waveforms vectors
         float *D = malloc(2*nindices*sizeof(float));
         float *d = malloc(nindices*sizeof(float));
@@ -1100,7 +1135,7 @@ static void drawAnObject()
         //vDSP_vsadd(vertices+2,3,po+2,D+1,2,nvertices);
         //sum of squares
         vDSP_vdist(D,2,D+1,2,d,1,nindices);
-        //find the index of the minimu distance
+        //find the index of the minimum distance
         vDSP_minvi(d,1,&fmin,&imin,nindices);
         //imin now holds the index of the vertex closest to the point
         //find the number of wfVertices per waveform
@@ -1108,8 +1143,8 @@ static void drawAnObject()
         free(d);
         free(D);
         //3 points per waveform
-        unsigned int wfidx = imin/(3);
-        
+        //unsigned int wfidx = imin/(3);
+        unsigned int wfidx = imin;
         //get the current drawing color
         [[self openGLContext] makeCurrentContext];
         glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
@@ -1117,10 +1152,10 @@ static void drawAnObject()
         
         NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSData dataWithBytes: &wfidx 
                                                                                                             length: sizeof(unsigned int)],
-                                                                    [NSData dataWithBytes: color+imin length:3*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
+                                                                    [NSData dataWithBytes: color+3*imin length:3*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
         glUnmapBuffer(GL_ARRAY_BUFFER);
-        //[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:params];
-        [self highlightPoints:params];
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:self userInfo: params];
+        //[self highlightPoints:params];
     }
 }
 
