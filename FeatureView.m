@@ -826,6 +826,44 @@ static void drawAnObject()
     [[self openGLContext] flushBuffer];
 
 }
+
+-(NSImage*)image
+{
+    //for drawing the image
+    NSBitmapImageRep *imageRep;
+    NSImage *image;
+    NSSize viewSize = [self bounds].size;
+    int width = viewSize.width;
+    int height = viewSize.height;
+    
+    //[self lockFocus];
+    //[self lockFocusIfCanDraw];
+    //[self drawRect:[self bounds]];
+    //[self unlockFocus];
+    [self display];
+    imageRep = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes: NULL 
+                                                        pixelsWide: width 
+                                                        pixelsHigh: height 
+													 bitsPerSample: 8 
+                                                   samplesPerPixel: 4 
+                                                          hasAlpha: YES 
+                                                          isPlanar: NO 
+                                                    colorSpaceName: NSDeviceRGBColorSpace 
+                                                       bytesPerRow: width*4     
+													  bitsPerPixel:32] autorelease];
+    
+    [[self openGLContext] makeCurrentContext];
+    //bind the vertex buffer as an pixel buffer
+    //glBindBuffer(GL_PIXEL_PACK_BUFFER, wfVertexBuffer);
+    glReadPixels(0,0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, [imageRep bitmapData]);
+    image = [[[NSImage alloc] initWithSize:NSMakeSize(width, height)] autorelease];
+    [image addRepresentation:imageRep];
+    [image lockFocusFlipped:YES];
+    [imageRep drawInRect:NSMakeRect(0,0,[image size].width, [image size].height)];
+    [image unlockFocus];
+    return image;
+}
+
 - (void) prepareOpenGL
 {
     //prepare openGL context

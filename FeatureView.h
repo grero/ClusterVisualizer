@@ -84,6 +84,7 @@ static BOOL dataloaded;
 -(void) resetZoom;
 -(void) changeZoom;
 -(void) drawLabels;
+-(NSImage*)image;
 //-(void) drawBox;
 -(NSData*)getVertexData;
 //-(void) pushVertices;
