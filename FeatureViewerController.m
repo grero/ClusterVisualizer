@@ -172,7 +172,8 @@
 					NSAlert *alert = [NSAlert alertWithMessageText:@"Feature file could not be loaded" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@""];
 					[alert runModal];
 					NSZoneFree([self zone], tmp_data);
-					return;
+					NSZoneFree([self zone], tmp_data2);
+					continue;
 					
 				}
 				//transpose
@@ -183,8 +184,20 @@
 						tmp_data2[j*H.rows+i] = tmp_data[i*H.cols+j];
 					}
 				}
-				//scale
-				//vDSP_vsdiv(
+				//find max
+				float max,min;
+				float l;
+				vDSP_maxv(tmp_data2,1,&max,H.rows*(H.cols));
+				//find min
+				vDSP_minv(tmp_data2,1,&min,H.rows*(H.cols));
+				l = max-min;
+				//scale each feature to be between -1 and +1
+				for(j=0;j<(H.rows)*(H.cols);j++)
+				{
+					tmp_data2[j] = 2*(tmp_data2[j]-min)/l-1;
+				}
+				
+	
 				[data appendBytes:tmp_data2 length: H.rows*H.cols*sizeof(float)];
 				NSZoneFree([self zone], tmp_data);
 				NSZoneFree([self zone], tmp_data2);
@@ -200,6 +213,7 @@
 				anyLoaded = YES;
 				
 			}
+			//scale individual features
 			
 			/*need to reshape the data
 			tmp_data = malloc([data length]);
@@ -212,6 +226,7 @@
 					tmp_data[i*tmp_cols+j] = tmp_data_2[j%H.cols+]
 				}
 			}*/
+			
 			rows = H.cols;
 		}
 		if( anyLoaded == NO)
@@ -265,6 +280,17 @@
 				[tokens scanFloat:tmp_data+i*cols+j];
 			}
 		}
+		float max,min;
+		float l;
+		//find max
+		vDSP_maxv(tmp_data,1,&max,rows*cols);
+		//find min
+		vDSP_minv(tmp_data,1,&min,rows*cols);
+		l = max-min;
+		for(j=0;j<rows*cols;j++)
+		{
+			tmp_data[j] = 2*(tmp_data[j]-min)/l-1;
+		}
 		[data appendBytes:tmp_data length:rows*cols*sizeof(float)];
 		tmp_data2 = (float*)[data bytes];
 		//free(tmp_data);
@@ -281,7 +307,7 @@
 	range.length = rows*cols*sizeof(float);
 	
 	//scale data
-	float max,min,l;
+	//float max,min,l;
 	//this was not a good idea; scale the whole dataset instead
 	/*
 	for(i=0;i<cols;i++)
@@ -301,6 +327,7 @@
 		}
 	}
 	 */
+	/*
 	//find max
 	vDSP_maxv(tmp_data,1,&max,rows*cols);
 	//find min
@@ -310,7 +337,9 @@
 	{
 		tmp_data[j] = 2*(tmp_data[j]-min)/l-1;
 	}
+	 */
 	[data replaceBytesInRange:range withBytes:tmp_data length: rows*cols*sizeof(float)];
+	 
 	NSZoneFree([self zone], tmp_data);
 	[fw createVertices:data withRows:rows andColumns:cols];
 	//[fw loadVertices: [openPanel URL]];
