@@ -1479,6 +1479,7 @@
     {
         //NSMutableArray *cluster_indices = [NSMutableArray arrayWithCapacity:params.rows];
         //NSMutableIndexSet *index = [NSMutableIndexSet indexSet];
+		
         NSMutableDictionary *cluster_indices = [NSMutableDictionary dictionaryWithCapacity:params.rows];
         //enumreate all valid clusters
         //do it the "c" way
@@ -1513,7 +1514,18 @@
 
             
         }] componentsJoinedByString:@"\n"];
-        [cidx_string writeToFile:[NSString stringWithFormat: @"%@.cut",currentBaseName] atomically:YES];
+		//open panel to get filename
+
+		NSSavePanel *savePanel = [NSSavePanel savePanel];
+		[savePanel setNameFieldLabel:[NSString stringWithFormat: @"%@.cut",currentBaseName]];
+		[savePanel beginSheetModalForWindow:[fw window] completionHandler:^(NSInteger result) 
+		 {
+			 if(result == NSFileHandlingPanelOKButton )
+			 {
+				 [cidx_string writeToFile:[savePanel nameFieldLabel] atomically:YES];
+			 }
+		 }];
+        //[cidx_string writeToFile:[NSString stringWithFormat: @"%@.cut",currentBaseName] atomically:YES];
         //now write a file containing the template clusters
         NSArray *templates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"isTemplate==1"]];
         NSEnumerator *templateEnumerator = [templates objectEnumerator];
@@ -1524,7 +1536,15 @@
             [templateIds addObject:[NSString stringWithFormat: @"%d",[[template clusterId] intValue]]];
         }
         NSString *templateIdStr = [templateIds componentsJoinedByString:@"\n"];
-        [templateIdStr writeToFile:[NSString stringWithFormat:@"%@.scu",currentBaseName] atomically:YES];
+		[savePanel setNameFieldLabel:[NSString stringWithFormat: @"%@.scu",currentBaseName]];
+		[savePanel beginSheetModalForWindow:[fw window] completionHandler:^(NSInteger result) 
+		 {
+			 if(result == NSFileHandlingPanelOKButton )
+			 {
+				 [templateIdStr writeToFile:[savePanel nameFieldLabel] atomically:YES];
+			 }
+		 }];
+        //[templateIdStr writeToFile:[NSString stringWithFormat:@"%@.scu",currentBaseName] atomically:YES];
         
         //also store the data
         
