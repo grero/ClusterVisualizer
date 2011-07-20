@@ -134,10 +134,11 @@
 	//TODO: modify this should that multiple clusters can be drawn in the same view, with each cluster a different color
     wavesize = channels*timepoints;
     waveIndexSize = channels*(2*timepoints-2);
-	//+1 to make room for mean waveform
-    nWfIndices = (nwaves+1)*wavesize;
+	//+3 to make room for mean waveform and +/- std
+    nWfIndices = (nwaves+3)*wavesize;
     nWfVertices = nWfIndices;
     num_spikes = nwaves;
+	orig_num_spikes = nwaves;
     chs = channels;
     timepts = timepoints;
 	//create an index that will tell us which waveforms are active
@@ -165,6 +166,7 @@
     int i,j,k;
     unsigned int offset = 0;
 	unsigned int moffset = 0;
+	unsigned int stdoffset = 0;
     //3 dimensions X 2
     wfMinmax = calloc(6,sizeof(float));
 	chMinMax = NSZoneCalloc([self zone], 2*chs, sizeof(float));
@@ -188,6 +190,7 @@
 				{
 					offset = ((i*channels+j)*timepoints + k);
 					moffset = ((nwaves*channels+j)*timepoints + k);
+					stdoffset = (((nwaves+1)*channels+j)*timepoints + k);
 
 					//x
 					//wfVertices[offset] = tmp[offset];
@@ -201,6 +204,12 @@
 					wfVertices[3*moffset] = wfVertices[3*offset];
 					wfVertices[3*moffset+1] =(i*(wfVertices[3*moffset+1])+tmp[offset])/(i+1);
 					wfVertices[3*moffset+2] = 1.0;
+					
+					//compute x*x and place it as the last waveform
+					wfVertices[3*stdoffset] = wfVertices[3*offset];
+					wfVertices[3*stdoffset+1] =(i*(wfVertices[3*stdoffset+1])+(tmp[offset])*(tmp[offset]))/(i+1);
+					wfVertices[3*stdoffset+2] = 1.0;
+					
 					//calculate wfMinmax
 					if (tmp[offset] < wfMinmax[2] )
 					{
@@ -235,7 +244,9 @@
 				for(k=0;k<timepoints;k++)
 				{
 					offset = ((i*channels+reorder_index[j])*timepoints + k);
+					//don't reorder mean and std
 					moffset = ((nwaves*channels+j)*timepoints + k);
+					stdoffset = (((nwaves+1)*channels+j)*timepoints + k);
 
 					//x
 					//wfVertices[offset] = tmp[offset];
@@ -250,6 +261,13 @@
 					wfVertices[3*moffset] = wfVertices[3*offset];
 					wfVertices[3*moffset+1] =(i*(wfVertices[3*moffset+1])+tmp[offset])/(i+1);
 					wfVertices[3*moffset+2] = 1.0;
+					
+					//std
+					//compute x*x and place it as the last waveform
+					wfVertices[3*stdoffset] = wfVertices[3*offset];
+					wfVertices[3*stdoffset+1] =(i*(wfVertices[3*stdoffset+1])+(tmp[offset])*(tmp[offset]))/(i+1);
+					wfVertices[3*stdoffset+2] = 1.0;
+					
 					
 					//calculate wfMinmax
 					if (tmp[offset] < wfMinmax[2] )
@@ -275,6 +293,20 @@
 		}
 		
 	}
+	//finalize computation of standard devation
+	float w1,w2,s;
+	for(i=0;i<wavesize;i++)
+	{
+		w1 = wfVertices[3*(nwaves*wavesize+i)+1];
+		w2 = wfVertices[3*((nwaves+1)*wavesize+i)+1];
+		s = sqrt(w2-w1*w1);
+		wfVertices[3*((nwaves+1)*wavesize+i)+1] = w1+1.96*s;
+		wfVertices[3*((nwaves+2)*wavesize+i)+1] = w1-1.96*s;
+		//also set the x and z-components
+		wfVertices[3*((nwaves+2)*wavesize+i)] = wfVertices[3*(nwaves*wavesize+i)];
+		wfVertices[3*((nwaves+2)*wavesize+i)+2] = wfVertices[3*(nwaves*wavesize+i)+2];
+		
+	}
 	
 	wfMinmax[0] = 0;
     wfMinmax[1] = channels*(timepoints+channelHop);
@@ -294,8 +326,8 @@
     //each channel will have 2*pointsPerChannel-2 points
     unsigned int pointsPerChannel = 2*timepoints-2;
     //unsigned int offset = 0;
-	//+1 to accommodate mean waveform
-    nWfIndices = (nwaves+1)*channels*pointsPerChannel;
+	//+3 to accommodate mean waveform and +/- std
+    nWfIndices = (nwaves+3)*channels*pointsPerChannel;
     if( (wfDataloaded) && (wfIndices != NULL ))
     {
         wfIndices = realloc(wfIndices, nWfIndices*sizeof(GLuint));
@@ -306,7 +338,7 @@
 
     }
 
-    for(i=0;i<nwaves+1;i++)
+    for(i=0;i<nwaves+3;i++)
     {
         for(j=0;j<channels;j++)
         {
@@ -409,10 +441,21 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
 	unsigned int offset = 0;
 	for(i=0;i<wavesize;i++)
 	{
+		offset = 3*(nWfVertices-3*wavesize+i);
+		color_data[offset] = 1.0-0.5*gcolor[0];
+		color_data[offset+1] = 1.0-0.5*gcolor[1];
+		color_data[offset+2] = 1.0-0.5*gcolor[2];
+		
+		offset = 3*(nWfVertices-2*wavesize+i);
+		color_data[offset] = 1.0-0.5*gcolor[0];
+		color_data[offset+1] = 1.0-0.5*gcolor[1];
+		color_data[offset+2] = 1.0-0.5*gcolor[2];
+			
 		offset = 3*(nWfVertices-wavesize+i);
 		color_data[offset] = 1.0-0.5*gcolor[0];
 		color_data[offset+1] = 1.0-0.5*gcolor[1];
 		color_data[offset+2] = 1.0-0.5*gcolor[2];
+		
 	}
 }
 
@@ -423,8 +466,7 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
 
 -(void) highlightWaveforms:(NSData*)wfidx
 {
-	//TODO: This does not work after waveforms are removed
-	//check if highlightWaves have changed
+	
 	if([wfidx isEqual:highlightWaves] )
 	{
 		return;
@@ -771,6 +813,36 @@ static void wfDrawAnObject()
 	}
 }
 
+-(void) hideOutlierWaveforms
+{
+	//hides all waveforms outside mean+/-1.96 std
+	NSUInteger *_index = malloc(num_spikes*sizeof(NSUInteger));
+	[waveformIndices getIndexes:_index maxCount:num_spikes inIndexRange:nil];
+
+	int i,j;
+	NSMutableData *idx = [NSMutableData dataWithCapacity:num_spikes];
+	for(i=0;i<num_spikes;i++)
+	{
+		for(j=0;j<wavesize;j++)
+		{
+			if ( (wfVertices[3*(_index[i]*wavesize+j)+1] > wfVertices[3*((orig_num_spikes+1)*wavesize+j)+1]) || (wfVertices[3*(_index[i]*wavesize+j)+1] < wfVertices[3*((orig_num_spikes+2)*wavesize+j)+1]) ) 
+			{
+				[idx appendBytes:_index+i length:sizeof(unsigned int)];
+				//found one, so skip to next waveform
+				break;
+			}
+		}
+	}
+	free(_index);
+	NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:idx,
+                                                                [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects: 
+                                                                                                                      @"points",@"color",nil]];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object: self userInfo: params];
+	//[self highlightWaveforms: idx];
+	//[self hideWaveforms:idx];
+	
+}
+
 -(void) hideWaveforms:(NSData*)wfidx
 {
 	//wfidx should be in the original coordinates
@@ -852,10 +924,14 @@ static void wfDrawAnObject()
 		wfVertices[3*(k*wavesize+l)+1] = wfVertices[3*(num_spikes*wavesize+l)+1];
 		wfVertices[3*(k*wavesize+l)+2] = wfVertices[3*(num_spikes*wavesize+l)+2];
 	}*/
-	//reset mean waveform index
+	//reset mean and std waveform index
 	for(l=0;l<waveIndexSize;l++)
 	{
 		new_idx[k*waveIndexSize+l] = tmp_idx[num_spikes*waveIndexSize+l];
+		new_idx[(k+1)*waveIndexSize+l] = tmp_idx[(num_spikes+1)*waveIndexSize+l];
+		new_idx[(k+2)*waveIndexSize+l] = tmp_idx[(num_spikes+2)*waveIndexSize+l];
+
+
 	}
     glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
     num_spikes-=_npoints;
@@ -1282,6 +1358,10 @@ static void wfDrawAnObject()
 									  [NSNumber numberWithUnsignedInt:timepts],@"timepoints",nil];
 			//post notification
 			[[NSNotificationCenter defaultCenter] postNotificationName:@"computeSpikeWidth" object: self userInfo:userInfo];
+		}
+		else if ( [[theEvent characters] isEqualToString: @"a"] )
+		{
+			[self hideOutlierWaveforms];
 		}
 		else if ([ theEvent modifierFlags] & NSControlKeyMask )
 		{
