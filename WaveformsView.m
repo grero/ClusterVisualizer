@@ -449,8 +449,8 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
         for(i=0;i<_nhpoints;i++)
         {
             //need to reset z-value of previously highlighted waveform
-            //idx = _hpoints[i];
-            idx = _indexes[_hpoints[i]];
+            idx = _hpoints[i];
+            //idx = _indexes[_hpoints[i]];
 			zvalue = -1.0;
             vDSP_vfill(&zvalue,_data+(idx*timepts*chs*3)+2,3,timepts*chs);
         }
@@ -461,8 +461,8 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
     //set the z-value
     for(i=0;i<_npoints;i++)
     {
-        //idx = _points[i];
-		idx = _indexes[_points[i]];
+        idx = _points[i];
+		//idx = _indexes[_points[i]];
 		//check that the point is valid
 		if( idx < num_spikes )
 		{
@@ -480,8 +480,8 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
         //unsigned int _nhpoints = [wfidx length]/sizeof(unsigned int);
         for(i=0;i<_nhpoints;i++)
         {
-            //idx = _hpoints[i];
-            idx = _indexes[_hpoints[i]];
+            idx = _hpoints[i];
+            //idx = _indexes[_hpoints[i]];
 			vDSP_vfill(dcolor,_colors+(idx*wavesize*3),3,wavesize);
             vDSP_vfill(dcolor+1,_colors+(idx*wavesize*3)+1,3,wavesize);
             vDSP_vfill(dcolor+2,_colors+(idx*wavesize*3)+2,3,wavesize);
@@ -495,8 +495,8 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
     hcolor[2] = 1.0-dcolor[2];
     for(i=0;i<_npoints;i++)
     {
-        //idx = _points[i];
-		idx = _indexes[_points[i]];
+        idx = _points[i];
+		//idx = _indexes[_points[i]];
 		if (idx < num_spikes )
 		{
 			vDSP_vfill(hcolor,_colors+(idx*wavesize*3),3,wavesize);
@@ -773,6 +773,7 @@ static void wfDrawAnObject()
 
 -(void) hideWaveforms:(NSData*)wfidx
 {
+	//wfidx should be in the original coordinates
     [[self openGLContext] makeCurrentContext];
     unsigned int* _points = (unsigned int*)[wfidx bytes];
     unsigned int _npoints = [wfidx length]/sizeof(unsigned int);
@@ -784,13 +785,28 @@ static void wfDrawAnObject()
     int i,j,found,k,l;
     j = 0;
     found = 0;
-    k = 0;
-    //unsigned int wvsize =
-	//remove from active waveforms
-	for(i=0;i<_npoints;i++)
+    k = 0;	
+	//get the indices
+	NSUInteger *_index = malloc(num_spikes*sizeof(NSUInteger));
+	[waveformIndices getIndexes:_index maxCount:num_spikes inIndexRange:nil];
+	/*
+	for(i=0;i<num_spikes-_npoints;i++)
 	{
-		[waveformIndices removeIndex:_points[i]];
+		for(l=0;l<waveIndexSize;l++)
+		{
+			new_idx[k*waveIndexSize+l] = tmp_idx[i*waveIndexSize+l];
+		}
 	}
+	//the code below is redundant, because of the above. We already have the indexes, so we can just iterate through them
+	
+	[waveformIndices enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop)
+	 {
+		 for(l=0;l<waveIndexSize;l++)
+		 {
+			 new_idx[k*waveIndexSize+l] = tmp_idx[i*waveIndexSize+l];
+		 }
+	 }];
+	*/
 	//the code below is a bit pointless; we know that wfidx are all from the currently drawn waves
 	
     for(i=0;i<num_spikes;i++)
@@ -799,7 +815,7 @@ static void wfDrawAnObject()
         j=0;
         while((found==0) && (j<_npoints))
         {
-            if(i==_points[j])
+            if(_index[i]==_points[j])
 			{
                 found = 1;
 			}
@@ -808,10 +824,7 @@ static void wfDrawAnObject()
         }
         if(found == 0)
         {
-            //need to remove the waveform;rearrange both indices and vertixes
-			//we are removing points from the cluster, i.e. this will not work
-			//is there a concern here that we are over-writing points
-			//we are shifting indices around, which means that the index i is no longer valid after the first shift
+            
             for(l=0;l<waveIndexSize;l++)
             {
                 new_idx[k*waveIndexSize+l] = tmp_idx[i*waveIndexSize+l];
@@ -828,11 +841,7 @@ static void wfDrawAnObject()
             k+=1;
         }
     }
-	//alternative code
-	//remove wfidx from tmp_idx
-	//to remove points, shift all points down by one
-	
-	
+	free(_index);
 	//
 	//we have now gotten rid of the extra waveforms; need to shift the mean waveform into place
 	k = num_spikes-_npoints;
@@ -867,7 +876,11 @@ static void wfDrawAnObject()
     //glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
     //push data to the current buffer
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, nWfIndices*sizeof(GLuint), new_idx, GL_DYNAMIC_DRAW);
-    
+    //update waveform indices
+	for(i=0;i<_npoints;i++)
+	{
+		[waveformIndices removeIndex:_points[i]];
+	}
     [self setNeedsDisplay: YES];
     
 }
@@ -1013,21 +1026,28 @@ static void wfDrawAnObject()
         vDSP_vdist(D,2,D+1,2,d,1,nWfVertices);
         //find the index of the minimu distance
         //vDSP_minvi(d,1,&fmin,&imin,nWfVertices);
-        int i;
+        int i,j;
+		float q;
 		fmin = INFINITY;
+		//only search among the shown waveforms
 		for(i=0;i<num_spikes;i++)
 		{
-			if (d[_indexes[i]] < fmin) {
-				fmin = d[_indexes[i]];
-				imin = i;
+			for(j=0;j<wavesize;j++)
+			{
+				q = d[_indexes[i]*wavesize+j];
+				if (q < fmin) {
+					fmin = q;
+					imin = _indexes[i];
+				}
 			}
 		}
+		free(_indexes);
 		//imin now holds the index of the vertex closest to the point
         //find the number of wfVertices per waveform
         
         free(d);
         free(D);
-        wfidx = imin/(wfLength);
+		wfidx = imin;//(wfLength);
     }
     free(p);
     //if command key is pressed, we want to add this wavform to the currently drawn waveforms
