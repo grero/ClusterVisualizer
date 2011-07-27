@@ -648,7 +648,7 @@
 			//the maximum numbers of clusters
 			unsigned int maxCluster = overlaps[ncols-2]+1;
 			unsigned i,j;
-			
+				
 			cluster_colors = NSZoneMalloc([self zone], 3*ncols*sizeof(float));
 			tempArray = [NSMutableArray arrayWithCapacity:maxCluster];
 
@@ -1517,14 +1517,20 @@
 		//open panel to get filename
 
 		NSSavePanel *savePanel = [NSSavePanel savePanel];
-		[savePanel setNameFieldLabel:[NSString stringWithFormat: @"%@.cut",currentBaseName]];
-		[savePanel beginSheetModalForWindow:[fw window] completionHandler:^(NSInteger result) 
+		[savePanel setNameFieldStringValue:[NSString stringWithFormat: @"%@.cut",currentBaseName]];
+		/*
+		[savePanel beginWithCompletionHandler:^(NSInteger result) 
 		 {
 			 if(result == NSFileHandlingPanelOKButton )
 			 {
-				 [cidx_string writeToFile:[savePanel nameFieldLabel] atomically:YES];
+				 [cidx_string writeToFile:[savePanel nameFieldStringValue] atomically:YES];
 			 }
-		 }];
+		 }];*/
+		NSInteger result = [savePanel runModal];
+		if(result == NSFileHandlingPanelOKButton )
+		{
+			[cidx_string writeToFile:[savePanel nameFieldStringValue] atomically:YES];
+		}
         //[cidx_string writeToFile:[NSString stringWithFormat: @"%@.cut",currentBaseName] atomically:YES];
         //now write a file containing the template clusters
         NSArray *templates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"isTemplate==1"]];
@@ -1536,12 +1542,12 @@
             [templateIds addObject:[NSString stringWithFormat: @"%d",[[template clusterId] intValue]]];
         }
         NSString *templateIdStr = [templateIds componentsJoinedByString:@"\n"];
-		[savePanel setNameFieldLabel:[NSString stringWithFormat: @"%@.scu",currentBaseName]];
-		[savePanel beginSheetModalForWindow:[fw window] completionHandler:^(NSInteger result) 
+		[savePanel setNameFieldStringValue:[NSString stringWithFormat: @"%@.scu",currentBaseName]];
+		[savePanel beginWithCompletionHandler:^(NSInteger result) 
 		 {
 			 if(result == NSFileHandlingPanelOKButton )
 			 {
-				 [templateIdStr writeToFile:[savePanel nameFieldLabel] atomically:YES];
+				 [templateIdStr writeToFile:[savePanel nameFieldStringValue] atomically:YES];
 			 }
 		 }];
         //[templateIdStr writeToFile:[NSString stringWithFormat:@"%@.scu",currentBaseName] atomically:YES];
@@ -1881,12 +1887,12 @@
 	NSNumber *number = [formatter numberFromString:wf]; 
 	unsigned int point = [number unsignedIntValue];
 	//if( point < [[[self activeCluster] npoints] unsignedIntValue] )
-	if ( point < [[[[clusterController selectedObjects] objectAtIndex:0] npoints] unsignedIntValue] )
-	{
+	//if ( point < [[[[clusterController selectedObjects] objectAtIndex:0] npoints] unsignedIntValue] )
+	//{
 		selectedWaveform = [[NSString stringWithString:wf] retain];
 		NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:[NSData dataWithBytes:&point length:sizeof(unsigned int)],@"points",nil];
 		[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:self userInfo:userInfo];
-	}
+	//}
 	[formatter release];
 	//
 }
