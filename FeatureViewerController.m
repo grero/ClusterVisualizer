@@ -1529,7 +1529,7 @@
 		NSInteger result = [savePanel runModal];
 		if(result == NSFileHandlingPanelOKButton )
 		{
-			[cidx_string writeToFile:[savePanel nameFieldStringValue] atomically:YES];
+			[cidx_string writeToFile:[[[savePanel directoryURL] path] stringByAppendingPathComponent: [savePanel nameFieldStringValue]] atomically:YES];
 		}
         //[cidx_string writeToFile:[NSString stringWithFormat: @"%@.cut",currentBaseName] atomically:YES];
         //now write a file containing the template clusters
@@ -1547,7 +1547,7 @@
 		 {
 			 if(result == NSFileHandlingPanelOKButton )
 			 {
-				 [templateIdStr writeToFile:[savePanel nameFieldStringValue] atomically:YES];
+				 [templateIdStr writeToFile:[[[savePanel directoryURL] path] stringByAppendingPathComponent: [savePanel nameFieldStringValue]] atomically:YES];
 			 }
 		 }];
         //[templateIdStr writeToFile:[NSString stringWithFormat:@"%@.scu",currentBaseName] atomically:YES];
