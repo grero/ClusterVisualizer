@@ -365,7 +365,15 @@
         a = wfVertices[3*indices[i]+2];
     }*/
     //
-    wfColors = malloc(nWfVertices*3*sizeof(GLfloat));
+	//prevent leakage
+	if ((wfDataloaded) && (wfColors != NULL)) 
+	{
+		wfColors = realloc(wfColors, nWfVertices*3*sizeof(GLfloat));
+	}
+	else {
+		wfColors = malloc(nWfVertices*3*sizeof(GLfloat));
+	}
+
     NSOpenGLContext *context = [self openGLContext];
     [context makeCurrentContext];
     //GLfloat *gcolor = malloc(4*sizeof(GLfloat));
@@ -466,7 +474,7 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
 
 -(void) highlightWaveforms:(NSData*)wfidx
 {
-	
+	//wfidx must be in cluster coordinates and not refer to wfVertices
 	if([wfidx isEqual:highlightWaves] )
 	{
 		return;
@@ -491,8 +499,8 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
         for(i=0;i<_nhpoints;i++)
         {
             //need to reset z-value of previously highlighted waveform
-            idx = _hpoints[i];
-            //idx = _indexes[_hpoints[i]];
+            //idx = _hpoints[i];
+            idx = _indexes[_hpoints[i]];
 			zvalue = -1.0;
             vDSP_vfill(&zvalue,_data+(idx*timepts*chs*3)+2,3,timepts*chs);
         }
@@ -503,10 +511,10 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
     //set the z-value
     for(i=0;i<_npoints;i++)
     {
-        idx = _points[i];
-		//idx = _indexes[_points[i]];
+        //idx = _points[i];
+		idx = _indexes[_points[i]];
 		//check that the point is valid
-		if( idx < num_spikes )
+		if( idx < orig_num_spikes )
 		{
 			vDSP_vfill(&zvalue,_data+(idx*timepts*chs*3)+2,3,timepts*chs);
 		}
@@ -522,8 +530,8 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
         //unsigned int _nhpoints = [wfidx length]/sizeof(unsigned int);
         for(i=0;i<_nhpoints;i++)
         {
-            idx = _hpoints[i];
-            //idx = _indexes[_hpoints[i]];
+            //idx = _hpoints[i];
+            idx = _indexes[_hpoints[i]];
 			vDSP_vfill(dcolor,_colors+(idx*wavesize*3),3,wavesize);
             vDSP_vfill(dcolor+1,_colors+(idx*wavesize*3)+1,3,wavesize);
             vDSP_vfill(dcolor+2,_colors+(idx*wavesize*3)+2,3,wavesize);
@@ -537,9 +545,9 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
     hcolor[2] = 1.0-dcolor[2];
     for(i=0;i<_npoints;i++)
     {
-        idx = _points[i];
-		//idx = _indexes[_points[i]];
-		if (idx < num_spikes )
+        //idx = _points[i];
+		idx = _indexes[_points[i]];
+		if (idx < orig_num_spikes )
 		{
 			vDSP_vfill(hcolor,_colors+(idx*wavesize*3),3,wavesize);
 			vDSP_vfill(hcolor+1,_colors+(idx*wavesize*3)+1,3,wavesize);
@@ -637,28 +645,59 @@ static void wfDrawAnObject()
 -(void)drawLabels
 {
     //TODO: This does not work; the labels are stretched, and drawn in black, not whte as the color suggests.
-    int nlabels = 10;
+    int nlabels = 2;
     int i;
     //NSAttributedString *label;
     NSMutableDictionary *normal9Attribs = [NSMutableDictionary dictionary];
-    [normal9Attribs setObject: [NSFont fontWithName: @"Helvetica" size: 9.0f] forKey: NSFontAttributeName];
+    [normal9Attribs setObject: [NSFont fontWithName: @"Helvetica" size: 8.0f] forKey: NSFontAttributeName];
     //label = [[[NSMutableAttributedString alloc] initWithString:@"GL Capabilities:" attributes:bold12Attribs] autorelease];
     float width = [self bounds].size.width;
     float height =[self bounds].size.height;
-    float xmargin = 0.005*width;
-    float ymargin = 0.01*height;
-    float dy = 0.8*height/nlabels;
-    float y = [self bounds].origin.y;
-    for(i=0;i<nlabels;i++)
+    //the margins are decided by how the data are scaled; the full extent of the window is 1.2*height (widith)
+	//float xmargin = 0;
+    //float ymargin = (height-height/1.2)/2.0;//0.001*height;
+    float dy = height/1.2/(nlabels-1);
+	dy = height/(1.1*(ymax-ymin));
+	//data increment
+	//float dy_ = (ymax-ymin)/(nlabels-1);
+    //float y = [self bounds].origin.y;
+	[[self openGLContext] makeCurrentContext];
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	glScalef (2.0f / width, -2.0f /  height, 1.0f);
+	float *label_positions = (float*)malloc(3*sizeof(float));
+	//top
+	//label_positions[2] = 0.5*height-ymargin;
+	label_positions[2] = 0.5*height-dy*0.1*(ymax-ymin)/2;
+	label_positions[1] = -0.5*height+dy*(0.1*(ymax-ymin)/2.0+ymax);
+	//bottom
+	//label_positions[0] = 0.5*height-ymargin-height/1.2;
+	label_positions[0] = -0.5*height+dy*0.1*(ymax-ymin)/2;
+	
+	float *label_titles = (float*)malloc(3*sizeof(float));
+	label_titles[0] = ymax;
+	label_titles[1] = 0;
+	label_titles[2] = ymin;
+    for(i=0;i<nlabels+1;i++)
     {
-        y = ymargin + i*dy;
         NSAttributedString *label;
-        label = [[[NSAttributedString alloc] initWithString:[NSString stringWithFormat: @"%.1f",&y]  attributes:normal9Attribs] autorelease];
+        //label = [[[NSAttributedString alloc] initWithString:[NSString stringWithFormat: @"%.1f",ymin+i*dy_]  attributes:normal9Attribs] autorelease];
+		label = [[[NSAttributedString alloc] initWithString:[NSString stringWithFormat: @"%.1f",label_titles[i]]  attributes:normal9Attribs] autorelease];
+
         GLString *glabel;
-        glabel = [[GLString alloc] initWithAttributedString:label withTextColor:[NSColor colorWithDeviceRed:0.5f green:0.5f blue:0.56f alpha:1.0f] withBoxColor:[NSColor colorWithDeviceRed:0.4f green:0.4f blue:0.0f alpha:0.0f] withBorderColor:[NSColor colorWithDeviceRed:0.8f green:0.8f blue:0.0f alpha:0.0f]];
-        [glabel drawAtPoint:NSMakePoint (xmargin, y)];
-        
+        glabel = [[GLString alloc] initWithAttributedString:label withTextColor:[NSColor colorWithDeviceRed:1.0f green:1.0f blue:1.0f alpha:1.0f] withBoxColor:[NSColor colorWithDeviceRed:0.4f green:0.4f blue:0.0f alpha:1.0f] withBorderColor:[NSColor colorWithDeviceRed:0.8f green:0.8f blue:0.0f alpha:1.0f]];
+		//y = i*(dy-[glabel frameSize].height);
+		//[glabel drawAtPoint:NSMakePoint (-0.5*width+xmargin,0.5*height-ymargin-[glabel frameSize].height - y)];
+		[glabel drawAtPoint:NSMakePoint (-0.5*width,label_positions[i] - 0.5*[glabel frameSize].height)];
+
+        //drawAtPoint:NSMakePoint (10.0f, height - [glabelY frameSize].height - 10.0f)];
     }
+	free(label_titles);
+	free(label_positions);
+	glPopMatrix();
 
 }
 
@@ -677,15 +716,17 @@ static void wfDrawAnObject()
     //glClear(GL_DEPTH_BUFFER_BIT);
     if(wfDataloaded)
     {
+		[self drawLabels];
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
+		
 		/*glOrtho(1.05*xmin-0.05*xmax, 1.05*xmin-0.05*xmax, 1.05*wfMinmax[2]-0.05*wfMinmax[3], 
 				1.05*wfMinmax[3]-0.05*wfMinmax[2], wfMinmax[4], wfMinmax[5]);*/
         glOrtho(xmin, xmax, 1.1*ymin, 1.1*ymax, 1.1*wfMinmax[4], 1.1*wfMinmax[5]);
 		wfDrawAnObject();
 		//glPushMatrix();
 		//glScalef(1.0/(xmax-xmin),1.0/(ymax-ymin),1.0);
-		//[self drawLabels];
+		
 		//glPopMatrix();
 		
                 //drawFrame();
@@ -819,7 +860,7 @@ static void wfDrawAnObject()
 	NSUInteger *_index = malloc(num_spikes*sizeof(NSUInteger));
 	[waveformIndices getIndexes:_index maxCount:num_spikes inIndexRange:nil];
 
-	int i,j;
+	unsigned int i,j;
 	NSMutableData *idx = [NSMutableData dataWithCapacity:num_spikes];
 	for(i=0;i<num_spikes;i++)
 	{
@@ -827,7 +868,7 @@ static void wfDrawAnObject()
 		{
 			if ( (wfVertices[3*(_index[i]*wavesize+j)+1] > wfVertices[3*((orig_num_spikes+1)*wavesize+j)+1]) || (wfVertices[3*(_index[i]*wavesize+j)+1] < wfVertices[3*((orig_num_spikes+2)*wavesize+j)+1]) ) 
 			{
-				[idx appendBytes:_index+i length:sizeof(unsigned int)];
+				[idx appendBytes:&i length:sizeof(unsigned int)];
 				//found one, so skip to next waveform
 				break;
 			}
@@ -845,14 +886,14 @@ static void wfDrawAnObject()
 
 -(void) hideWaveforms:(NSData*)wfidx
 {
-	//wfidx should be in the original coordinates
+	//wfidx will be in the new coordinates
     [[self openGLContext] makeCurrentContext];
     unsigned int* _points = (unsigned int*)[wfidx bytes];
     unsigned int _npoints = [wfidx length]/sizeof(unsigned int);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,wfIndexBuffer);
     GLuint *tmp_idx = (GLuint*)glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY);
 	//array to hold the new indices
-	GLuint* new_idx = malloc((num_spikes-_npoints+1)*waveIndexSize*sizeof(GLuint));
+	GLuint* new_idx = malloc((num_spikes-_npoints+3)*waveIndexSize*sizeof(GLuint));
 
     int i,j,found,k,l;
     j = 0;
@@ -887,7 +928,7 @@ static void wfDrawAnObject()
         j=0;
         while((found==0) && (j<_npoints))
         {
-            if(_index[i]==_points[j])
+            if(i==_points[j])
 			{
                 found = 1;
 			}
@@ -955,7 +996,7 @@ static void wfDrawAnObject()
     //update waveform indices
 	for(i=0;i<_npoints;i++)
 	{
-		[waveformIndices removeIndex:_points[i]];
+		[waveformIndices removeIndex:_index[_points[i]]];
 	}
     [self setNeedsDisplay: YES];
     
@@ -1113,7 +1154,8 @@ static void wfDrawAnObject()
 				q = d[_indexes[i]*wavesize+j];
 				if (q < fmin) {
 					fmin = q;
-					imin = _indexes[i];
+					//imin = _indexes[i];
+					imin = i;
 				}
 			}
 		}
@@ -1412,26 +1454,32 @@ static void wfDrawAnObject()
 {
 	//shift highlighted waveform downwards
 	NSMutableData *hdata;
-
 	if( [self highlightWaves] != NULL )
 	{
+		//NSUInteger *_index = malloc(num_spikes*(sizeof(NSUInteger)));
+		//[waveformIndices getIndexes:_index maxCount:num_spikes inIndexRange:nil];
 		hdata = [NSMutableData dataWithData:[self highlightWaves]];		
 		//get the indices and increment by one
 		unsigned int *idx = (unsigned int*)([hdata bytes]);
 		unsigned int len = [hdata length]/sizeof(unsigned int);
+		NSUInteger k;
 		int i;
 		for(i=0;i<len;i++)
 		{
 			if( idx[i] > 0 )
 			{
 				idx[i]--;
+				//move one index back
+			//k = [waveformIndices indexLessThanIndex:idx[i]];
+			//if( k != NSNotFound )
+			//	idx[i] = (unsigned int)k;
 			}
 		}
 	}
 	else
 	{
 		//no highlighted waves, so set highlight to the first wave
-		unsigned int idx = 0;
+		unsigned int idx = 0;//(unsigned int)[waveformIndices firstIndex];
 		hdata = [NSMutableData dataWithBytes:&idx length:sizeof(unsigned int)];
 
 	}
@@ -1459,18 +1507,23 @@ static void wfDrawAnObject()
 		unsigned int *idx = (unsigned int*)([hdata bytes]);
 		unsigned int len = [hdata length]/sizeof(unsigned int);
 		int i;
+		//NSUInteger  k;
 		for(i=0;i<len;i++)
 		{
 			if( idx[i] < num_spikes -1 )
 			{
 				idx[i]++;
+				//advance one index
+			//k = [waveformIndices indexGreaterThanIndex:idx[i]];
+			//if(k != NSNotFound )
+			//	idx[i] = (unsigned int)k;
 			}
 		}
 	}
 	else
 	{
 		//no highlighted waves, so set highlight to the first wave
-		unsigned int idx = 0;
+		unsigned int idx = 0;//(unsigned int)[waveformIndices firstIndex];
 		hdata = [NSMutableData dataWithBytes:&idx length:sizeof(unsigned int)];
 		
 	}
