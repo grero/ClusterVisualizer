@@ -32,6 +32,7 @@
 @synthesize mask;
 @synthesize waveformsImage;
 @synthesize featureDims;
+@synthesize description;
 
 -(void)setActive:(NSInteger)value
 {
@@ -226,6 +227,7 @@
 		vDSP_meanv(_data+i, cols, _mean+i, rows);
 	}
 	mean = [[NSData dataWithBytes:_mean length:sizeof(_mean)] retain];
+	free(_mean);
 }
 
 -(void)computeIsolationDistance:(NSData*)data
@@ -362,13 +364,16 @@
     
     NSUInteger* _points = malloc(_npoints*sizeof(NSUInteger));
     [[self indices] getIndexes:_points maxCount:_npoints*sizeof(NSUInteger) inIndexRange:nil];
-    unsigned int* _ppoints = malloc(_npoints*sizeof(unsigned int));
+    
+	unsigned int* _ppoints = malloc(_npoints*sizeof(unsigned int));
     for(i=0;i<_npoints;i++)
     {
         _ppoints[i] = (unsigned int)_points[i];
     }
     free(_points);
     [[self points] setData: [NSData dataWithBytes:_ppoints length:_npoints*sizeof(unsigned int)]];
+	//[[self points] setData: [NSData dataWithBytes:(unsigned int*)_points length:_npoints*sizeof(unsigned int)]];
+	//free(_points);
     free(_ppoints);
     [self setNpoints:[NSNumber numberWithUnsignedInt:_npoints]];
 
@@ -440,6 +445,14 @@
     return self;
             
              
+}
+
+-(void)updateDescription
+{
+	NSArray *components = [NSArray arrayWithObjects:[npoints stringValue],[shortISIs stringValue],[lRatio stringValue],[isolationDistance stringValue],nil];
+	NSArray *keys = [NSArray arrayWithObjects:@"#points", @"shortISI",@"L-ratio",@"IsoDist",nil];
+	NSDictionary *descr = [NSDictionary dictionaryWithObjects: components forKeys: keys];
+	[self setDescription:[descr description]];
 }
 
 

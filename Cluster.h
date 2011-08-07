@@ -32,7 +32,7 @@
     NSMutableData *mask;
     NSImage *waveformsImage;
 	NSInteger featureDims;
-    
+	NSString *description; //a string listing all the parameters of this cluster
 
 }
 
@@ -58,6 +58,7 @@
 @property(retain,readwrite) NSImage *waveformsImage;
 @property(retain,readwrite) NSData *featureRanges;
 @property(assign,readwrite) NSInteger featureDims;
+@property(retain,readwrite) NSString *description;
 
 -(void)createName;
 -(void)makeInactive;
@@ -75,7 +76,7 @@
 -(void)computeFeatureRanges:(NSData*)data;
 -(void)removePoints:(NSData*)rpoints;
 -(void)addPoints:(NSData*)rpoints;
-
+-(void)updateDescription;
 //encoding
 -(void)encodeWithCoder:(NSCoder*)coder;
 -(id)initWithCoder:(NSCoder*)coder;
