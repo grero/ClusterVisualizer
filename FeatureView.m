@@ -219,6 +219,11 @@
     rows = r;
     cols = c;
     nindices = rows;
+	//create an indexset
+	NSRange rng;
+	rng.location = 0;
+	rng.length = rows;
+	indexset = [[NSMutableIndexSet indexSetWithIndexesInRange:rng] retain];
     if(dataloaded)
     {
         //data has already been loaded, i.e. we are requesting to draw another set of features
@@ -286,7 +291,7 @@
         GLfloat *vertex_pointer = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
         modifyVertices(vertex_pointer);
 		//compute min/max
-		float max,min,l;
+		/*float max,min,l;
 		//find max
 		vDSP_maxv(vertex_pointer,1,&max,rows*3);
 		//find min
@@ -296,7 +301,7 @@
 		for(j=0;j<rows*3;j++)
 		{
 			vertex_pointer[j] = 2*(vertex_pointer[j]-min)/l-1;
-		}
+		}*/
 		//
         glUnmapBuffer(GL_ARRAY_BUFFER);
         /*
@@ -311,15 +316,18 @@
 -(void) showCluster: (Cluster *)cluster
 {
     int cid = [cluster.name intValue];
+	unsigned int new_size = [[cluster npoints] intValue];
     //do this in a very inane way for now, just to see if it works
     int i;
 	[[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
     GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
+	//
+	//gluErrorString(<#GLenum error#>)
+	//
     if(tmp_indices!=NULL)
     {
         unsigned int *points = (unsigned int*)[[cluster points] bytes];
-        int new_size = [[cluster npoints] intValue];
         //new_size = [cluster.indices count];
         //tmp_indices = realloc(tmp_indices, new_size*sizeof(GLuint));
         int j = 0;
@@ -353,18 +361,19 @@
 			
 
         }
+		/*
 		scale = 1.0;
 		for(j=0;j<3;j++)
 		{
 			scale = MAX(scale,1.0/(cluster_minmax[2*j+1]-cluster_minmax[2*j]));		
 		}
 		scale = 1.0/scale;
-						
+		*/				
 		
         //this does not work for a 64 bit application, as NSUInteger is then 64 bit, while the tm_indices is 32 bit.
         //int count = [indexset getIndexes:(NSUInteger*)tmp_indices maxCount:nindices+new_size inIndexRange:nil];
         //glBufferData(GL_ELEMENT_ARRAY_BUFFER, new_size*sizeof(GLuint), tmp_indices, GL_DYNAMIC_DRAW);
-        glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+		glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
 		nindices += new_size;
 
 		//normalize
@@ -376,7 +385,6 @@
 		//originz = -centroid[1];
         //NSZoneFree([self zone], centroid);
 		[indexset addIndexes: [cluster indices]];
-		//TODO: Change the viewport to scale to the new set of points
 		//calculate the centroid of the cluster in the current space
 		[self changeZoom];
         [self setNeedsDisplay:YES];
@@ -385,58 +393,76 @@
 
 -(void) hideCluster: (Cluster *)cluster
 {
+	unsigned int new_size = [[cluster npoints] intValue];
+	//first check if hiding this cluste takes away all indices, if so, simply set nindices to 0
+	if(nindices - new_size ==0)
+	{
+		nindices = 0;
+		[self setNeedsDisplay:YES];
+		return;
+	}
 	[[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-    GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
-    if(tmp_indices != NULL)
+    GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
+    if((tmp_indices != NULL) && (new_size>0) )
     {
+		
         unsigned int *points = (unsigned int*)[[cluster points] bytes];
-        int new_size = [[cluster npoints] intValue];
+		//unsigned int *_points = (unsigned int*)malloc((nindices-new_size)*sizeof(unsigned int));
         //new_size = [[cluster indices] count];
-        if(new_size>0)
-        {
-            int i,j,k,found;
-			i = 0;
-			//TODO: The following is a very naiv way of doing intersection. Should fix this 
-            //      One way to fix make it more efficient is to make sure the indices are sorted. This can
-            //      be done by maintaining a heap, for instance. 
-			//dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-			//dispatch_apply(nindices, queue, ^(size_t j)
-			
-            for(j=0;j<nindices;j++)
-            {
-				//int i,k,found;
+		int i,j,k,found;
+		i = 0;
+		//TODO: The following is a very naiv way of doing intersection. Should fix this 
+		//      One way to fix make it more efficient is to make sure the indices are sorted. This can
+		//      be done by maintaining a heap, for instance. 
+		//dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+		//dispatch_apply(nindices, queue, ^(size_t j)
+		
+		for(j=0;j<nindices;j++)
+		{
+			//int i,k,found;
 
-                found = 0;
-				//i = 0;
-                for(k=0;k<new_size;k++)
-                {
-                    if(tmp_indices[j]==points[k])
-                    {
-                        found=1;
-                        //once we've found a match, abort
-                        break;
-                    }
-                }
-                if(found==0)
-                {
-                    tmp_indices[i] = tmp_indices[j];
-                    i+=1;
-                }
-            }//);
-            //alternative to the above: Use IndexSets
-            //NSMutableIndexSet *tmp = [NSMutableIndexSet 
-            int count = [indexset count];
-            [indexset removeIndexes: [cluster indices]];
-            NSRange range;
-            range.location = 0;
-            range.length =nindices;
-            //count = [indexset getIndexes: tmp_indices maxCount: nindices-new_size inIndexRange: nil];
-            nindices-=new_size;
-            if(nindices<0)
-                nindices=0;
-        }
+			found = 0;
+			//i = 0;
+			for(k=0;k<new_size;k++)
+			{
+				if(tmp_indices[j]==points[k])
+				{
+					found=1;
+					//once we've found a match, abort
+					break;
+				}
+			}
+			if(found==0)
+			{
+				indices[i] = tmp_indices[j];
+				i+=1;
+			}
+		}//);
+		//alternative to the above: Use IndexSets
+		//NSMutableIndexSet *tmp = [NSMutableIndexSet 
+		int count = [indexset count];
+		[indexset removeIndexes: [cluster indices]];
+		
+		NSRange range;
+		range.location = 0;
+		range.length =nindices;
+		//count = [indexset getIndexes: tmp_indices maxCount: nindices-new_size inIndexRange: nil];
+		nindices-=new_size;
+		if(nindices<0)
+			nindices=0;
+		NSUInteger *_index = malloc(nindices*sizeof(NSUInteger));
+        [indexset getIndexes: _index maxCount:nindices*sizeof(NSUInteger) inIndexRange:nil];
+		for(i=0;i<nindices;i++)
+		{
+			indices[i] = (unsigned int)_index[i];
+			tmp_indices[i] = (unsigned int) _index[i];
+		}
         glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+		//push the new indices
+		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, nindices*sizeof(unsigned int), indices, GL_DYNAMIC_DRAW);
+		//free(_points);
 		//reset origin
 		originx = 0.0;
 		originy = 0.0;
@@ -449,12 +475,28 @@
 -(void) hideAllClusters
 {
     nindices = 0;
+	[indexset removeAllIndexes];
     [self setNeedsDisplay:YES];
 }
 
 -(void) showAllClusters
 {
     nindices = rows;
+	[[self openGLContext] makeCurrentContext];
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+	GLuint *index = malloc(rows*sizeof(unsigned int));
+	//could make this more efficient, e.g. using range
+	unsigned int i;
+	for(i=0;i<rows;i++)
+	{
+		index[i] = i;
+	}
+	NSRange rng;
+	rng.location = 0;
+	rng.length = rows;
+	[indexset addIndexesInRange:rng];
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, rows*sizeof(GLuint), index, GL_DYNAMIC_DRAW);
+	free(index);
     [self setNeedsDisplay:YES];
 }
 
@@ -483,7 +525,7 @@
     unsigned int _npoints = (unsigned int)([points length]/sizeof(unsigned int));
     //get the indices to redraw
     [[self openGLContext] makeCurrentContext];
-    glBindBuffer(GL_ARRAY_BUFFER, indexBuffer);
+    //glBindBuffer(GL_ARRAY_BUFFER, indexBuffer);
 	//TODO: This doesn't work as long as there are more than one cluster; the indices returned in params only refer to the currently
 	//selected waveforms in the waveformsview
     //GLuint *tmp_idx = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
@@ -495,6 +537,7 @@
 		{
 			//idx[i] = tmp_idx[_clusterPoints[_points[i]]];
 			idx[i] = _clusterPoints[_points[i]];
+			//idx[i] = _points[i];
 		}
 	}
 	else
@@ -532,16 +575,16 @@
         _colors[idx[i]*3+1] = 1-_color[1];
         _colors[idx[i]*3+2] = 1-_color[2];
     }
-        glUnmapBuffer(GL_ARRAY_BUFFER);
+	glUnmapBuffer(GL_ARRAY_BUFFER);
     if( highlightedPoints == NULL)
     {
         [self setHighlightedPoints: [NSMutableData dataWithBytes: idx length: _npoints*sizeof(GLuint)]];
     }
     else {
-        [[self highlightedPoints] setData: [NSMutableData dataWithBytes: idx length: _npoints*sizeof(GLuint)]];
+        [[self highlightedPoints] setData: [NSData dataWithBytes: idx length: _npoints*sizeof(GLuint)]];
         
     }
-
+	free(idx);
     [self setNeedsDisplay:YES];
 }
 
@@ -774,14 +817,75 @@ static void drawAnObject()
 
 -(void)drawLabels
 {
-	NSMutableDictionary *normal9Attribs = [NSMutableDictionary dictionary];
-    [normal9Attribs setObject: [NSFont fontWithName: @"Helvetica" size: 9.0f] forKey: NSFontAttributeName];
+	if( (glabelX == nil ) || (glabelY == nil) || (glabelZ == nil ) )
+	{
+		NSMutableDictionary *normal9Attribs = [NSMutableDictionary dictionary];
+		[normal9Attribs setObject: [NSFont fontWithName: @"Helvetica" size: 12.0f] forKey: NSFontAttributeName];
+		
+		NSAttributedString *labelX,*labelY,*labelZ;
+		labelX = [[[NSAttributedString alloc] initWithString:[NSString stringWithFormat: @"Axis 1"]  attributes:normal9Attribs] autorelease];
+		labelY = [[[NSAttributedString alloc] initWithString:[NSString stringWithFormat: @"Axis 2"]  attributes:normal9Attribs] autorelease];
+
+		labelZ = [[[NSAttributedString alloc] initWithString:[NSString stringWithFormat: @"Axis 3"]  attributes:normal9Attribs] autorelease];
+
+		//GLString *glabel;
+		glabelX = [[[GLString alloc] initWithAttributedString:labelX
+											  withTextColor:[NSColor colorWithDeviceRed:1.0f green:0.0f blue:0.56f alpha:1.0f] withBoxColor:[NSColor colorWithDeviceRed:1.0f green:0.0f blue:0.0f alpha:1.0f] withBorderColor:[NSColor colorWithDeviceRed:0.0f green:0.0f blue:0.0f alpha:1.0f]] retain];
+		glabelY = [[[GLString alloc] initWithAttributedString:labelY 
+												withTextColor:[NSColor colorWithDeviceRed:1.0f green:0.0f blue:0.56f alpha:1.0f] withBoxColor:[NSColor colorWithDeviceRed:1.0f green:0.0f blue:0.0f alpha:1.0f] withBorderColor:[NSColor colorWithDeviceRed:0.0f green:0.0f blue:0.0f alpha:1.0f]] retain];
+		glabelZ = [[[GLString alloc] initWithAttributedString:labelZ 
+												withTextColor:[NSColor colorWithDeviceRed:1.0f green:0.0f blue:0.56f alpha:1.0f] withBoxColor:[NSColor colorWithDeviceRed:1.0f green:0.0f blue:0.0f alpha:1.0f] withBorderColor:[NSColor colorWithDeviceRed:0.0f green:0.0f blue:0.0f alpha:1.0f]] retain];
+
+	}
+	GLfloat width = [self bounds].size.width;
+	GLfloat height = [self bounds].size.height;
+
+	/*glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();*/
 	
-	NSAttributedString *label;
-	label = [[[NSAttributedString alloc] initWithString:[NSString stringWithFormat: @"Axis 1"]  attributes:normal9Attribs] autorelease];
-	GLString *glabel;
-	glabel = [[GLString alloc] initWithAttributedString:label withTextColor:[NSColor colorWithDeviceRed:0.5f green:0.5f blue:0.56f alpha:1.0f] withBoxColor:[NSColor colorWithDeviceRed:0.4f green:0.4f blue:0.0f alpha:0.0f] withBorderColor:[NSColor colorWithDeviceRed:0.8f green:0.8f blue:0.0f alpha:0.0f]];
-	[glabel drawAtPoint:NSMakePoint (0.5, 0.5)];
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	glTranslatef(originx, originy, originz);
+	glRotatef(rotatey,0, 1, 0);
+	glRotatef(rotatez, 0, 0,1);
+	//X-label
+	glPushMatrix();
+	glTranslatef(0.0, 1.0, 1.1);
+	//glTranslatef(1.0, 0, 0);
+	glScalef (2.0f / width, -2.0f /  height, 1.0f);
+	//glTranslatef (-width / 2.0f, -height / 2.0f, 0.0f);	
+	[glabelX drawAtPoint:NSMakePoint (10.0f, height - [glabelX frameSize].height - 10.0f)];
+	glPopMatrix();
+	
+	//Y-label
+	glPushMatrix();
+
+	//glRotatef(90,0,1,0);
+	glRotatef(90, 0, 0, 1);
+	glTranslatef(1.5, 1.7, 1.1);
+
+	glScalef (2.0f / width, -2.0f /  height, 1.0f);
+	glTranslatef (-width / 2.0f, -height / 2.0f, 0.0f);	
+	[glabelY drawAtPoint:NSMakePoint (10.0f, height - [glabelY frameSize].height - 10.0f)];
+	glPopMatrix();
+	
+	//Z-label
+	/*glPushMatrix();
+	//glRotatef(90,1,0,0);
+	glScalef (2.0f / width, -2.0f /  height, 1.0f);
+	glTranslatef (-width / 2.0f, -height / 2.0f, 0.0f);
+	//rotate
+	glRotatef(90, 0, 0, 1);
+	[glabelZ drawAtPoint:NSMakePoint (10.0f, height - [glabelZ frameSize].height - 10.0f)];
+	glPopMatrix();*/
+	
+	GLenum err = glGetError();
+	NSLog(@"glError: %s" ,(char *) gluErrorString (err));
+	/*
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();*/
 
 }
 
@@ -798,8 +902,19 @@ static void drawAnObject()
     glClear(GL_COLOR_BUFFER_BIT);
 	
     glClear(GL_DEPTH_BUFFER_BIT);
+	//scale = 30.0f;
+	//[self changeZoom];
+	[self drawLabels];
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(originx, originy, originz);
+	glRotatef(rotatey,0, 1, 0);
+	glRotatef(rotatez, 0, 0,1);
+	drawFrame();
+
 	if(dataloaded)
     {
+		
 		//glMatrixMode(GL_PROJECTION);
 
 		//glLoadIdentity();
@@ -818,9 +933,7 @@ static void drawAnObject()
 		//glFrustum(1.5*minmax[2*draw_dims[0]], 1.5*minmax[2*draw_dims[0]+1], 1.5*minmax[2*draw_dims[1]], 
 		//		   1.5*minmax[2*draw_dims[1]+1], 1.5*minmax[2*draw_dims[2]], 1.5*minmax[2*draw_dims[2]+1]);
 		//glFrustum(-2, 2, -2,2, 2, 6);
-        glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		glTranslatef(originx, originy, originz);
+        
 
 		/*
 		glMatrixMode(GL_PROJECTION);
@@ -838,15 +951,12 @@ static void drawAnObject()
 		//glTranslatef(originx, originy, originz);
 
 
-		glRotatef(rotatey,0, 1, 0);
-		glRotatef(rotatez, 0, 0,1);
+		
 
 		//glScalef(scale, scale, scale);
 
 		drawAnObject();
 
-		drawFrame();
-		
         //drawFrame();
     }
     glFlush();

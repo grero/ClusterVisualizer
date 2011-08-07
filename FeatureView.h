@@ -48,6 +48,7 @@ static BOOL dataloaded;
     @private
     NSOpenGLContext* _oglContext;
     NSOpenGLPixelFormat* _pixelFormat;
+	GLString *glabelX,*glabelY,*glabelZ;
     
     
     
