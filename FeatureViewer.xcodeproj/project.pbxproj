@@ -12,9 +12,11 @@
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		C710DD7B12E30CF300CCCE0C /* GLString.m in Sources */ = {isa = PBXBuildFile; fileRef = C710DD7912E30CF300CCCE0C /* GLString.m */; };
 		C71B0FD21257014400F594EA /* OpenPanelDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C71B0FD11257014400F594EA /* OpenPanelDelegate.m */; };
 		C72337D4124E2B2A00FC9EF6 /* FeatureViewerController.m in Sources */ = {isa = PBXBuildFile; fileRef = C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */; };
 		C723391B124EE6BD00FC9EF6 /* Cluster.m in Sources */ = {isa = PBXBuildFile; fileRef = C723391A124EE6BD00FC9EF6 /* Cluster.m */; };
+		C74166BB12E5DF850025C06C /* HistogramView.m in Sources */ = {isa = PBXBuildFile; fileRef = C74166BA12E5DF850025C06C /* HistogramView.m */; };
 		C75C02CD126946D1000E9BA8 /* ProgressPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = C75C02CC126946D1000E9BA8 /* ProgressPanel.m */; };
 		C76101A8124C5FBF00B6210B /* FeatureView.m in Sources */ = {isa = PBXBuildFile; fileRef = C76101A7124C5FBF00B6210B /* FeatureView.m */; };
 		C76101AF124C61F000B6210B /* readFeature.c in Sources */ = {isa = PBXBuildFile; fileRef = C76101AE124C61F000B6210B /* readFeature.c */; };
@@ -34,6 +36,18 @@
 		C7D281CA1257906F007D19EA /* WaveformsView.m in Sources */ = {isa = PBXBuildFile; fileRef = C7D281C91257906F007D19EA /* WaveformsView.m */; };
 		C7D281F31257A52B007D19EA /* nptLoadingEngine.c in Sources */ = {isa = PBXBuildFile; fileRef = C7D281F11257A52B007D19EA /* nptLoadingEngine.c */; };
 		C7D282241257B34A007D19EA /* WaveformsPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = C7D282231257B34A007D19EA /* WaveformsPanel.m */; };
+		DB19959C138817F6003A6D89 /* RasterWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = DB19959B138817F6003A6D89 /* RasterWindow.xib */; };
+		DB1995A013881966003A6D89 /* RasterView.m in Sources */ = {isa = PBXBuildFile; fileRef = DB19959F13881966003A6D89 /* RasterView.m */; };
+		DB262A8813C833D900A6DEC7 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = DB262A8713C833D900A6DEC7 /* Credits.rtf */; };
+		DB262AB513C8368000A6DEC7 /* release_notes.rtf in Resources */ = {isa = PBXBuildFile; fileRef = DB262AB413C8368000A6DEC7 /* release_notes.rtf */; };
+		DB2EFC0A13C324EC0065CD24 /* libmatio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DB2EFC0913C324EC0065CD24 /* libmatio.dylib */; };
+		DB2EFC0B13C3250F0065CD24 /* libmatio.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB2EFC0913C324EC0065CD24 /* libmatio.dylib */; };
+		DB91841B13440F580025F64A /* fileReaders.c in Sources */ = {isa = PBXBuildFile; fileRef = DB91841A13440F580025F64A /* fileReaders.c */; };
+		DBA05985136A42A1008639C2 /* libhdf5_hl.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DBA05984136A42A1008639C2 /* libhdf5_hl.6.dylib */; };
+		DBA05987136A42A1008639C2 /* libhdf5.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DBA05986136A42A1008639C2 /* libhdf5.6.dylib */; };
+		DBA05988136A42AE008639C2 /* libhdf5_hl.6.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBA05984136A42A1008639C2 /* libhdf5_hl.6.dylib */; };
+		DBA05989136A42AE008639C2 /* libhdf5.6.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBA05986136A42A1008639C2 /* libhdf5.6.dylib */; };
+		DBA05AC3136ACB41008639C2 /* computeFeatures.c in Sources */ = {isa = PBXBuildFile; fileRef = DBA05AC2136ACB41008639C2 /* computeFeatures.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -43,6 +57,9 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				DB2EFC0B13C3250F0065CD24 /* libmatio.dylib in CopyFiles */,
+				DBA05988136A42AE008639C2 /* libhdf5_hl.6.dylib in CopyFiles */,
+				DBA05989136A42AE008639C2 /* libhdf5.6.dylib in CopyFiles */,
 				C769E1021262E10700DF0154 /* libgsl.dylib in CopyFiles */,
 				C769E1C71262E52200DF0154 /* libgsl.0.dylib in CopyFiles */,
 				C78C3EAD1252D391002BB91A /* libhdf5.dylib in CopyFiles */,
@@ -65,12 +82,16 @@
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		8D1107310486CEB800E47090 /* FeatureViewer-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "FeatureViewer-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* FeatureViewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FeatureViewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C710DD7912E30CF300CCCE0C /* GLString.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GLString.m; sourceTree = "<group>"; };
+		C710DD7A12E30CF300CCCE0C /* GLString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GLString.h; sourceTree = "<group>"; };
 		C71B0FD01257014400F594EA /* OpenPanelDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenPanelDelegate.h; sourceTree = "<group>"; };
 		C71B0FD11257014400F594EA /* OpenPanelDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenPanelDelegate.m; sourceTree = "<group>"; };
 		C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FeatureViewerController.h; sourceTree = "<group>"; };
 		C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FeatureViewerController.m; sourceTree = "<group>"; };
 		C7233919124EE6BD00FC9EF6 /* Cluster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Cluster.h; sourceTree = "<group>"; };
 		C723391A124EE6BD00FC9EF6 /* Cluster.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Cluster.m; sourceTree = "<group>"; };
+		C74166B912E5DF850025C06C /* HistogramView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HistogramView.h; sourceTree = "<group>"; };
+		C74166BA12E5DF850025C06C /* HistogramView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HistogramView.m; sourceTree = "<group>"; };
 		C75C02CB126946D1000E9BA8 /* ProgressPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProgressPanel.h; sourceTree = "<group>"; };
 		C75C02CC126946D1000E9BA8 /* ProgressPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ProgressPanel.m; sourceTree = "<group>"; };
 		C76101A6124C5FBF00B6210B /* FeatureView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FeatureView.h; sourceTree = "<group>"; };
@@ -94,6 +115,18 @@
 		C7D281F21257A52B007D19EA /* nptLoadingEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nptLoadingEngine.h; sourceTree = "<group>"; };
 		C7D282221257B34A007D19EA /* WaveformsPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WaveformsPanel.h; sourceTree = "<group>"; };
 		C7D282231257B34A007D19EA /* WaveformsPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WaveformsPanel.m; sourceTree = "<group>"; };
+		DB19959B138817F6003A6D89 /* RasterWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = RasterWindow.xib; sourceTree = "<group>"; };
+		DB19959E13881966003A6D89 /* RasterView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RasterView.h; sourceTree = "<group>"; };
+		DB19959F13881966003A6D89 /* RasterView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RasterView.m; sourceTree = "<group>"; };
+		DB262A8713C833D900A6DEC7 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
+		DB262AB413C8368000A6DEC7 /* release_notes.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = release_notes.rtf; sourceTree = "<group>"; };
+		DB2EFC0913C324EC0065CD24 /* libmatio.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmatio.dylib; path = /Users/roger/tmp/libmatio.dylib; sourceTree = "<absolute>"; };
+		DB91841913440F580025F64A /* fileReaders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fileReaders.h; sourceTree = "<group>"; };
+		DB91841A13440F580025F64A /* fileReaders.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fileReaders.c; sourceTree = "<group>"; };
+		DBA05984136A42A1008639C2 /* libhdf5_hl.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libhdf5_hl.6.dylib; path = /usr/local/lib/libhdf5_hl.6.dylib; sourceTree = "<absolute>"; };
+		DBA05986136A42A1008639C2 /* libhdf5.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libhdf5.6.dylib; path = /usr/local/lib/libhdf5.6.dylib; sourceTree = "<absolute>"; };
+		DBA05AC1136ACB41008639C2 /* computeFeatures.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = computeFeatures.h; sourceTree = "<group>"; };
+		DBA05AC2136ACB41008639C2 /* computeFeatures.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = computeFeatures.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,6 +134,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DB2EFC0A13C324EC0065CD24 /* libmatio.dylib in Frameworks */,
 				C79EAC2E1260BF5C0066BCAD /* libgsl.dylib in Frameworks */,
 				C769E1C41262E4EB00DF0154 /* libgsl.0.dylib in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
@@ -108,6 +142,8 @@
 				C7610289124C81B200B6210B /* libhdf5.dylib in Frameworks */,
 				C76102DE124C840F00B6210B /* libhdf5_hl.dylib in Frameworks */,
 				C7AEFDAA125B5BA1007F5D43 /* Accelerate.framework in Frameworks */,
+				DBA05985136A42A1008639C2 /* libhdf5_hl.6.dylib in Frameworks */,
+				DBA05987136A42A1008639C2 /* libhdf5.6.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -120,6 +156,8 @@
 				256AC3D80F4B6AC300CF3369 /* FeatureViewerAppDelegate.h */,
 				C71B0FD01257014400F594EA /* OpenPanelDelegate.h */,
 				C7D281C81257906F007D19EA /* WaveformsView.h */,
+				DB19959E13881966003A6D89 /* RasterView.h */,
+				DB19959F13881966003A6D89 /* RasterView.m */,
 				C75C02CB126946D1000E9BA8 /* ProgressPanel.h */,
 				C75C02CC126946D1000E9BA8 /* ProgressPanel.m */,
 				C7D281C91257906F007D19EA /* WaveformsView.m */,
@@ -161,6 +199,7 @@
 		29B97314FDCFA39411CA2CEA /* FeatureViewer */ = {
 			isa = PBXGroup;
 			children = (
+				DB262A8713C833D900A6DEC7 /* Credits.rtf */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
@@ -181,6 +220,11 @@
 				C7D282231257B34A007D19EA /* WaveformsPanel.m */,
 				C79EAC2D1260BF5C0066BCAD /* libgsl.dylib */,
 				C769E1C31262E4EB00DF0154 /* libgsl.0.dylib */,
+				DB91841913440F580025F64A /* fileReaders.h */,
+				DB91841A13440F580025F64A /* fileReaders.c */,
+				DBA05984136A42A1008639C2 /* libhdf5_hl.6.dylib */,
+				DBA05986136A42A1008639C2 /* libhdf5.6.dylib */,
+				DB2EFC0913C324EC0065CD24 /* libmatio.dylib */,
 			);
 			name = FeatureViewer;
 			sourceTree = "<group>";
@@ -188,11 +232,15 @@
 		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
+				C710DD7912E30CF300CCCE0C /* GLString.m */,
+				C710DD7A12E30CF300CCCE0C /* GLString.h */,
 				256AC3F00F4B6AF500CF3369 /* FeatureViewer_Prefix.pch */,
 				C7D281F11257A52B007D19EA /* nptLoadingEngine.c */,
 				C79EA891125F02CE0066BCAD /* utils.c */,
 				C79EA892125F02CE0066BCAD /* utils.h */,
 				C7D281F21257A52B007D19EA /* nptLoadingEngine.h */,
+				DBA05AC1136ACB41008639C2 /* computeFeatures.h */,
+				DBA05AC2136ACB41008639C2 /* computeFeatures.c */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
 			);
 			name = "Other Sources";
@@ -201,9 +249,13 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				DB19959B138817F6003A6D89 /* RasterWindow.xib */,
 				8D1107310486CEB800E47090 /* FeatureViewer-Info.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
 				1DDD58140DA1D0A300B32029 /* MainMenu.xib */,
+				C74166B912E5DF850025C06C /* HistogramView.h */,
+				C74166BA12E5DF850025C06C /* HistogramView.m */,
+				DB262AB413C8368000A6DEC7 /* release_notes.rtf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -273,6 +325,9 @@
 				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
 				1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */,
 				C78C34471250AE34002BB91A /* todo.txt in Resources */,
+				DB19959C138817F6003A6D89 /* RasterWindow.xib in Resources */,
+				DB262A8813C833D900A6DEC7 /* Credits.rtf in Resources */,
+				DB262AB513C8368000A6DEC7 /* release_notes.rtf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -291,7 +346,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "install_name_tool -change /usr/local/hdf5/lib/libhdf5.dylib @executable_path/../Frameworks/libhdf5.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\ninstall_name_tool -change /usr/local/hdf5/lib/libhdf5_hl.dylib @executable_path/../Frameworks/libhdf5_hl.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\ninstall_name_tool -change /tmp/hdf5-1.8.3/hdf5/lib/libhdf5.6.dylib @executable_path/../Frameworks/libhdf5.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\ninstall_name_tool -change /tmp/hdf5-1.8.3/hdf5/lib/libhdf5_hl.6.dylib @executable_path/../Frameworks/libhdf5_hl.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\n\ninstall_name_tool -change /usr/local/lib/libgsl.dylib @executable_path/../Frameworks/libgsl.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\ninstall_name_tool -change /usr/local/lib/libgsl.0.dylib @executable_path/../Frameworks/libgsl.0.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"";
+			shellScript = "install_name_tool -change /usr/local/lib/libhdf5.dylib @executable_path/../Frameworks/libhdf5.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\ninstall_name_tool -change /usr/local/lib/libhdf5.6.dylib @executable_path/../Frameworks/libhdf5.6.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\n\ninstall_name_tool -id \"@executable_path/../Frameworks/libhdf5.6.dylib\" \"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH/libhdf5.dylib\"\n\ninstall_name_tool -change /usr/local/lib/libhdf5_hl.dylib @executable_path/../Frameworks/libhdf5_hl.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\ninstall_name_tool -change /usr/local/lib/libhdf5_hl.6.dylib @executable_path/../Frameworks/libhdf5_hl.6.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\n\ninstall_name_tool -id @executable_path/../Frameworks/libhdf5_hl.dylib  \"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH/libhdf5_hl.dylib\"\ninstall_name_tool -id @executable_path/../Frameworks/libhdf5_hl.6.dylib  \"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH/libhdf5_hl.6.dylib\"\n\n\ninstall_name_tool -change /tmp/hdf5-1.8.3/hdf5/lib/libhdf5.6.dylib @executable_path/../Frameworks/libhdf5.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\ninstall_name_tool -change /tmp/hdf5-1.8.3/hdf5/lib/libhdf5_hl.6.dylib @executable_path/../Frameworks/libhdf5_hl.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\n\ninstall_name_tool -change /usr/local/lib/libgsl.dylib @executable_path/../Frameworks/libgsl.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\ninstall_name_tool -id @executable_path/../Frameworks/libgsl.dylib  \"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH/libgsl.dylib\"\ninstall_name_tool -change /usr/local/lib/libgsl.0.dylib @executable_path/../Frameworks/libgsl.0.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\ninstall_name_tool -id @executable_path/../Frameworks/libgsl.0.dylib  \"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH/libgsl.0.dylib\"\n\ninstall_name_tool -change /usr/local/lib/libmatio.dylib @executable_path/../Framework/libmatio.dylib \"$TARGET_BUILD_DIR/$EXECUTABLE_PATH\"\ninstall_name_tool -id @executable_path/../Frameworks/libmatio.dylib  \"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH/libmatio.dylib\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -313,6 +368,11 @@
 				C7D282241257B34A007D19EA /* WaveformsPanel.m in Sources */,
 				C79EA893125F02CE0066BCAD /* utils.c in Sources */,
 				C75C02CD126946D1000E9BA8 /* ProgressPanel.m in Sources */,
+				C710DD7B12E30CF300CCCE0C /* GLString.m in Sources */,
+				C74166BB12E5DF850025C06C /* HistogramView.m in Sources */,
+				DB91841B13440F580025F64A /* fileReaders.c in Sources */,
+				DBA05AC3136ACB41008639C2 /* computeFeatures.c in Sources */,
+				DB1995A013881966003A6D89 /* RasterView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -354,6 +414,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/hdf5/lib,
+					"\"$(SRCROOT)/../../../../tmp\"",
 				);
 				PRODUCT_NAME = FeatureViewer;
 			};
@@ -372,6 +433,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/hdf5/lib,
+					"\"$(SRCROOT)/../../../../tmp\"",
 				);
 				PRODUCT_NAME = FeatureViewer;
 			};
@@ -409,11 +471,26 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = /usr/local/hdf5/include;
-				LIBRARY_SEARCH_PATHS = /usr/local/hdf5/lib;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					/usr/local/hdf5/include,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib,
+					/usr/local/hdf5/lib,
+				);
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-lmatio",
+					"-lgsl",
+					"-L/usr/local/lib/",
+					"-L/usr/local/hdf5/lib",
+					"-lhdf5",
+				);
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;
 			};

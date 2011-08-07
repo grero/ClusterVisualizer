@@ -628,7 +628,6 @@
 				[cluster computeISIs:timestamps];
 				[cluster setIsTemplate:0];
 				[cluster setActive: 1];
-				
 				[tempArray addObject:cluster];
 			}
 			NSZoneFree([self zone], cids);
@@ -677,7 +676,7 @@
 				//[cluster computeISIs:timestamps];
 				[cluster setIsTemplate:0];
 				[cluster setActive: 1];
-				
+				[cluster updateDescription];
 				[tempArray addObject:cluster];
 			}
 			//now loop through the overlap matrix, adding points to the clusters as we go along

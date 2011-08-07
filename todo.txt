@@ -61,4 +61,20 @@ should be put into cluster 0. If deleting a cluster that was the result of some 
 
 - Implement text for axes. This is most relevant for the waveformsview, where we would like to know the amplitudes. I think the best way of doing this is to draw text into a bitmap context, and then render this bitmap as a glTexture. Use graphicsContextWithBitmapImageRep for this, then the drawAtPoint method of the NSString class
 - Implement offline drawing. Since speed is less of a concern here, I'm thinking I could do this by re-drawing the current view using quartz, on a separate thread.
-- One remaining issue now is that when the waveformsview is resized, calling the [Cluster image] method returns the image of the previously drawn cluster instead of the current cluster.
+- One remaining issue now is that when the waveformsview is resized, calling the [Cluster image] method returns the image of the previously drawn cluster instead of the current cluster. FIXED (sort of; more like cirumvented by drawing everything once as the clusters are loaded)
+- Implement drag and drop; this is especially useful for waveforms, but could also be handy for feature space views. If a drag in initiated, create a pdf of the view which is then placed on the clipboard. The receiving application should then be able to open the pdf in its own view
+- Rotation in feature space should always happen around the centroid of the cluster currently displayed, or teh combined centroid of many clusters. Right now, rotation always happens around an axis centered in feature space, which looks weird for peripheral clusters
+- There some weirdness going on with the rotation. I think that if I allow events to be sent to the display without them needing to have gained focus, I sometimes end up rotation the waveformsview instead of the feature view - FIXED
+- Implement zoom for waveforms view. This is especially useful for zooming in on channels when displaying polytrode data - Almost FIXED
+- Allow several clusters to be super-imposed in the waveformsview
+- There is currently no easy way of comparing clusters
+- For polytrode data, it would be interesting to be able to automatically load features on channels for which the cluster is active. Right now, I have no way of telling which are a cluster's active channels, though
+- Add a progress meter to the loading of Features
+- Notification sent from WaveformsView is not received by FeatureViewerController - FIXED
+- Ability to select waveforms larger than a certain threshold. This could take the form of a horizontal line that could be moved up and down; waveforms that exceed the threshold are highlighted.
+- It would be really cool to have an interactive "cell classifier" running, such that, as waveforms are added or removed from a cluster, a tenative classification is attempted. This could be based on burst frequency, spike width, ISI shape, etc, etc. There should also be a away to calibrate the algorithm if the cell type of a cluster is know.
+- Cluster colors are not reflected in the feature view if features are loaded after the clusters
+- Allow use of model to cluster data. This would be useful for sorting of multiple sessions, where the session with the most number of spikes can be used to create the model, and subsequent sessions can be automatically sorted by apply the model, i.e. by assigning each waveoform to the cluster to which is has the smallest mahalanobis distance
+- Allow running KlustaKwik directly on a selected feature set
+- Read descriptor files to get groups from polytrodes
+- Allow pruning of waveforms larger than/smaller than a certain (confidence) interval around the mean
