@@ -48,12 +48,14 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color);
 	NSMutableArray *highlightedChannels;
 	//data to hold information on which waveforms are active
 	NSMutableIndexSet *waveformIndices;
+    BOOL drawLabels, drawMean, drawStd;
     
     
 }
 
 @property (retain,readwrite) NSMutableData *highlightWaves;
 @property (retain,readwrite) NSMutableArray *highlightedChannels;
+@property (assign,readwrite) BOOL drawLabels, drawMean, drawStd;
 
 //OpenGL related functions
 +(NSOpenGLPixelFormat*)defaultPixelFormat;
@@ -82,5 +84,8 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color);
 -(void)showOnlyHighlighted;
 -(NSImage*)image;
 -(void) createAxis;
+
+-(void)setDrawStd:(BOOL)_drawStd;
+-(void)setDrawMean:(BOOL)_drawMean;
 
 @end

@@ -70,8 +70,16 @@
 									
 																					
 	[filterPredicates setRowTemplates: [NSArray arrayWithObjects:row,nil]];
-
-	
+    
+    //setup some usedefaults
+    [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES], @"autoscaleaxes",
+                                                             [NSNumber numberWithBool: YES], @"showFeatureAxesLabels",
+                                                             [NSNumber numberWithBool: YES],
+                                                             @"showWaveformsAxesLabels",
+                                                             [NSNumber numberWithBool: YES],
+                                                             @"showWaveformsMean",
+                                                             [NSNumber numberWithBool: YES],
+                                                             @"showWaveformsStd",nil]];
 }
 
 -(BOOL) acceptsFirstResponder
@@ -191,12 +199,17 @@
 				//find min
 				vDSP_minv(tmp_data2,1,&min,H.rows*(H.cols));
 				l = max-min;
-				//scale each feature to be between -1 and +1
-				for(j=0;j<(H.rows)*(H.cols);j++)
-				{
-					tmp_data2[j] = 2*(tmp_data2[j]-min)/l-1;
+				//scale each feature to be between -1 and +1 if autoscale is requested
+                //note that this is an overall scaling, so it should not distort the relationship
+                //between dimensions
+                if( [[NSUserDefaults standardUserDefaults] boolForKey:@"autoscaleaxes"] == YES )
+                {
+                    for(j=0;j<(H.rows)*(H.cols);j++)
+                    {
+                        tmp_data2[j] = 2*(tmp_data2[j]-min)/l-1;
+                    }
 				}
-				
+                
 	
 				[data appendBytes:tmp_data2 length: H.rows*H.cols*sizeof(float)];
 				NSZoneFree([self zone], tmp_data);

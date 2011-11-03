@@ -27,16 +27,21 @@
 			return NO;
 		}
 	}
-	//next compare the second last path component to see if its a cluster
-	//if ([[fileComps objectAtIndex:1 /*[fileComps count]-2]*/] isEqualToString:extension]) 
-	if( [extensions containsObject: [fileComps objectAtIndex:1]] )
-	{
-		return YES;
-	}
-	else
-	{
-		return NO;
-	}
+    if( [fileComps count] > 1)
+    {
+        //next compare the second last path component to see if its a cluster
+        //if ([[fileComps objectAtIndex:1 /*[fileComps count]-2]*/] isEqualToString:extension]) 
+        if( [extensions containsObject: [fileComps objectAtIndex:1]] )
+        {
+            return YES;
+        }
+        else
+        {
+            return NO;
+        }
+    }
+    else
+        return NO;
 
 }
 

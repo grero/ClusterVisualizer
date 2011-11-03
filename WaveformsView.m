@@ -15,10 +15,14 @@
 
 @synthesize highlightWaves;
 @synthesize highlightedChannels;
+@synthesize drawLabels;//,drawMean,drawStd;
 
 -(void)awakeFromNib
 {
     wfDataloaded = NO;
+    drawLabels = NO;
+    drawMean = YES;
+    drawStd = YES;
 }
 
 -(BOOL)acceptsFirstResponder
@@ -135,7 +139,14 @@
     wavesize = channels*timepoints;
     waveIndexSize = channels*(2*timepoints-2);
 	//+3 to make room for mean waveform and +/- std
-    nWfIndices = (nwaves+3)*wavesize;
+    nWfIndices = nwaves+3;
+    /*
+    if (drawMean)
+        wfIndices+=1;
+    if (drawStd)
+        wfIndices +=2;
+    */
+    nWfIndices *= wavesize;
     nWfVertices = nWfIndices;
     num_spikes = nwaves;
 	orig_num_spikes = nwaves;
@@ -716,7 +727,9 @@ static void wfDrawAnObject()
     //glClear(GL_DEPTH_BUFFER_BIT);
     if(wfDataloaded)
     {
-		[self drawLabels];
+        if (drawLabels) {
+            [self drawLabels];
+        }
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		
@@ -1538,6 +1551,46 @@ static void wfDrawAnObject()
 																								   [NSNumber numberWithUnsignedInt:idx[0]],
 																								   @"selected",nil]];
 }	
+
+-(void)setDrawMean:(BOOL)_drawMean
+{
+    if(( _drawMean == NO) && (drawMean == YES) )
+    {
+        if( drawStd == NO )
+        {
+            //if we want to turn off drawing of mean, we have to reduce the number of waveforms to draw by the size of one waveform
+            nWfIndices-=wavesize;
+        }
+        else
+        {
+            //since we are drawing just the standard deviation, we have to shift the indices to skip the mean waveform
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
+            unsigned int *idx = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
+            unsigned int i,start;
+            start = (nWfIndices/waveIndexSize - 3)*waveIndexSize;
+            for(i=start;i<(start+2)*waveIndexSize;
+            glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+            
+            
+        }
+    }
+    else if (( _drawMean == YES) && (drawMean == NO))
+    {
+        if( drawStd == NO )
+        {
+            //if we want to turn on drawing of mean, we have to increase the number of waveforms to draw by the size of one waveform
+            nWfIndices+=wavesize;
+        }
+        else
+        {
+         //shift indices
+        }
+    
+    }
+    drawMean = _drawMean;
+
+}
+
 
 -(void)dealloc
 {

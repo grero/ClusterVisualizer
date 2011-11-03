@@ -237,6 +237,7 @@
     [vertex_data getBytes:vertices length: rows*cols*sizeof(float)];
     minmax = realloc(minmax,2*cols*sizeof(float));
     int cl;
+    //this only works if we have rescaled the axis
     for(cl=0;cl<cols;cl++)
     {
         minmax[2*cl] = -1.5;
