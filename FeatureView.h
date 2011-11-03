@@ -49,6 +49,7 @@ static BOOL dataloaded;
     NSOpenGLContext* _oglContext;
     NSOpenGLPixelFormat* _pixelFormat;
 	GLString *glabelX,*glabelY,*glabelZ;
+    BOOL drawAxesLabels;
     
     
     
@@ -85,6 +86,7 @@ static BOOL dataloaded;
 -(void) resetZoom;
 -(void) changeZoom;
 -(void) drawLabels;
+-(void) setDrawLabels: (BOOL)_drawLabels;
 -(NSImage*)image;
 //-(void) drawBox;
 -(NSData*)getVertexData;

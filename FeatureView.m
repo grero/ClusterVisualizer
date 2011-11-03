@@ -36,6 +36,7 @@
     base_color[0] = 1.0f;
 	base_color[1] = 0.85f;
 	base_color[2] = 0.35f;
+    drawAxesLabels = NO;
     NSOpenGLPixelFormatAttribute attrs[] =
     {
         NSOpenGLPFAAllRenderers,YES,
@@ -50,6 +51,9 @@
                                                  name: NSViewGlobalFrameDidChangeNotification object: self];
     */
      //[self setOpenGLContext: [[NSOpenGLContext alloc] initWithFormat:[NSOpenGLView defaultPixelFormat] shareContext:nil]];
+    
+    //register for defaults updates
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:NSUserDefaultsDidChangeNotification object:nil];
     
 }
 
@@ -905,7 +909,10 @@ static void drawAnObject()
     glClear(GL_DEPTH_BUFFER_BIT);
 	//scale = 30.0f;
 	//[self changeZoom];
-	[self drawLabels];
+    if( drawAxesLabels )
+    {
+        [self drawLabels];
+    }
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glTranslatef(originx, originy, originz);
@@ -1091,6 +1098,10 @@ static void drawAnObject()
     if([[notification name] isEqualToString:@"highlight"])
     {
         [self highlightPoints:[notification userInfo] inCluster: [notification object]];
+    }
+    else if( [[notification name] isEqualToString:NSUserDefaultsDidChangeNotification])
+    {
+        [self setDrawLabels:[[[NSUserDefaults standardUserDefaults] objectForKey:@"showFeatureAxesLabels"] boolValue]];
     }
 }
 
@@ -1350,6 +1361,11 @@ static void drawAnObject()
 	}
 	[self setNeedsDisplay:needDisplay];
 	
+}
+
+-(void) setDrawLabels:(BOOL)_drawLabels
+{
+    drawAxesLabels = _drawLabels;
 }
 
 -(void)dealloc

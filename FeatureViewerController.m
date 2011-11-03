@@ -61,8 +61,7 @@
 	[self setReleasenotes: reln];
 	autoLoadWaveforms = YES;
 	//set up predicates for filter
-	NSPredicateEditorRowTemplate *row = [[[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions:
-										  [NSArray arrayWithObjects:[NSExpression expressionForKeyPath:@"valid"],[NSExpression expressionForKeyPath: @"active"],nil] rightExpressions:
+	NSPredicateEditorRowTemplate *row = [[[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions: [NSArray arrayWithObjects:[NSExpression expressionForKeyPath:@"valid"],[NSExpression expressionForKeyPath: @"active"],nil] rightExpressions:
 										  [NSArray arrayWithObjects:[NSExpression expressionForConstantValue: [NSNumber numberWithInt:1]],[NSExpression expressionForConstantValue:[NSNumber numberWithInt:1]],nil] modifier: NSDirectPredicateModifier operators:
 										  [NSArray arrayWithObjects:[NSNumber numberWithInt: NSEqualToPredicateOperatorType],[NSNumber numberWithInt: NSNotEqualToPredicateOperatorType],nil] options:
 										 NSCaseInsensitivePredicateOption] autorelease];
@@ -72,14 +71,11 @@
 	[filterPredicates setRowTemplates: [NSArray arrayWithObjects:row,nil]];
     
     //setup some usedefaults
-    [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES], @"autoscaleaxes",
-                                                             [NSNumber numberWithBool: YES], @"showFeatureAxesLabels",
-                                                             [NSNumber numberWithBool: YES],
-                                                             @"showWaveformsAxesLabels",
-                                                             [NSNumber numberWithBool: YES],
-                                                             @"showWaveformsMean",
-                                                             [NSNumber numberWithBool: YES],
-                                                             @"showWaveformsStd",nil]];
+    [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithBool:YES], @"autoScaleAxes",
+                                      [NSNumber numberWithBool: YES], @"showFeatureAxesLabels",
+                                      [NSNumber numberWithBool: NO], @"showWaveformsAxesLabels",
+                                      [NSNumber numberWithBool: YES], @"showWaveformsMean",/*
+                                      [NSNumber numberWithBool: YES], @"showWaveformsStd",*/nil]];
 }
 
 -(BOOL) acceptsFirstResponder
@@ -1377,17 +1373,20 @@
         }
         //isiIdx contains the indices of the isis; the first index is the index of the shortest isi
         //only mark if the shortest ISI is less than 1000 microseconds
-        if ( times[tpts[pts[0]+1]]-times[tpts[pts[0]]] < 1000)
+        if(pts)
         {
-        
-            unsigned int *spts = malloc(2*sizeof(unsigned int));
-            spts[0] = pts[0];
-            spts[1] = pts[0]+1;
-            NSDictionary *params = [NSDictionary dictionaryWithObjects: [NSArray arrayWithObjects:
-                                                                         [NSData dataWithBytes:spts length:2*sizeof(unsigned int)],[activeCluster color],nil]
-                                                               forKeys: [NSArray arrayWithObjects:@"points",@"color",nil]];
-            [[NSNotificationCenter defaultCenter] postNotificationName: @"highlight" object: params];
-            free(spts);
+            if ( times[tpts[pts[0]+1]]-times[tpts[pts[0]]] < 1000)
+            {
+            
+                unsigned int *spts = malloc(2*sizeof(unsigned int));
+                spts[0] = pts[0];
+                spts[1] = pts[0]+1;
+                NSDictionary *params = [NSDictionary dictionaryWithObjects: [NSArray arrayWithObjects:
+                                                                             [NSData dataWithBytes:spts length:2*sizeof(unsigned int)],[activeCluster color],nil]
+                                                                   forKeys: [NSArray arrayWithObjects:@"points",@"color",nil]];
+                [[NSNotificationCenter defaultCenter] postNotificationName: @"highlight" object: params];
+                free(spts);
+            }
         }
     }
     else if ( [selection isEqualToString:@"Remove waveforms"] )

@@ -23,6 +23,8 @@
     drawLabels = NO;
     drawMean = YES;
     drawStd = YES;
+    //register for defaults updates
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name: NSUserDefaultsDidChangeNotification object:nil];
 }
 
 -(BOOL)acceptsFirstResponder
@@ -1031,6 +1033,12 @@ static void wfDrawAnObject()
     {
         [self highlightWaveforms:[[notification userInfo] objectForKey:@"points"]];
     }
+    else if( [[notification name] isEqualToString:NSUserDefaultsDidChangeNotification] )
+    {
+        [self setDrawMean:[[NSUserDefaults standardUserDefaults] boolForKey:@"showWaveformsMean"]];
+        [self setDrawStd:[[NSUserDefaults standardUserDefaults] boolForKey:@"showWaveformsStd"]];
+        [self setDrawLabels:[[NSUserDefaults standardUserDefaults] boolForKey:@"showWaveformAxesLabels"]];
+    }
 }
     
 //event handlers
@@ -1498,14 +1506,13 @@ static void wfDrawAnObject()
 	}
 	//create and send the notification
 	NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
-                                                                [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects: 
-                                                                                                                      @"points",@"color",nil]];
+                                                                [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects:                                                                                                                       @"points",@"color",nil]];
+    
     [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object: self userInfo: params];
 	unsigned int *idx = (unsigned int*)[hdata bytes];
 	
-	[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:self userInfo: [NSDictionary dictionaryWithObjectsAndKeys:
-																								   [NSNumber numberWithUnsignedInt:idx[0]],
-																								   @"selected",nil]];
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:self userInfo: [NSDictionary dictionaryWithObjectsAndKeys:																							   [NSNumber numberWithUnsignedInt:idx[0]],
+													@"selected",nil]];
 }
 
 -(IBAction)moveLeft:(id)sender
@@ -1542,52 +1549,92 @@ static void wfDrawAnObject()
 	}
 	//create and send the notification
 	NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
-                                                                [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects: 
-                                                                                                                      @"points",@"color",nil]];
+                                                                [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects:                                                                                                                       @"points",@"color",nil]];
+    
     [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:self userInfo: params];
 	unsigned int *idx = (unsigned int*)[hdata bytes];
 	
-	[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:self userInfo: [NSDictionary dictionaryWithObjectsAndKeys:
-																								   [NSNumber numberWithUnsignedInt:idx[0]],
-																								   @"selected",nil]];
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:self userInfo: [NSDictionary dictionaryWithObjectsAndKeys:																							   [NSNumber numberWithUnsignedInt:idx[0]],
+													@"selected",nil]];
 }	
 
 -(void)setDrawMean:(BOOL)_drawMean
 {
-    if(( _drawMean == NO) && (drawMean == YES) )
+    if(wfDataloaded)
     {
-        if( drawStd == NO )
+        if(( _drawMean == NO) && (drawMean == YES) )
         {
-            //if we want to turn off drawing of mean, we have to reduce the number of waveforms to draw by the size of one waveform
-            nWfIndices-=wavesize;
+            if( drawStd == NO )
+            {
+                //if we want to turn off drawing of mean, we have to reduce the number of waveforms to draw by the size of one waveform
+                nWfIndices-=waveIndexSize;
+            }
+            else
+            {
+                //since we are drawing just the standard deviation, we have to shift the indices to skip the mean waveform
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
+                unsigned int *idx = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
+                if(idx)
+                {
+                    unsigned int i,j,start;
+                    start = (nWfIndices/waveIndexSize - 3);
+                    for(i=start;i<(start+2);i++)
+                    {
+                        for(j=0;j<waveIndexSize;j++)
+                        {
+                            idx[i*waveIndexSize+j] = idx[(i+1)*waveIndexSize+j];
+                        }
+                    }
+                    nWfIndices-=waveIndexSize;
+                    glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+                }
+                
+                
+            }
         }
-        else
+        else if (( _drawMean == YES) && (drawMean == NO))
         {
-            //since we are drawing just the standard deviation, we have to shift the indices to skip the mean waveform
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
-            unsigned int *idx = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
-            unsigned int i,start;
-            start = (nWfIndices/waveIndexSize - 3)*waveIndexSize;
-            for(i=start;i<(start+2)*waveIndexSize;
-            glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-            
-            
+            if( drawStd == NO )
+            {
+                //if we want to turn on drawing of mean, we have to increase the number of waveforms to draw by the size of one waveform
+                nWfIndices+=waveIndexSize;
+            }
+            else
+            {
+             //shift indices
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
+                unsigned int *idx = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
+                if(idx)
+                {
+                    unsigned int i,j,start;
+                    start = (nWfIndices/waveIndexSize -2);
+                    //first shift std up
+                    for(i=start+1;i>=(start);i--)
+                    {
+                        for(j=0;j<waveIndexSize;j++)
+                        {
+                            idx[(i+1)*waveIndexSize+j] = idx[i*waveIndexSize+j];
+                        }
+                    }
+                    //then fill in the mean
+                    for(j=0;j<waveIndexSize;j++)
+                    {
+                        idx[start*waveIndexSize+j] = idx[(start-1)*waveIndexSize+j] + wavesize;
+                    }
+                    nWfIndices+=waveIndexSize;
+                    glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+                }
+
+                
+            }
+        
         }
-    }
-    else if (( _drawMean == YES) && (drawMean == NO))
-    {
-        if( drawStd == NO )
-        {
-            //if we want to turn on drawing of mean, we have to increase the number of waveforms to draw by the size of one waveform
-            nWfIndices+=wavesize;
-        }
-        else
-        {
-         //shift indices
-        }
-    
-    }
-    drawMean = _drawMean;
+        drawMean = _drawMean;
+    }   
+}
+
+-(void)setDrawStd:(BOOL)_drawStd
+{
 
 }
 
