@@ -74,8 +74,8 @@
     [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithBool:YES], @"autoScaleAxes",
                                       [NSNumber numberWithBool: YES], @"showFeatureAxesLabels",
                                       [NSNumber numberWithBool: NO], @"showWaveformsAxesLabels",
-                                      [NSNumber numberWithBool: YES], @"showWaveformsMean",/*
-                                      [NSNumber numberWithBool: YES], @"showWaveformsStd",*/nil]];
+                                      [NSNumber numberWithBool: YES], @"showWaveformsMean",
+                                      [NSNumber numberWithBool: YES], @"showWaveformsStd",nil]];
 }
 
 -(BOOL) acceptsFirstResponder
@@ -198,7 +198,7 @@
 				//scale each feature to be between -1 and +1 if autoscale is requested
                 //note that this is an overall scaling, so it should not distort the relationship
                 //between dimensions
-                if( [[NSUserDefaults standardUserDefaults] boolForKey:@"autoscaleaxes"] == YES )
+                if( [[NSUserDefaults standardUserDefaults] boolForKey:@"autoScaleAxes"] == YES )
                 {
                     for(j=0;j<(H.rows)*(H.cols);j++)
                     {
@@ -814,8 +814,7 @@
     NSZoneFree([self zone], _points);
     [self loadWaveforms:cluster];
     //allow the waveforms view to receive notification about highlights
-    [[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) 
-                                                 name:@"highlight" object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
 
     
 }
@@ -1266,8 +1265,7 @@
 	[selectClusterOption removeItemAtIndex:idx];
 	[selectClusterOption insertItemWithTitle:new_selection atIndex:idx];
 	//make sure the waveforms view receives notification of highlights
-	[[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) 
-												 name:@"highlight" object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
 	
 	
 }
@@ -1324,8 +1322,7 @@
         [sender removeItemAtIndex:idx];
         [sender insertItemWithTitle:new_selection atIndex:idx];
         //make sure the waveforms view receives notification of highlights
-        [[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) 
-                                                     name:@"highlight" object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
 
     }
     else if ( [selection isEqualToString:@"Hide waveforms"] )
@@ -1881,8 +1878,7 @@
 		[selectClusterOption removeItemAtIndex:idx];
 		[selectClusterOption insertItemWithTitle:new_selection atIndex:idx];
 		//make sure the waveforms view receives notification of highlights
-		[[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) 
-													 name:@"highlight" object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
 		selectedClusters = [[[NSIndexSet alloc] initWithIndexSet:indexes] retain];
 	}
 	
