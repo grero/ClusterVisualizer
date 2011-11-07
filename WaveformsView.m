@@ -1148,6 +1148,11 @@ static void wfDrawAnObject()
 		return;
 
 	}
+    else if ([theEvent modifierFlags] & NSShiftKeyMask )
+    {
+        //if we select while the shift key is down, add the poin to the already selected points
+        
+    }
     else 
     {
         //get only the relevant vertices
@@ -1201,18 +1206,15 @@ static void wfDrawAnObject()
     }
     [hdata appendBytes:&wfidx length:sizeof(unsigned int)];
     /*NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
-                                                                [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects: 
-                                                                                                                      @"points",@"color",nil]];
+                                                                [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects:                                                                                                                      @"points",@"color",nil]];
     [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:params];*/
 	NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
-                                                                [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects: 
-                                                                                                                      @"points",@"color",nil]];
+                                                                [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects:                                                                                                                     @"points",@"color",nil]];
     [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object: self userInfo: params];
 	unsigned int *idx = (unsigned int*)[hdata bytes];
 	
-	[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:self userInfo: [NSDictionary dictionaryWithObjectsAndKeys:
-																								   [NSNumber numberWithUnsignedInt:idx[0]],
-																								   @"selected",nil]];
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:self userInfo: [NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithUnsignedInt:idx[0]],
+													@"selected",nil]];
 	
     //[self highlightWaveform:wfidx];
     
@@ -1564,20 +1566,27 @@ static void wfDrawAnObject()
     {
         if(( _drawMean == NO) && (drawMean == YES) )
         {
-            if( drawStd == NO )
+            /*if( drawStd == NO )
             {
                 //if we want to turn off drawing of mean, we have to reduce the number of waveforms to draw by the size of one waveform
                 nWfIndices-=waveIndexSize;
             }
             else
-            {
+            {*/
                 //since we are drawing just the standard deviation, we have to shift the indices to skip the mean waveform
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
                 unsigned int *idx = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
                 if(idx)
                 {
                     unsigned int i,j,start;
-                    start = (nWfIndices/waveIndexSize - 3);
+                    if (drawStd == YES)
+                    {
+                        start = (nWfIndices/waveIndexSize - 3);
+                    }
+                    else
+                    {
+                        start = (nWfIndices/waveIndexSize - 1);
+                    }
                     for(i=start;i<(start+2);i++)
                     {
                         for(j=0;j<waveIndexSize;j++)
@@ -1590,24 +1599,31 @@ static void wfDrawAnObject()
                 }
                 
                 
-            }
+            //}
         }
         else if (( _drawMean == YES) && (drawMean == NO))
         {
-            if( drawStd == NO )
+            /*if( drawStd == NO )
             {
                 //if we want to turn on drawing of mean, we have to increase the number of waveforms to draw by the size of one waveform
                 nWfIndices+=waveIndexSize;
             }
             else
-            {
+            {*/
              //shift indices
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
                 unsigned int *idx = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
                 if(idx)
                 {
                     unsigned int i,j,start;
-                    start = (nWfIndices/waveIndexSize -2);
+                    if( drawStd == YES )
+                    {
+                        start = (nWfIndices/waveIndexSize -2);
+                    }
+                    else
+                    {
+                        start = (nWfIndices/waveIndexSize);
+                    }
                     //first shift std up
                     for(i=start+1;i>=(start);i--)
                     {
@@ -1626,16 +1642,39 @@ static void wfDrawAnObject()
                 }
 
                 
-            }
+            //}
         
         }
         drawMean = _drawMean;
+        [self setNeedsDisplay:YES]; 
     }   
 }
 
 -(void)setDrawStd:(BOOL)_drawStd
 {
-
+    if( wfDataloaded )
+    {   
+        //check that we are actually changing the state
+        if( (_drawStd == YES ) && (drawStd == NO ) )
+        {
+            if( drawMean == NO )
+            {
+                //if we are not drawing anything, 
+                nWfIndices+=2*waveIndexSize;
+            }
+            else
+            {
+                //since standard devation is always drawn after the mean, we can just do the same
+                nWfIndices+=2*waveIndexSize;
+            }
+        }
+        else if ( (_drawStd == NO) && (drawStd == YES ))
+        {
+            nWfIndices-=2*waveIndexSize;
+        }
+        drawStd = _drawStd;
+        [self setNeedsDisplay:YES];
+    }
 }
 
 
