@@ -56,6 +56,7 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:NSUserDefaultsDidChangeNotification object:nil];
 
 	picked = NO;
+    selectedClusters = [[NSMutableArray  arrayWithCapacity:10] retain];
     
 }
 
@@ -323,6 +324,7 @@
 -(void) showCluster: (Cluster *)cluster
 {
     currentCluster = cluster;
+    [selectedClusters addObject: cluster];
     int cid = [cluster.name intValue];
 	unsigned int new_size = [[cluster npoints] intValue];
     //do this in a very inane way for now, just to see if it works
@@ -401,6 +403,11 @@
 
 -(void) hideCluster: (Cluster *)cluster
 {
+    [selectedClusters removeObject:cluster];
+    if( [selectedClusters count] >= 1 )
+    {
+        currentCluster = [selectedClusters lastObject];
+    }
 	unsigned int new_size = [[cluster npoints] intValue];
 	//first check if hiding this cluste takes away all indices, if so, simply set nindices to 0
 	if(nindices - new_size ==0)
@@ -563,7 +570,7 @@
     GLfloat *_color = (GLfloat*)[color bytes];
     
     glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-    GLfloat *_colors = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+    GLfloat *_colors = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
     //reset the colors before doing the new colors
     if(highlightedPoints != NULL )
     {
@@ -572,17 +579,17 @@
         //GLfloat *_bcolor = (GLfloat*)[bcolor bytes];
         for(i=0;i<_nhpoints;i++)
         {
-            _colors[_hpoints[i]*3] = _color[0];
-            _colors[_hpoints[i]*3+1] = _color[1];
-            _colors[_hpoints[i]*3+2] = _color[2];
+            _colors[_hpoints[i]*3] = 1-_colors[_hpoints[i]*3];
+            _colors[_hpoints[i]*3+1] = 1-_colors[_hpoints[i]*3+1];
+            _colors[_hpoints[i]*3+2] =1-_colors[_hpoints[i]*3+2];
         }
     }
     
     for(i=0;i<_npoints;i++)
     {
-        _colors[idx[i]*3] = 1-_color[0];
-        _colors[idx[i]*3+1] = 1-_color[1];
-        _colors[idx[i]*3+2] = 1-_color[2];
+        _colors[idx[i]*3] = 1-_colors[idx[i]*3];
+        _colors[idx[i]*3+1] = 1-_colors[idx[i]*3+1];
+        _colors[idx[i]*3+2] = 1- _colors[idx[i]*3+2];
     }
 	glUnmapBuffer(GL_ARRAY_BUFFER);
     if( highlightedPoints == NULL)
@@ -1280,7 +1287,8 @@ static void drawAnObject()
 		//
 		double dmin = INFINITY;
 		unsigned int wfidx = nindices;
-		NSUInteger i,k;
+		NSUInteger i,k,cidx;
+        cidx = wfidx;
 		double dT = INFINITY;
         //go through each index currently drawn
         //[indexset enumerateIndexesUsingBlock:^(NSUInteger k, BOOL *stop)
@@ -1311,6 +1319,7 @@ static void drawAnObject()
 			if( (rv<dmin) )
 			{
 				dmin = rv;
+                cidx = k;
 				if( rv < dT)
 				{
 						//again, the index to pass to the highlight function needs to be in cluster coordinates, not global coordinates
@@ -1321,6 +1330,38 @@ static void drawAnObject()
             i+=1;
 
 		}
+        Cluster *useCluster = nil;
+        if ([selectedClusters count] ==1 )
+        {
+            useCluster = [selectedClusters objectAtIndex:0];
+        }
+        else if ([selectedClusters count]>1) 
+        {
+            
+        
+            //now figure out which cluster the select point was in
+            NSUInteger q = 0;
+            useCluster = [selectedClusters objectAtIndex:q];
+            while( [[useCluster indices] containsIndex:cidx] == NO)
+            {
+                //offset+=[[useCluster npoints] unsignedIntValue];
+                
+                q+=1;
+                useCluster = [selectedClusters objectAtIndex:q];
+            }
+            useCluster = [selectedClusters objectAtIndex:q];    
+            
+            //the brute force way; go through the cluster points to find the index
+            NSUInteger _npoints = [[useCluster npoints] unsignedIntValue];
+            unsigned int *_points = (unsigned int*)[[useCluster points] bytes];
+            unsigned int l = 0;
+            //loop through until we find it
+            while( (_points[l] != cidx ) && (l < _npoints ) )
+                l++;
+            wfidx = l;
+            //OK, this doesn't work
+                    
+        }
 		NSLog(@"depth: (%f,%f)", depth[0],depth[1]);
 		NSLog(@"x: %f, y: %f, z_near: %f, z_far: %f", objXNear,objYNear,objZNear,objZFar);
 		//NSLog(@"ray: (%f, %f, %f)", ray[0],ray[1],ray[2]);
@@ -1364,7 +1405,7 @@ static void drawAnObject()
 			
 			NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSData dataWithBytes: &wfidx length: sizeof(unsigned int)],                                                                    [NSData dataWithBytes: color+3*wfidx length:3*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
 			glUnmapBuffer(GL_ARRAY_BUFFER);
-			[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:currentCluster userInfo: params];
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:useCluster userInfo: params];
 			//[self highlightPoints:params];
 		}
     }
@@ -1472,6 +1513,7 @@ static void drawAnObject()
                                                   object:self];
     [self clearGLContext];
     [_pixelFormat release];
+    [selectedClusters release];
     [super dealloc];
 }
 

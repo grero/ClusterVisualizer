@@ -53,6 +53,7 @@ static BOOL picked;
 	GLString *glabelX,*glabelY,*glabelZ;
     BOOL drawAxesLabels;
     Cluster *currentCluster;
+    NSMutableArray *selectedClusters;
     
     
 }
