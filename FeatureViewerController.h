@@ -24,6 +24,8 @@
     
     NSMutableArray *Clusters;
     NSMutableArray *ClusterOptions;
+    //menu object for performing cluster options
+    NSMenu *clusterOptionsMenu;
     Cluster *activeCluster;
     NSArray *clusterModel;
     NSPredicate *isValidCluster, *filterClustersPredicate;

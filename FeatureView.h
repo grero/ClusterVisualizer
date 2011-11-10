@@ -20,6 +20,7 @@ static GLfloat *colors;
 static GLfloat *use_colors;
 static GLfloat base_color[3];
 static GLuint *indices;
+static GLfloat pickedPoint[3];
 static int nvertices;
 static int nindices;
 
@@ -39,6 +40,7 @@ static void modifyVertices(GLfloat *vertex_data);
 static void modifyIndices(GLuint *index_data);
 static void modifyColors(GLfloat *color_data);
 static BOOL dataloaded;
+static BOOL picked;
 
 @interface FeatureView : NSView {
 
@@ -50,7 +52,7 @@ static BOOL dataloaded;
     NSOpenGLPixelFormat* _pixelFormat;
 	GLString *glabelX,*glabelY,*glabelZ;
     BOOL drawAxesLabels;
-    
+    Cluster *currentCluster;
     
     
 }

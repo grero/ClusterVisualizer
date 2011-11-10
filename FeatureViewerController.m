@@ -26,6 +26,7 @@
 @synthesize selectedWaveform;
 @synthesize featureCycleInterval;
 @synthesize releasenotes;
+@synthesize rasterView;
 
 -(void)awakeFromNib
 {
@@ -205,7 +206,7 @@
                         tmp_data2[j] = 2*(tmp_data2[j]-min)/l-1;
                     }
 				}
-                
+
 	
 				[data appendBytes:tmp_data2 length: H.rows*H.cols*sizeof(float)];
 				NSZoneFree([self zone], tmp_data);
@@ -221,8 +222,8 @@
 				//notify that we have indeed loaded something
 				anyLoaded = YES;
 				
-			}
-			//scale individual features
+		}
+		//scale individual features
 			
 			/*need to reshape the data
 			tmp_data = malloc([data length]);
@@ -734,8 +735,12 @@
     
     
     [selectClusterOption removeAllItems];
-    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",
-                               @"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",nil];
+    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",nil];
+    //test
+    //clusterOptionsMenu  = [[[NSMenu alloc] initWithTitle:@"Options"] autorelease];
+    //add some items
+    //[clusterOptionsMenu addItem: [[NSMenuItem alloc] initWithTitle:@"Make template" action:@selector(performClusterOption:) keyEquivalent:nil]];
+    //
     if(timestamps!=NULL)
     {
         //only allow isi computation if timestamps are loaded
@@ -1000,13 +1005,9 @@
     //[[Clusters filteredArrayUsingPredicate:[NSCompoundPredicate notPredicateWithSubpredicate: predicate]] makeObjectsPerformSelector:@selector(makeInactive)];
     //[allActive setState: 0];
     //Inactive those clusters for which the predicate is not true and which are already active
-    [[Clusters filteredArrayUsingPredicate:[NSCompoundPredicate andPredicateWithSubpredicates:[NSArray arrayWithObjects: 
-                                                                                               [NSCompoundPredicate notPredicateWithSubpredicate:predicate],
-                                                                                               isActive,nil]]] makeObjectsPerformSelector:@selector(makeInactive)];
+    [[Clusters filteredArrayUsingPredicate:[NSCompoundPredicate andPredicateWithSubpredicates:[NSArray arrayWithObjects:                                                                                                [NSCompoundPredicate notPredicateWithSubpredicate:predicate],                                                                                               isActive,nil]]] makeObjectsPerformSelector:@selector(makeInactive)];
     //Activate those clusters for which the predicate is true and which are inactive
-    [[Clusters filteredArrayUsingPredicate: [NSCompoundPredicate andPredicateWithSubpredicates:[NSArray arrayWithObjects: 
-                                                                                                [NSCompoundPredicate notPredicateWithSubpredicate:isActive],
-                                                                                                 predicate,nil]]] makeObjectsPerformSelector:@selector(makeActive)];
+    [[Clusters filteredArrayUsingPredicate: [NSCompoundPredicate andPredicateWithSubpredicates:[NSArray arrayWithObjects:                                                                                                 [NSCompoundPredicate notPredicateWithSubpredicate:isActive],                                                                                                 predicate,nil]]] makeObjectsPerformSelector:@selector(makeActive)];
 }
 
 - (IBAction) changeDim1: (id)sender
@@ -1167,7 +1168,14 @@
 		//A highlight was received from waveformsview; this needs to be passed onto featureView
 		if (([self selectedClusters] != nil) && ([[self selectedClusters] count] >= 1 ) ) 
 		{
-			[[self fw] highlightPoints:[notification userInfo] inCluster:[[self Clusters] objectAtIndex:[selectedClusters firstIndex]]];
+            if( [[notification object] isKindOfClass:[Cluster class]] )
+            {
+                [[self fw] highlightPoints:[notification userInfo] inCluster: [notification object]];
+            }
+            else
+            {
+                [[self fw] highlightPoints:[notification userInfo] inCluster:[[self Clusters] objectAtIndex:[selectedClusters firstIndex]]];
+            }
 		}
 		else
 		{
@@ -1251,6 +1259,7 @@
 
 - (IBAction) clusterThumbClicked: (id)sender
 {
+    //check if we cli
 	[self loadWaveforms:[self activeCluster]];
 	[[wfv window] orderFront: self];
 	//make sure we also update the waverormsImage
@@ -1378,10 +1387,9 @@
                 unsigned int *spts = malloc(2*sizeof(unsigned int));
                 spts[0] = pts[0];
                 spts[1] = pts[0]+1;
-                NSDictionary *params = [NSDictionary dictionaryWithObjects: [NSArray arrayWithObjects:
-                                                                             [NSData dataWithBytes:spts length:2*sizeof(unsigned int)],[activeCluster color],nil]
-                                                                   forKeys: [NSArray arrayWithObjects:@"points",@"color",nil]];
-                [[NSNotificationCenter defaultCenter] postNotificationName: @"highlight" object: params];
+                NSDictionary *_params = [NSDictionary dictionaryWithObjects: 
+                                        [NSArray arrayWithObjects:                                                                             [NSData dataWithBytes:spts length:2*sizeof(unsigned int)],[activeCluster color],nil] forKeys: [NSArray arrayWithObjects:@"points",@"color",nil]];
+                [[NSNotificationCenter defaultCenter] postNotificationName: @"highlight" object: _params];
                 free(spts);
             }
         }
@@ -1857,6 +1865,7 @@
 -(void)setSelectedClusters:(NSIndexSet *)indexes
 {
 	//this should be called when a cluster is selected (by clicking on the thumbnail).Draw the waveforms of (the first) selected cluster
+    //TODO: what happens if we right-click? nothing
 	NSUInteger firstIndex = [indexes firstIndex];
 	if( firstIndex < [Clusters count] )
 	{

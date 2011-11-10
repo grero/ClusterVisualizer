@@ -54,6 +54,8 @@
     
     //register for defaults updates
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:NSUserDefaultsDidChangeNotification object:nil];
+
+	picked = NO;
     
 }
 
@@ -320,6 +322,7 @@
 
 -(void) showCluster: (Cluster *)cluster
 {
+    currentCluster = cluster;
     int cid = [cluster.name intValue];
 	unsigned int new_size = [[cluster npoints] intValue];
     //do this in a very inane way for now, just to see if it works
@@ -513,11 +516,12 @@
 	//need to make this work when cluster is nil
 	NSData *color;
 	unsigned int* _clusterPoints;
+    unsigned int _nclusterPoints = 0;
 	if( cluster != nil )
 	{
 		color = [cluster color];
 		_clusterPoints = (unsigned int*)[[cluster points] bytes];
-		unsigned int _nclusterPoints = [[cluster npoints] unsignedIntValue];
+		_nclusterPoints = [[cluster npoints] unsignedIntValue];
 	}
 	else 
 	{
@@ -919,7 +923,20 @@ static void drawAnObject()
 	glRotatef(rotatey,0, 1, 0);
 	glRotatef(rotatez, 0, 0,1);
 	drawFrame();
+	
+	/*This code is for testing mouse clicks
+	if(picked)
+	{
+		glPushMatrix();
+		glBegin(GL_POINTS);
+		glVertex3f(pickedPoint[0],pickedPoint[1],pickedPoint[2]);
+		glColor3f(1.0,0.0,0.0);
+	    glEnd();
+		//glTranslatef(pickedPoint[0],pickedPoint[1],pickedPoint[2]);
+		glPopMatrix();
 
+	}
+	*/
 	if(dataloaded)
     {
 		
@@ -1032,7 +1049,7 @@ static void drawAnObject()
     glEnable(GL_BLEND);
     glEnable(GL_POINT_SMOOTH);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
-	glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
+    glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -1213,7 +1230,7 @@ static void drawAnObject()
     {
         //only select points if Command key is pressed
         //get current point in view coordinates
-        NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:self];
+        NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
         //now we will have to figure out which waveform(s) contains this point
         //scale to data coorindates
         NSPoint dataPoint;
@@ -1230,17 +1247,86 @@ static void drawAnObject()
         glGetDoublev (GL_MODELVIEW_MATRIX, m);
         glGetDoublev (GL_PROJECTION_MATRIX,p);
         glGetIntegerv( GL_VIEWPORT, view );
-        double objX,objY,objZ;
+        double objXNear,objXFar,objYNear,objYFar,objZNear,objZFar;
 		//get the position of the points in the original data space
 		//note that since window coordinates are using lower left as (0,0), openGL uses upper left
 		NSRect r = [self bounds];
-		float height = r.size.height;
+		//float height = r.size.height;
+		float height = view[3];
 		//TODO: this doesn't work
 		GLfloat depth[2];
 		//get the z-component
-		glReadPixels(currentPoint.x, height-currentPoint.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, depth);
-        gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[0], m, p, view, &objX, &objY, &objZ);
-        NSLog(@"x: %f, y: %f, z: %f", objX,objY,objZ);
+		glReadPixels(currentPoint.x, /*height-*/currentPoint.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, depth);
+		//get a ray
+		gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[1], m, p, view, &objXNear, &objYNear, &objZNear);
+		gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[0], m, p, view, &objXFar, &objYFar, &objZFar);
+		GLdouble ray[3];
+		ray[0] = -objXNear+objXFar;
+		ray[1] = -objYNear+objYFar;
+		ray[2] = -objZNear+objZFar;
+		GLdouble _r = sqrt(ray[0]*ray[0] + ray[1]*ray[1] + ray[2]*ray[2]);
+		//normalize
+		ray[0]/=_r;
+		ray[1]/=_r;
+		ray[2]/=_r;
+		picked = YES;
+		pickedPoint[0] = objXNear;
+		pickedPoint[1] = objYNear;
+		pickedPoint[2] = objZNear;
+		//once we have the ray, we can look for intersections
+		//since we are only interested in points, we can simply check whether the point +/- its radius encompasses the line 
+		//line given by x0 + ray[0](x-x0), y0 + ray[1](y-y0), z0 + ray[2](z-z0)
+		//for each object, decompose the vector from the near point to the object into components parallel and orthogonal to the ray. Then check whether the length of the orthogonal component is smaller than the radius of the object. If it is, we have intersection
+		//
+		double dmin = INFINITY;
+		unsigned int wfidx = nindices;
+		NSUInteger i,k;
+		double dT = INFINITY;
+        //go through each index currently drawn
+        //[indexset enumerateIndexesUsingBlock:^(NSUInteger k, BOOL *stop)
+        k = [indexset firstIndex];
+        i = 0;
+        while(k != NSNotFound )
+        //for(i=0;i<nindices;i++)
+		{
+			double a = 0;
+			//component along ray
+			//k = indices[i];
+			a+=ray[0]*(use_vertices[3*k] - objXNear);
+			a+=ray[1]*(use_vertices[3*k+1] - objYNear);
+			a+=ray[2]*(use_vertices[3*k+2] - objZNear);
+
+			double v[3];
+			double rv = 0;
+			v[0] = (use_vertices[3*k]-objXNear)-a*ray[0];
+			rv+=v[0]*v[0];
+			v[1] = (use_vertices[3*k+1]-objYNear)-a*ray[1];
+			rv+=v[1]*v[1];
+			v[2] = (use_vertices[3*k+2]-objZNear)-a*ray[2];
+			rv+=v[2]*v[2];
+
+			//this is the distance from the object to the ray
+			rv = sqrt(rv);
+			//check if it's the smallest so far, and that it's smaller than the threshold, dT
+			if( (rv<dmin) )
+			{
+				dmin = rv;
+				if( rv < dT)
+				{
+						//again, the index to pass to the highlight function needs to be in cluster coordinates, not global coordinates
+						wfidx = i;	
+				}
+			}
+            k = [indexset indexGreaterThanIndex:k];
+            i+=1;
+
+		}
+		NSLog(@"depth: (%f,%f)", depth[0],depth[1]);
+		NSLog(@"x: %f, y: %f, z_near: %f, z_far: %f", objXNear,objYNear,objZNear,objZFar);
+		//NSLog(@"ray: (%f, %f, %f)", ray[0],ray[1],ray[2]);
+		NSLog(@"maxpoint: %d, smallest distance: %f, selected point: %d", nindices,dmin,wfidx);
+
+			/*
         //here, we don't really care about the z-value
         //(dataPoint.x,dataPoint.y) and the waveforms vectors
         float *D = malloc(2*nindices*sizeof(float));
@@ -1248,9 +1334,9 @@ static void drawAnObject()
         float *po = malloc(3*sizeof(float));
         vDSP_Length imin;
         float fmin;
-        po[0] = -(float)objX;
-        po[1] = -(float)objY;
-        po[2] = -(float)objZ;
+        po[0] = -(float)objXNear;
+        po[1] = -(float)objYNear;
+        po[2] = -(float)objZNear;
         //substract the point
         vDSP_vsadd(use_vertices,3,po,D,2,nindices);
         vDSP_vsadd(use_vertices+1,3,po+1,D+1,2,nindices);
@@ -1268,16 +1354,19 @@ static void drawAnObject()
         //unsigned int wfidx = imin/(3);
         unsigned int wfidx = imin;
         //get the current drawing color
-        [[self openGLContext] makeCurrentContext];
-        glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-        float *color = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
-        
-        NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSData dataWithBytes: &wfidx 
-                                                                                                            length: sizeof(unsigned int)],
-                                                                    [NSData dataWithBytes: color+3*imin length:3*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
-        glUnmapBuffer(GL_ARRAY_BUFFER);
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:self userInfo: params];
-        //[self highlightPoints:params];
+	//*/
+		//make sure we actually found a point first
+		if(wfidx < nindices)
+		{
+			[[self openGLContext] makeCurrentContext];
+			glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+			float *color = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+			
+			NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSData dataWithBytes: &wfidx length: sizeof(unsigned int)],                                                                    [NSData dataWithBytes: color+3*wfidx length:3*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
+			glUnmapBuffer(GL_ARRAY_BUFFER);
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:currentCluster userInfo: params];
+			//[self highlightPoints:params];
+		}
     }
 }
 
