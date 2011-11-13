@@ -423,8 +423,25 @@
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) 
 												 name:@"setFeatures" object:nil];
 	
-	
-
+	NSString *stimInfoFile = NULL;
+    if( waveformsFile != NULL )
+    {
+        //attempt to locate a simtinfo object. This should be located two levels above the waveformfile
+        NSString *stimInfoDir = [waveformsFile stringByDeletingLastPathComponent];
+        stimInfoFile = [waveformsFile lastPathComponent];
+        NSRange _r = [stimInfoFile rangeOfString:@"g00"];
+        stimInfoFile = [stimInfoDir stringByAppendingPathComponent:[[stimInfoFile substringWithRange:NSMakeRange(0, _r.location)] stringByAppendingString:@".ini"]];
+        if( [[NSFileManager defaultManager] fileExistsAtPath:stimInfoFile] == NO)
+        {
+            stimInfoDir = [[waveformsFile stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
+            stimInfoFile = [waveformsFile lastPathComponent];
+            _r = [stimInfoFile rangeOfString:@"g00"];
+            stimInfoFile = [stimInfoDir stringByAppendingPathComponent:[[stimInfoFile substringWithRange:NSMakeRange(0, _r.location)] stringByAppendingString:@"stimInfo.mat"]];
+        }
+    }
+    //load stimInfo
+    stimInfo = [[[StimInfo alloc] init] retain];
+    [stimInfo readFromFile:stimInfoFile];
 	//only reset clusters if data has already been loaded
     if( ([self Clusters] != nil) && (dataloaded == YES ) )
     {

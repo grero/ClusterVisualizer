@@ -43,6 +43,7 @@
 		DB2EFC0A13C324EC0065CD24 /* libmatio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DB2EFC0913C324EC0065CD24 /* libmatio.dylib */; };
 		DB34A522144FAF79005E7E66 /* libopen-pal.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB34A520144FAF79005E7E66 /* libopen-pal.0.dylib */; };
 		DB34A523144FAF79005E7E66 /* libopen-rte.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB34A521144FAF79005E7E66 /* libopen-rte.0.dylib */; };
+		DB4F63C0146FA65500AD54B3 /* StimInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4F63BF146FA65500AD54B3 /* StimInfo.m */; };
 		DB91841B13440F580025F64A /* fileReaders.c in Sources */ = {isa = PBXBuildFile; fileRef = DB91841A13440F580025F64A /* fileReaders.c */; };
 		DBA05985136A42A1008639C2 /* libhdf5_hl.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DBA05984136A42A1008639C2 /* libhdf5_hl.6.dylib */; };
 		DBA05987136A42A1008639C2 /* libhdf5.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DBA05986136A42A1008639C2 /* libhdf5.6.dylib */; };
@@ -129,6 +130,8 @@
 		DB2EFC0913C324EC0065CD24 /* libmatio.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmatio.dylib; path = /Users/roger/tmp/libmatio.dylib; sourceTree = "<absolute>"; };
 		DB34A520144FAF79005E7E66 /* libopen-pal.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libopen-pal.0.dylib"; sourceTree = "<group>"; };
 		DB34A521144FAF79005E7E66 /* libopen-rte.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libopen-rte.0.dylib"; sourceTree = "<group>"; };
+		DB4F63BE146FA65500AD54B3 /* StimInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StimInfo.h; sourceTree = "<group>"; };
+		DB4F63BF146FA65500AD54B3 /* StimInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StimInfo.m; sourceTree = "<group>"; };
 		DB91841913440F580025F64A /* fileReaders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fileReaders.h; sourceTree = "<group>"; };
 		DB91841A13440F580025F64A /* fileReaders.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fileReaders.c; sourceTree = "<group>"; };
 		DBA05984136A42A1008639C2 /* libhdf5_hl.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libhdf5_hl.6.dylib; path = /usr/local/lib/libhdf5_hl.6.dylib; sourceTree = "<absolute>"; };
@@ -253,6 +256,8 @@
 				C79EA891125F02CE0066BCAD /* utils.c */,
 				C79EA892125F02CE0066BCAD /* utils.h */,
 				C7D281F21257A52B007D19EA /* nptLoadingEngine.h */,
+				DB4F63BE146FA65500AD54B3 /* StimInfo.h */,
+				DB4F63BF146FA65500AD54B3 /* StimInfo.m */,
 				DBA05AC1136ACB41008639C2 /* computeFeatures.h */,
 				DBA05AC2136ACB41008639C2 /* computeFeatures.c */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
@@ -405,6 +410,7 @@
 				DB91841B13440F580025F64A /* fileReaders.c in Sources */,
 				DBA05AC3136ACB41008639C2 /* computeFeatures.c in Sources */,
 				DB1995A013881966003A6D89 /* RasterView.m in Sources */,
+				DB4F63C0146FA65500AD54B3 /* StimInfo.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -19,6 +19,7 @@
 #import "fileReaders.h"
 #import "computeFeatures.h"
 #import "RasterView.h"
+#import "StimInfo.h"
 
 @interface FeatureViewerController : NSController {
     
@@ -46,6 +47,7 @@
 	NSNumber *featureCycleInterval;
 	NSString *selectedWaveform;
 	NSAttributedString *releaseNotes;
+    StimInfo *stimInfo;
     IBOutlet FeatureView *fw;
     IBOutlet WaveformsView *wfv;
     IBOutlet NSComboBox *dim1;
@@ -61,6 +63,7 @@
 	IBOutlet NSPanel *cyclePanel;
 	IBOutlet NSArrayController *clusterController;
 	IBOutlet NSPredicateEditor *filterPredicates;
+    
     
     
 }
