@@ -71,6 +71,9 @@
 																					
 	[filterPredicates setRowTemplates: [NSArray arrayWithObjects:row,nil]];
     
+    //load the rasterview window
+    
+    
     //setup some usedefaults
     [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithBool:YES], @"autoScaleAxes",
                                       [NSNumber numberWithBool: YES], @"showFeatureAxesLabels",
@@ -363,13 +366,14 @@
 	//NSLog(@"Filebase: %@",filebase);
 	if (([self waveformsFile] == NULL ) && (autoLoadWaveforms == YES) )
 	{
-		NSArray *waveformfiles = [[[[NSFileManager defaultManager] contentsOfDirectoryAtPath: directory error: nil] 
+        //waveforms file usually resides in a directory above the feature file
+		NSArray *waveformfiles = [[[[NSFileManager defaultManager] contentsOfDirectoryAtPath: [directory stringByDeletingLastPathComponent] error: nil] 
 								   pathsMatchingExtensions:[NSArray arrayWithObjects:@"bin",nil]] filteredArrayUsingPredicate:
 								  [NSPredicate predicateWithFormat:@"SELF BEGINSWITH %@", filebase]];
 		//NSString *waveformsPath = @"";
 		if( [waveformfiles count] == 1 )
 		{
-			[self setWaveformsFile: [waveformfiles objectAtIndex:0]];
+            [self setWaveformsFile: [[directory stringByDeletingLastPathComponent] stringByAppendingPathComponent: [waveformfiles objectAtIndex:0]]];
 			char *waveformsPath = [waveformsFile cStringUsingEncoding: NSASCIIStringEncoding];
 			nptHeader spikeHeader;
 			spikeHeader = *getSpikeInfo(waveformsPath, &spikeHeader);
@@ -735,7 +739,7 @@
     
     
     [selectClusterOption removeAllItems];
-    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",nil];
+    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Show raster",nil];
     //test
     //clusterOptionsMenu  = [[[NSMenu alloc] initWithTitle:@"Options"] autorelease];
     //add some items
@@ -1166,16 +1170,15 @@
 			[inputPanel makeKeyAndOrderFront:self];
 		}*/
 		//A highlight was received from waveformsview; this needs to be passed onto featureView
-		if (([self selectedClusters] != nil) && ([[self selectedClusters] count] >= 1 ) ) 
+        if( [[notification object] isKindOfClass:[Cluster class]] )
+        {
+            [[self fw] highlightPoints:[notification userInfo] inCluster: [notification object]];
+        }
+		else if (([self selectedClusters] != nil) && ([[self selectedClusters] count] >= 1 ) ) 
 		{
-            if( [[notification object] isKindOfClass:[Cluster class]] )
-            {
-                [[self fw] highlightPoints:[notification userInfo] inCluster: [notification object]];
-            }
-            else
-            {
-                [[self fw] highlightPoints:[notification userInfo] inCluster:[[self Clusters] objectAtIndex:[selectedClusters firstIndex]]];
-            }
+        
+            [[self fw] highlightPoints:[notification userInfo] inCluster:[[self Clusters] objectAtIndex:[selectedClusters firstIndex]]];
+        
 		}
 		else
 		{
@@ -1389,7 +1392,7 @@
                 spts[1] = pts[0]+1;
                 NSDictionary *_params = [NSDictionary dictionaryWithObjects: 
                                         [NSArray arrayWithObjects:                                                                             [NSData dataWithBytes:spts length:2*sizeof(unsigned int)],[activeCluster color],nil] forKeys: [NSArray arrayWithObjects:@"points",@"color",nil]];
-                [[NSNotificationCenter defaultCenter] postNotificationName: @"highlight" object: _params];
+                [[NSNotificationCenter defaultCenter] postNotificationName: @"highlight" userInfo: _params];
                 free(spts);
             }
         }
@@ -1480,6 +1483,25 @@
             [histView drawHistogram:[dict objectForKey:@"counts"] andBins:[dict objectForKey:@"bins"]];
             [histView setNeedsDisplay:YES];
         }
+    }
+    else if ([selection isEqualToString: @"Show raster"] )
+    {
+        //TODO: this is just proto-type code. Please make this more efficient
+        Cluster *_cluster = [candidates objectAtIndex:0];
+        NSMutableData *ctimes = [NSMutableData dataWithCapacity:([[_cluster npoints] unsignedIntValue])*sizeof(unsigned long long int)];
+        NSUInteger idx = [[_cluster indices] firstIndex];
+        while( idx != NSNotFound )
+        {
+            NSRange _r;
+            _r.location = idx*sizeof(unsigned long long int);
+            _r.length = sizeof(unsigned long long int);
+            [ctimes appendData: [timestamps subdataWithRange:_r]];
+            idx = [[_cluster indices] indexGreaterThanIndex:idx];
+        }
+        ///register raster view for notifications
+        [[NSNotificationCenter defaultCenter] addObserver:[self rasterView] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
+        [rasterView createVertices:ctimes];
+		[[rasterView window] makeKeyAndOrderFront:self];
     }
         
                                                                                  
