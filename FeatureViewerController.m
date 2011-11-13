@@ -994,11 +994,18 @@
                 
             }
         }*/
+        //update the raster
+        if( [[[self rasterView] window] isVisible] )
+        {
+            [rasterView createVertices:[[notification object] getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)]];
+        }
+        
+
     }
     else {
         [fw hideCluster: [notification object]];
     }
-
+    
 }
 
 -(void)setFilterClustersPredicate:(NSPredicate *)predicate
@@ -1903,6 +1910,10 @@
 			NSImage *img = [[self wfv] image];
 			[firstCluster setWaveformsImage:img];
 		}
+        if( [[[self rasterView] window] isVisible] )
+        {
+            [rasterView createVertices:[firstCluster getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)]];
+        }
 		NSInteger idx = [selectClusterOption indexOfSelectedItem];
 		NSString *selection = [selectClusterOption titleOfSelectedItem];
 		NSString *new_selection = [selection stringByReplacingOccurrencesOfString:@"Show" withString:@"Hide"];
