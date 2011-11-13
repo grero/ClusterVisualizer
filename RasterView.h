@@ -17,6 +17,8 @@ static GLuint rColorBuffer;
     NSOpenGLContext *_oglContext;
     NSOpenGLPixelFormat *_pixelFormat;
 	GLuint npoints;
+    float xmin,xmax,ymin,ymax,zmin,zmax;
+    NSMutableData *highlightedPoints;
 	
 }
 
@@ -35,4 +37,7 @@ static GLuint rColorBuffer;
 
 
 -(void) createVertices: (NSData*)points;
+-(void) highlightPoints: (NSDictionary*)params;
+
+-(void) receiveNotification: (NSNotification*)notification;
 @end

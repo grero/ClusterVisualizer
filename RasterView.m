@@ -18,6 +18,12 @@
 -(void)awakeFromNib
 {
 	int i = 0;
+    xmin = 0;
+    xmax = 1000;
+    ymax = 100.0;
+    ymin = 0;
+    zmin = -1;
+    zmax = 1;
 }
 
 +(NSOpenGLPixelFormat*) defaultPixelFormat
@@ -153,6 +159,9 @@
 	GLfloat *_colors = NSZoneMalloc([self zone], 4*npoints*sizeof(GLfloat));
 	GLfloat *_vertices = NSZoneMalloc([self zone], 3*npoints*sizeof(GLfloat));
 	unsigned long long int *_points = (unsigned long long int*)[points bytes];
+    unsigned int tidx;
+    //xmax
+    xmax = -INFINITY;
 	for(i=0;i<npoints;i++)
 	{
 		_indices[i] = i;
@@ -162,9 +171,16 @@
 		_colors[3*i+3] = 1.0;
 		
 		_vertices[3*i] = (GLfloat)((double)(_points[i])/1000);
-		_vertices[3*i+1] = 50.0;
+        
+		//_vertices[3*i+1] = 50.0;
+        tidx = (unsigned int)(_vertices[3*i]/30000.0);
+        _vertices[3*i] -= tidx*30000.0;
+        _vertices[3*i+1] = (GLfloat)(tidx);
 		_vertices[3*i+2] = 0.3;
-		
+		if(_vertices[3*i]>xmax)
+            xmax = _vertices[3*i];
+        if(_vertices[3*i+1] > ymax )
+            ymax = _vertices[3*i+1];
 	}
 	[[self openGLContext] makeCurrentContext];
 	glGenBuffers(1,&rIndexBuffer);
@@ -196,7 +212,7 @@
 	
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0, 10000.0, 0, 100.0, -1.0, 1.0);
+	glOrtho(xmin, xmax, ymin, ymax, zmin, zmax);
 	//glMatrixMode(GL_MODELVIEW);
 	//glLoadIdentity();
 	
@@ -219,5 +235,54 @@
 	[[self openGLContext] flushBuffer];
 }
 
+-(void) highlightPoints: (NSDictionary *)params
+{
+    NSData *points = [params objectForKey:@"points"];
+    unsigned int *_points = (unsigned int*)[points bytes];
+    unsigned int _npoints = [points length]/sizeof(unsigned int);
+    unsigned int i,k;
+    //change colors; first reset colors of already highlihted points
+    [[self openGLContext] makeCurrentContext];
+    glBindBuffer(GL_ARRAY_BUFFER, rColorBuffer);
+    GLfloat *_colors = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
+    if (highlightedPoints != NULL )
+    {
+        unsigned int *_hpoints = (unsigned int*)[highlightedPoints bytes];
+        unsigned int _nhpoints = [highlightedPoints length]/(sizeof(unsigned int));
+        for(i=0;i<_nhpoints;i++)
+        {
+            k = _hpoints[i];
+            _colors[4*k] = 1-_colors[4*k];
+            _colors[4*k+1] = 1-_colors[4*k+1];
+            _colors[4*k+2] = 1-_colors[4*k+2];
+
+        }
+        [highlightedPoints setData:[NSData dataWithData:points]];
+    }
+    else
+    {
+        highlightedPoints = [[NSMutableData dataWithData:points] retain];
+    }
+    for(i=0;i<_npoints;i++)
+    {
+        k = _points[i];
+        _colors[4*k] = 1-_colors[4*k];
+        _colors[4*k+1] = 1-_colors[4*k+1];
+        _colors[4*k+2] = 1-_colors[4*k+2];
+
+                                   
+    }
+    //done with color buffer
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+    [self setNeedsDisplay:YES];
+}
+
+-(void) receiveNotification: (NSNotification*)notification
+{
+    if( [[notification name] isEqualToString:@"highlight"] )
+    {
+        [self highlightPoints:[notification userInfo]];
+    }
+}
 	
 @end
