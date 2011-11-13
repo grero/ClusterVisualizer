@@ -456,6 +456,22 @@
 }
 
 
+-(NSData*)getRelevantData:(NSData*)data withElementSize:(unsigned int)elsize
+{
+    NSMutableData *_data = [NSMutableData dataWithCapacity:([[self npoints] unsignedIntValue])*elsize];
+    NSUInteger idx = [[self indices] firstIndex];
+    while( idx != NSNotFound )
+    {
+        NSRange _r;
+        _r.location = idx*elsize;
+        _r.length = elsize;
+        [_data appendData: [data subdataWithRange:_r]];
+        idx = [[self indices] indexGreaterThanIndex:idx];
+    }
+    return _data;
+
+}
+
 -(void) dealloc
 {
     [name release];

@@ -80,4 +80,5 @@
 //encoding
 -(void)encodeWithCoder:(NSCoder*)coder;
 -(id)initWithCoder:(NSCoder*)coder;
+-(NSData*)getRelevantData:(NSData*)data withElementSize:(unsigned int)elsize;
 @end
