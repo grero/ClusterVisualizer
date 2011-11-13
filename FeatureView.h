@@ -51,7 +51,7 @@ static BOOL picked;
     NSOpenGLContext* _oglContext;
     NSOpenGLPixelFormat* _pixelFormat;
 	GLString *glabelX,*glabelY,*glabelZ;
-    BOOL drawAxesLabels;
+    BOOL drawAxesLabels,appendHighlights;
     Cluster *currentCluster;
     NSMutableArray *selectedClusters;
     

@@ -37,6 +37,7 @@
 	base_color[1] = 0.85f;
 	base_color[2] = 0.35f;
     drawAxesLabels = NO;
+    appendHighlights = NO;
     NSOpenGLPixelFormatAttribute attrs[] =
     {
         NSOpenGLPFAAllRenderers,YES,
@@ -541,10 +542,6 @@
     unsigned int _npoints = (unsigned int)([points length]/sizeof(unsigned int));
     //get the indices to redraw
     [[self openGLContext] makeCurrentContext];
-    //glBindBuffer(GL_ARRAY_BUFFER, indexBuffer);
-	//TODO: This doesn't work as long as there are more than one cluster; the indices returned in params only refer to the currently
-	//selected waveforms in the waveformsview
-    //GLuint *tmp_idx = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
     int i;
     GLuint *idx = malloc(_npoints*sizeof(GLuint));
 	if( _clusterPoints != NULL )
@@ -567,12 +564,12 @@
 	}
     //glUnmapBuffer(GL_ARRAY_BUFFER);
     
-    GLfloat *_color = (GLfloat*)[color bytes];
+    //GLfloat *_color = (GLfloat*)[color bytes];
     
     glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
     GLfloat *_colors = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
     //reset the colors before doing the new colors
-    if(highlightedPoints != NULL )
+    if( (highlightedPoints != NULL ) && (appendHighlights == NO) )
     {
         unsigned int* _hpoints = (unsigned int*)[highlightedPoints bytes];
         unsigned int _nhpoints = (unsigned int)([highlightedPoints length]/sizeof(unsigned int));
@@ -597,7 +594,14 @@
         [self setHighlightedPoints: [NSMutableData dataWithBytes: idx length: _npoints*sizeof(GLuint)]];
     }
     else {
-        [[self highlightedPoints] setData: [NSData dataWithBytes: idx length: _npoints*sizeof(GLuint)]];
+        if (appendHighlights == YES) 
+        {
+            [[self highlightedPoints] appendData:[NSData dataWithBytes: idx length: _npoints*sizeof(GLuint)]];
+        }
+        else
+        {
+            [[self highlightedPoints] setData: [NSData dataWithBytes: idx length: _npoints*sizeof(GLuint)]];
+        }
         
     }
 	free(idx);
@@ -1236,7 +1240,16 @@ static void drawAnObject()
     if([theEvent modifierFlags] & NSCommandKeyMask)
     {
         //only select points if Command key is pressed
-        //get current point in view coordinates
+        //if we are also pressing the shift button, append highlights
+        if( [theEvent modifierFlags] & NSShiftKeyMask )
+        {
+            appendHighlights = YES;
+        }
+        else
+        {
+            appendHighlights = NO;
+        }
+         //get current point in view coordinates
         NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
         //now we will have to figure out which waveform(s) contains this point
         //scale to data coorindates
@@ -1405,6 +1418,7 @@ static void drawAnObject()
 			
 			NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSData dataWithBytes: &wfidx length: sizeof(unsigned int)],                                                                    [NSData dataWithBytes: color+3*wfidx length:3*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
 			glUnmapBuffer(GL_ARRAY_BUFFER);
+            //TODO: What if we want to select points from mutiple clustrers?
 			[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:useCluster userInfo: params];
 			//[self highlightPoints:params];
 		}
