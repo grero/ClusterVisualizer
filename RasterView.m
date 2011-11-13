@@ -165,10 +165,10 @@
 	for(i=0;i<npoints;i++)
 	{
 		_indices[i] = i;
-		_colors[3*i] = 1.0;
-		_colors[3*i+1] = 0.0;
-		_colors[3*i+2] = 0.0;
-		_colors[3*i+3] = 1.0;
+		_colors[4*i] = 1.0;
+		_colors[4*i+1] = 0.0;
+		_colors[4*i+2] = 0.0;
+		_colors[4*i+3] = 1.0;
 		
 		_vertices[3*i] = (GLfloat)((double)(_points[i])/1000);
         
@@ -180,7 +180,13 @@
 		if(_vertices[3*i]>xmax)
             xmax = _vertices[3*i];
         if(_vertices[3*i+1] > ymax )
+        {
             ymax = _vertices[3*i+1];
+        }
+        else if (_vertices[3*i+1] < ymin )
+        {
+            ymin = _vertices[3*i+1];
+        }
 	}
 	[[self openGLContext] makeCurrentContext];
 	glGenBuffers(1,&rIndexBuffer);
