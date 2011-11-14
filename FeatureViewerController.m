@@ -438,10 +438,12 @@
             _r = [stimInfoFile rangeOfString:@"g00"];
             stimInfoFile = [stimInfoDir stringByAppendingPathComponent:[[stimInfoFile substringWithRange:NSMakeRange(0, _r.location)] stringByAppendingString:@"stimInfo.mat"]];
         }
+    
     }
     //load stimInfo
     stimInfo = [[[StimInfo alloc] init] retain];
     [stimInfo readFromFile:stimInfoFile];
+    [stimInfo readMonitorSyncs];
 	//only reset clusters if data has already been loaded
     if( ([self Clusters] != nil) && (dataloaded == YES ) )
     {
@@ -1014,13 +1016,18 @@
         //update the raster
         if( [[[self rasterView] window] isVisible] )
         {
-            [rasterView createVertices:[[notification object] getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)]];
+            [rasterView createVertices:[[notification object] getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)] withColor:[[self activeCluster] color]];
         }
         
 
     }
     else {
         [fw hideCluster: [notification object]];
+        if([[self activeCluster] isEqualTo:[notification object]] )
+        {
+            //if the cluster we de-selected was the active one (i.e. last selected)
+            [self setActiveCluster:nil];
+        }
     }
     
 }
@@ -1198,16 +1205,18 @@
         {
             [[self fw] highlightPoints:[notification userInfo] inCluster: [notification object]];
         }
+        /*
 		else if (([self selectedClusters] != nil) && ([[self selectedClusters] count] >= 1 ) ) 
 		{
         
             [[self fw] highlightPoints:[notification userInfo] inCluster:[[self Clusters] objectAtIndex:[selectedClusters firstIndex]]];
         
 		}
+         */
 		else
 		{
 			//no cluster selected
-			[[self fw] highlightPoints:[notification userInfo] inCluster:nil];
+			[[self fw] highlightPoints:[notification userInfo] inCluster:[self activeCluster]];
 
 		}
 	}
@@ -1511,20 +1520,20 @@
     else if ([selection isEqualToString: @"Show raster"] )
     {
         //TODO: this is just proto-type code. Please make this more efficient
-        Cluster *_cluster = [candidates objectAtIndex:0];
-        NSMutableData *ctimes = [NSMutableData dataWithCapacity:([[_cluster npoints] unsignedIntValue])*sizeof(unsigned long long int)];
-        NSUInteger idx = [[_cluster indices] firstIndex];
+        //Cluster *_cluster = [candidates objectAtIndex:0];
+        NSMutableData *ctimes = [NSMutableData dataWithCapacity:([[[self activeCluster] npoints] unsignedIntValue])*sizeof(unsigned long long int)];
+        NSUInteger idx = [[[self activeCluster] indices] firstIndex];
         while( idx != NSNotFound )
         {
             NSRange _r;
             _r.location = idx*sizeof(unsigned long long int);
             _r.length = sizeof(unsigned long long int);
             [ctimes appendData: [timestamps subdataWithRange:_r]];
-            idx = [[_cluster indices] indexGreaterThanIndex:idx];
+            idx = [[[self activeCluster] indices] indexGreaterThanIndex:idx];
         }
         ///register raster view for notifications
         [[NSNotificationCenter defaultCenter] addObserver:[self rasterView] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
-        [rasterView createVertices:ctimes];
+        [rasterView createVertices:ctimes withColor:[NSData dataWithData:[[self activeCluster] color]]];
 		[[rasterView window] makeKeyAndOrderFront:self];
     }
         

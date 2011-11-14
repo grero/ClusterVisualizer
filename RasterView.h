@@ -7,6 +7,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import <OpenGL/glu.h>
 
 static GLuint rVertexBuffer;
 static GLuint rIndexBuffer;
@@ -17,7 +18,7 @@ static GLuint rColorBuffer;
     NSOpenGLContext *_oglContext;
     NSOpenGLPixelFormat *_pixelFormat;
 	GLuint npoints;
-    float xmin,xmax,ymin,ymax,zmin,zmax;
+    float xmin,xmax,ymin,ymax,zmin,zmax,xscale,yscale;
     NSMutableData *highlightedPoints;
 	
 }
@@ -36,7 +37,7 @@ static GLuint rColorBuffer;
 -(void) _surfaceNeedsUpdate:(NSNotification *)notification;
 
 
--(void) createVertices: (NSData*)points;
+-(void) createVertices: (NSData*)points withColor:(NSData*)color;
 -(void) highlightPoints: (NSDictionary*)params;
 
 -(void) receiveNotification: (NSNotification*)notification;

@@ -24,6 +24,8 @@
     ymin = 0;
     zmin = -1;
     zmax = 1;
+    yscale = 1.0;
+    xscale = 100;
 }
 
 +(NSOpenGLPixelFormat*) defaultPixelFormat
@@ -149,8 +151,9 @@
 	
 }
 
--(void)createVertices: (NSData*)points
+-(void)createVertices: (NSData*)points withColor: (NSData*)color
 {
+    GLfloat *_color = (GLfloat *)[color bytes];
 	npoints = [points length];
 	npoints = npoints/sizeof(unsigned long long int);
 	//create an index
@@ -165,9 +168,9 @@
 	for(i=0;i<npoints;i++)
 	{
 		_indices[i] = i;
-		_colors[4*i] = 1.0;
-		_colors[4*i+1] = 0.0;
-		_colors[4*i+2] = 0.0;
+		_colors[4*i] = _color[0];
+		_colors[4*i+1] = _color[1];
+		_colors[4*i+2] = _color[2];
 		_colors[4*i+3] = 1.0;
 		
 		_vertices[3*i] = (GLfloat)((double)(_points[i])/1000);
@@ -176,6 +179,8 @@
         tidx = (unsigned int)(_vertices[3*i]/30000.0);
         _vertices[3*i] -= tidx*30000.0;
         _vertices[3*i+1] = (GLfloat)(tidx);
+        //in the future, the z-value could be used to i.e. segregate into frames
+        //for now, use z-value equal to y-value
 		_vertices[3*i+2] = 0.3;
 		if(_vertices[3*i]>xmax)
             xmax = _vertices[3*i];
@@ -188,6 +193,12 @@
             ymin = _vertices[3*i+1];
         }
 	}
+    //rescale x-vertex
+    for(i=0;i<npoints;i++)
+    {
+        _vertices[3*i] = (_vertices[3*i]/xmax)*xscale;
+    }
+    xmax = xscale;
 	[[self openGLContext] makeCurrentContext];
 	glGenBuffers(1,&rIndexBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rIndexBuffer);
@@ -289,6 +300,68 @@
     {
         [self highlightPoints:[notification userInfo]];
     }
+}
+
+-(void)mouseUp:(NSEvent *)theEvent
+{
+    //get the current points
+    NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
+    GLint view[4];
+    GLdouble p[16];
+    GLdouble m[16];
+    
+    [[self openGLContext] makeCurrentContext];
+    glGetDoublev (GL_MODELVIEW_MATRIX, m);
+    glGetDoublev (GL_PROJECTION_MATRIX,p);
+    glGetIntegerv( GL_VIEWPORT, view );
+    double objXNear, objYNear,objZNear;
+    GLfloat depth[2];
+    //get the z-component
+    glReadPixels(currentPoint.x, currentPoint.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, depth);
+    //get object coordinates
+    gluUnProject(currentPoint.x, currentPoint.y, depth[0], m, p, view, &objXNear, &objYNear, &objZNear);
+    double dmin = INFINITY;
+    double dT = INFINITY;
+    //get a handle for the vertices
+    glBindBuffer(GL_ARRAY_BUFFER, rVertexBuffer);
+    GLfloat *use_vertices = (GLfloat*)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+    int i,wfidx;
+    //since we are using orthogonal projection, we simply compute the minimum euclidian distance
+    for(i=0;i<npoints;i++)
+    {
+        double v[3];
+        double rv = 0;
+        v[0] = ((double)use_vertices[3*i]-objXNear);
+        rv+=v[0]*v[0];
+        v[1] = ((double)use_vertices[3*i+1]-objYNear);
+        rv+=v[1]*v[1];
+        //v[2] = (use_vertices[3*i+2]-objZNear);
+        //rv+=v[2]*v[2];
+        
+        //this is the distance from the object to the ray
+        rv = sqrt(rv);
+        //check if it's the smallest so far, and that it's smaller than the threshold, dT
+        if( (rv<dmin) )
+        {
+            dmin = rv;
+            wfidx = i;
+            if( rv < dT)
+            {
+                
+                wfidx = i;	
+            }
+        }
+
+    }
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+    [[self openGLContext] makeCurrentContext];
+    glBindBuffer(GL_ARRAY_BUFFER, rColorBuffer);
+    
+    GLfloat *_colors = (GLfloat*)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+    NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSData dataWithBytes: &wfidx length: sizeof(unsigned int)],                                                                    [NSData dataWithBytes: _colors+4*wfidx length:3*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:self userInfo: params];
+    
 }
 	
 @end
