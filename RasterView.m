@@ -153,6 +153,8 @@
 
 -(void)createVertices: (NSData*)points withColor: (NSData*)color
 {
+    //make sure no points are highlgihted
+    highlightedPoints = NULL;
     GLfloat *_color = (GLfloat *)[color bytes];
 	npoints = [points length];
 	npoints = npoints/sizeof(unsigned long long int);
