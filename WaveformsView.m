@@ -487,6 +487,12 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
 
 -(void) highlightWaveforms:(NSData*)wfidx
 {
+    //first wheck if window is visible
+    if([[self window] isVisible ]== NO )
+    {
+        //do nothing
+        return;
+    }
 	//wfidx must be in cluster coordinates and not refer to wfVertices
 	//if nothing changed, return
 	if([wfidx isEqual:highlightWaves] )
@@ -1683,10 +1689,13 @@ static void wfDrawAnObject()
     [[NSNotificationCenter defaultCenter] removeObserver:self name:@"highlight" object:nil];
 }
 
--(void)viewDidUnhide
+-(void)viewWillMoveToWindow:(NSWindow*)newWindow
 {
     //if the view becomes visible, re-register for highlight modifcations
-    [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(receiveNotification:)name:@"highlight" object:nil];
+    if([[self window] isVisible] == YES)
+    {
+        [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(receiveNotification:)name:@"highlight" object:nil];
+    }
 
 }
 
