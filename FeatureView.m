@@ -414,6 +414,7 @@
 	if(nindices - new_size ==0)
 	{
 		nindices = 0;
+        [indexset removeAllIndexes];
 		[self setNeedsDisplay:YES];
 		return;
 	}
@@ -457,7 +458,6 @@
 		}//);
 		//alternative to the above: Use IndexSets
 		//NSMutableIndexSet *tmp = [NSMutableIndexSet 
-		int count = [indexset count];
 		[indexset removeIndexes: [cluster indices]];
 		
 		NSRange range;
@@ -530,6 +530,8 @@
 		color = [cluster color];
 		_clusterPoints = (unsigned int*)[[cluster points] bytes];
 		_nclusterPoints = [[cluster npoints] unsignedIntValue];
+        if(_nclusterPoints == 0)
+            _clusterPoints = NULL;
 	}
 	else 
 	{
@@ -537,8 +539,7 @@
 		//if no cluster is given, just use an index
 		_clusterPoints = NULL;	
 	}
-
-	unsigned int* _points = (unsigned int*)[points bytes];
+    unsigned int* _points = (unsigned int*)[points bytes];
     unsigned int _npoints = (unsigned int)([points length]/sizeof(unsigned int));
     //get the indices to redraw
     [[self openGLContext] makeCurrentContext];
@@ -1361,9 +1362,7 @@ static void drawAnObject()
                 
                 q+=1;
                 useCluster = [selectedClusters objectAtIndex:q];
-            }
-            useCluster = [selectedClusters objectAtIndex:q];    
-            
+            }            
             //the brute force way; go through the cluster points to find the index
             NSUInteger _npoints = [[useCluster npoints] unsignedIntValue];
             unsigned int *_points = (unsigned int*)[[useCluster points] bytes];
@@ -1380,36 +1379,7 @@ static void drawAnObject()
 		//NSLog(@"ray: (%f, %f, %f)", ray[0],ray[1],ray[2]);
 		NSLog(@"maxpoint: %d, smallest distance: %f, selected point: %d", nindices,dmin,wfidx);
 
-			/*
-        //here, we don't really care about the z-value
-        //(dataPoint.x,dataPoint.y) and the waveforms vectors
-        float *D = malloc(2*nindices*sizeof(float));
-        float *d = malloc(nindices*sizeof(float));
-        float *po = malloc(3*sizeof(float));
-        vDSP_Length imin;
-        float fmin;
-        po[0] = -(float)objXNear;
-        po[1] = -(float)objYNear;
-        po[2] = -(float)objZNear;
-        //substract the point
-        vDSP_vsadd(use_vertices,3,po,D,2,nindices);
-        vDSP_vsadd(use_vertices+1,3,po+1,D+1,2,nindices);
-        //vDSP_vsadd(vertices+2,3,po+2,D+1,2,nvertices);
-        //sum of squares
-        vDSP_vdist(D,2,D+1,2,d,1,nindices);
-        //find the index of the minimum distance
-        vDSP_minvi(d,1,&fmin,&imin,nindices);
-        //imin now holds the index of the vertex closest to the point
-        //find the number of wfVertices per waveform
-        free(po);
-        free(d);
-        free(D);
-        //3 points per waveform
-        //unsigned int wfidx = imin/(3);
-        unsigned int wfidx = imin;
-        //get the current drawing color
-	//*/
-		//make sure we actually found a point first
+        //make sure we actually found a point first
 		if(wfidx < nindices)
 		{
 			[[self openGLContext] makeCurrentContext];
