@@ -1018,6 +1018,10 @@
         {
             [rasterView createVertices:[[notification object] getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)] withColor:[[self activeCluster] color]];
         }
+        if( [[[self wfv] window] isVisible] )
+        {
+            [self loadWaveforms: [notification object]];
+        }
         
 
     }
@@ -1938,7 +1942,7 @@
 		}
         if( [[[self rasterView] window] isVisible] )
         {
-            [rasterView createVertices:[firstCluster getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)]];
+            [rasterView createVertices:[firstCluster getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)] withColor:[firstCluster color]];
         }
 		NSInteger idx = [selectClusterOption indexOfSelectedItem];
 		NSString *selection = [selectClusterOption titleOfSelectedItem];
