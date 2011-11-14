@@ -488,16 +488,17 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
 -(void) highlightWaveforms:(NSData*)wfidx
 {
 	//wfidx must be in cluster coordinates and not refer to wfVertices
+	//if nothing changed, return
 	if([wfidx isEqual:highlightWaves] )
 	{
 		return;
 	}
-    [[self openGLContext] makeCurrentContext];
     unsigned int* _points = (unsigned int*)[wfidx bytes];
 	
     unsigned int _npoints = [wfidx length]/sizeof(unsigned int);
     
     GLfloat zvalue;
+    [[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
     GLfloat *_data = (GLfloat*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
     unsigned int idx,i;
@@ -891,8 +892,7 @@ static void wfDrawAnObject()
 	}
 	free(_index);
 	NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:idx,
-                                                                [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects: 
-                                                                                                                      @"points",@"color",nil]];
+                                                                [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects:                                                                                                                       @"points",@"color",nil]];
     [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object: self userInfo: params];
 	//[self highlightWaveforms: idx];
 	//[self hideWaveforms:idx];
@@ -1675,6 +1675,19 @@ static void wfDrawAnObject()
         drawStd = _drawStd;
         [self setNeedsDisplay:YES];
     }
+}
+
+- (void)viewDidHide
+{
+    //if the view is hidden, we don't want to receive any highlight modifications
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"highlight" object:nil];
+}
+
+-(void)viewDidUnhide
+{
+    //if the view becomes visible, re-register for highlight modifcations
+    [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(receiveNotification:)name:@"highlight" object:nil];
+
 }
 
 
