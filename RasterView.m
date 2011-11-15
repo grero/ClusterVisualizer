@@ -390,12 +390,18 @@
         }
 
     }
+    //if command key was pressed, add the currently selected point to the already highlighted points
+    NSMutableData *wfidxData = [NSMutableData dataWithBytes: &wfidx length: sizeof(unsigned int)];
+    if( ([theEvent modifierFlags] & NSCommandKeyMask) && (highlightedPoints != NULL) )
+    {
+        [wfidxData appendData:highlightedPoints];
+    }
     glUnmapBuffer(GL_ARRAY_BUFFER);
     [[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ARRAY_BUFFER, rColorBuffer);
     
     GLfloat *_colors = (GLfloat*)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
-    NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSData dataWithBytes: &wfidx length: sizeof(unsigned int)],                                                                    [NSData dataWithBytes: _colors+4*wfidx length:3*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
+    NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:wfidxData,                                                                    [NSData dataWithBytes: _colors+4*wfidx length:3*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
     glUnmapBuffer(GL_ARRAY_BUFFER);
     [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:self userInfo: params];
     
