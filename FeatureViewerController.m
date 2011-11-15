@@ -78,6 +78,7 @@
     //setup some usedefaults
     [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithBool:YES], @"autoScaleAxes",
                                       [NSNumber numberWithBool: YES], @"showFeatureAxesLabels",
+                                      [NSNumber numberWithBool: YES],@"showFeatureAxesFrame",
                                       [NSNumber numberWithBool: NO], @"showWaveformsAxesLabels",
                                       [NSNumber numberWithBool: YES], @"showWaveformsMean",
                                       [NSNumber numberWithBool: YES], @"showWaveformsStd",
@@ -1549,26 +1550,38 @@
         //TODO: this is just proto-type code. Please make this more efficient
         //Cluster *_cluster = [candidates objectAtIndex:0];
         NSMutableData *ctimes = [NSMutableData dataWithCapacity:([[[self activeCluster] npoints] unsignedIntValue])*sizeof(unsigned long long int)];
-        NSUInteger idx = [[[self activeCluster] indices] firstIndex];
-        while( idx != NSNotFound )
+        Cluster *_useCluster = nil;
+        if( [self activeCluster] != nil )
         {
-            NSRange _r;
-            _r.location = idx*sizeof(unsigned long long int);
-            _r.length = sizeof(unsigned long long int);
-            [ctimes appendData: [timestamps subdataWithRange:_r]];
-            idx = [[[self activeCluster] indices] indexGreaterThanIndex:idx];
+            _useCluster = [self activeCluster];
         }
-        ///register raster view for notifications
-        [[NSNotificationCenter defaultCenter] addObserver:[self rasterView] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
-        if( [self stimInfo] == NULL )
+        else if( [[self selectedClusters] count]>=1)
         {
-            [rasterView createVertices:ctimes withColor:[NSData dataWithData:[[self activeCluster] color]]];
+            _useCluster = [[clusterController selectedObjects] objectAtIndex:0];
         }
-        else
+        if( _useCluster != nil )
         {
-            [rasterView createVertices:ctimes withColor:[NSData dataWithData:[[self activeCluster] color]] andRepBoundaries:[[self stimInfo] repBoundaries]];
+            NSUInteger idx = [[_useCluster indices] firstIndex];
+            while( idx != NSNotFound )
+            {
+                NSRange _r;
+                _r.location = idx*sizeof(unsigned long long int);
+                _r.length = sizeof(unsigned long long int);
+                [ctimes appendData: [timestamps subdataWithRange:_r]];
+                idx = [[_useCluster indices] indexGreaterThanIndex:idx];
+            }
+            ///register raster view for notifications
+            [[NSNotificationCenter defaultCenter] addObserver:[self rasterView] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
+            if( [self stimInfo] == NULL )
+            {
+                [rasterView createVertices:ctimes withColor:[NSData dataWithData:[_useCluster color]]];
+            }
+            else
+            {
+                [rasterView createVertices:ctimes withColor:[NSData dataWithData:[_useCluster color]] andRepBoundaries:[[self stimInfo] repBoundaries]];
+            }
+            [[rasterView window] makeKeyAndOrderFront:self];
         }
-		[[rasterView window] makeKeyAndOrderFront:self];
     }
         
                                                                                  
@@ -1981,6 +1994,11 @@
                 [rasterView createVertices:[firstCluster getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)] withColor:[firstCluster color] andRepBoundaries:[[self stimInfo] repBoundaries]];
             }
         }
+        //load cluster in feature view
+        //not the best solution
+        [[self fw] hideAllClusters];
+        //
+        [[self fw] showCluster:firstCluster];
 		NSInteger idx = [selectClusterOption indexOfSelectedItem];
 		NSString *selection = [selectClusterOption titleOfSelectedItem];
 		NSString *new_selection = [selection stringByReplacingOccurrencesOfString:@"Show" withString:@"Hide"];
