@@ -11,7 +11,7 @@
 @implementation FeatureView
 
 @synthesize indexset;
-@synthesize highlightedPoints;
+@synthesize highlightedPoints,highlightedClusterPoints;
 
 -(BOOL) acceptsFirstResponder
 {
@@ -520,6 +520,8 @@
 {
     //draw selected points in complementary color
     NSData *points = [params objectForKey: @"points"];
+    //store the points such that multiple selections will work
+    [self setHighlightedClusterPoints:points];
     //NSData *color = [params objectForKey:@"color"];
 	//need to make this work when cluster is nil
 	NSData *color;
@@ -594,16 +596,11 @@
     {
         [self setHighlightedPoints: [NSMutableData dataWithBytes: idx length: _npoints*sizeof(GLuint)]];
     }
-    else {
-        if (appendHighlights == YES) 
-        {
-            [[self highlightedPoints] appendData:[NSData dataWithBytes: idx length: _npoints*sizeof(GLuint)]];
-        }
-        else
-        {
-            [[self highlightedPoints] setData: [NSData dataWithBytes: idx length: _npoints*sizeof(GLuint)]];
-        }
-        
+    else
+    {
+    
+        [[self highlightedPoints] setData: [NSData dataWithBytes: idx length: _npoints*sizeof(GLuint)]];
+
     }
 	free(idx);
     [self setNeedsDisplay:YES];
@@ -1242,15 +1239,7 @@ static void drawAnObject()
     {
         //only select points if Command key is pressed
         //if we are also pressing the shift button, append highlights
-        if( [theEvent modifierFlags] & NSShiftKeyMask )
-        {
-            appendHighlights = YES;
-        }
-        else
-        {
-            appendHighlights = NO;
-        }
-         //get current point in view coordinates
+        //get current point in view coordinates
         NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
         //now we will have to figure out which waveform(s) contains this point
         //scale to data coorindates
@@ -1382,11 +1371,18 @@ static void drawAnObject()
         //make sure we actually found a point first
 		if(wfidx < nindices)
 		{
+            //TODO: this will not work; highlighted points is in global, not cluster coordinates
+            NSMutableData *wfidxData = [NSMutableData dataWithBytes: &wfidx length: sizeof(unsigned int)];
+            if( ([theEvent modifierFlags] & NSShiftKeyMask) && (highlightedClusterPoints != NULL) )
+            {
+                [wfidxData appendData:highlightedClusterPoints];
+            }
+
 			[[self openGLContext] makeCurrentContext];
 			glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
 			float *color = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
 			
-			NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSData dataWithBytes: &wfidx length: sizeof(unsigned int)],                                                                    [NSData dataWithBytes: color+3*wfidx length:3*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
+			NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:wfidxData,[NSData dataWithBytes: color+3*wfidx length:3*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
 			glUnmapBuffer(GL_ARRAY_BUFFER);
             //TODO: What if we want to select points from mutiple clustrers?
 			[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:useCluster userInfo: params];

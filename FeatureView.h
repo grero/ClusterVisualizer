@@ -46,6 +46,7 @@ static BOOL picked;
 
     NSMutableIndexSet *indexset;
     NSMutableData *highlightedPoints;
+    NSData *highlightedClusterPoints;
     NSMutableData *rotation;
     @private
     NSOpenGLContext* _oglContext;
@@ -60,6 +61,7 @@ static BOOL picked;
 
 @property (retain,readwrite) NSMutableIndexSet *indexset;
 @property (retain,readwrite) NSMutableData *highlightedPoints;
+@property (retain,readwrite) NSData *highlightedClusterPoints;
 
 +(NSOpenGLPixelFormat*)defaultPixelFormat;
 -(id) initWithFrame:(NSRect)frameRect pixelFormat:(NSOpenGLPixelFormat*)format;
