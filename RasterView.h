@@ -35,7 +35,7 @@ static GLuint rColorBuffer;
 -(void) setPixelFormat:(NSOpenGLPixelFormat*)pixelFormat;
 -(NSOpenGLPixelFormat*)pixelFormat;
 -(void) _surfaceNeedsUpdate:(NSNotification *)notification;
-
+-(void)createVertices:(NSData *)points withColor:(NSData *)color andRepBoundaries:(NSData*)boundaries;
 
 -(void) createVertices: (NSData*)points withColor:(NSData*)color;
 -(void) highlightPoints: (NSDictionary*)params;

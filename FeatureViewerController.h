@@ -135,4 +135,5 @@
 @property (retain,readwrite) NSString *selectedWaveform;
 @property (retain,readwrite) NSNumber *featureCycleInterval;
 @property (retain,readwrite) NSAttributedString *releasenotes;
+@property (retain,readwrite) StimInfo *stimInfo;
 @end

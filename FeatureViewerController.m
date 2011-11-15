@@ -27,6 +27,7 @@
 @synthesize featureCycleInterval;
 @synthesize releasenotes;
 @synthesize rasterView;
+@synthesize stimInfo;
 
 -(void)awakeFromNib
 {
@@ -79,7 +80,8 @@
                                       [NSNumber numberWithBool: YES], @"showFeatureAxesLabels",
                                       [NSNumber numberWithBool: NO], @"showWaveformsAxesLabels",
                                       [NSNumber numberWithBool: YES], @"showWaveformsMean",
-                                      [NSNumber numberWithBool: YES], @"showWaveformsStd",nil]];
+                                      [NSNumber numberWithBool: YES], @"showWaveformsStd",
+                                       [NSNumber numberWithBool: YES],@"stimInfo",nil]];
 }
 
 -(BOOL) acceptsFirstResponder
@@ -423,27 +425,41 @@
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) 
 												 name:@"setFeatures" object:nil];
 	
-	NSString *stimInfoFile = NULL;
-    if( waveformsFile != NULL )
-    {
-        //attempt to locate a simtinfo object. This should be located two levels above the waveformfile
-        NSString *stimInfoDir = [waveformsFile stringByDeletingLastPathComponent];
-        stimInfoFile = [waveformsFile lastPathComponent];
-        NSRange _r = [stimInfoFile rangeOfString:@"g00"];
-        stimInfoFile = [stimInfoDir stringByAppendingPathComponent:[[stimInfoFile substringWithRange:NSMakeRange(0, _r.location)] stringByAppendingString:@".ini"]];
-        if( [[NSFileManager defaultManager] fileExistsAtPath:stimInfoFile] == NO)
-        {
-            stimInfoDir = [[waveformsFile stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
-            stimInfoFile = [waveformsFile lastPathComponent];
-            _r = [stimInfoFile rangeOfString:@"g00"];
-            stimInfoFile = [stimInfoDir stringByAppendingPathComponent:[[stimInfoFile substringWithRange:NSMakeRange(0, _r.location)] stringByAppendingString:@"stimInfo.mat"]];
-        }
     
+    if( [[[NSUserDefaults standardUserDefaults] objectForKey:@"stimInfo"] boolValue]==YES)
+    {
+        NSString *stimInfoFile = NULL;
+        if( waveformsFile != NULL )
+        {
+            //attempt to locate a simtinfo object. This should be located two levels above the waveformfile
+            NSString *stimInfoDir = [waveformsFile stringByDeletingLastPathComponent];
+            stimInfoFile = [waveformsFile lastPathComponent];
+            NSRange _r = [stimInfoFile rangeOfString:@"g00"];
+            stimInfoFile = [stimInfoDir stringByAppendingPathComponent:[[stimInfoFile substringWithRange:NSMakeRange(0, _r.location)] stringByAppendingString:@".ini"]];
+            if( [[NSFileManager defaultManager] fileExistsAtPath:stimInfoFile] == NO)
+            {
+                stimInfoDir = [[waveformsFile stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
+                stimInfoFile = [waveformsFile lastPathComponent];
+                _r = [stimInfoFile rangeOfString:@"g00"];
+                stimInfoFile = [stimInfoDir stringByAppendingPathComponent:[[stimInfoFile substringWithRange:NSMakeRange(0, _r.location)] stringByAppendingString:@"stimInfo.mat"]];
+            }
+            if( [[NSFileManager defaultManager] fileExistsAtPath:stimInfoFile] == NO)
+            {
+                stimInfoFile=NULL;
+            }
+        
+        }
+        if(stimInfoFile != NULL)
+        {
+            //load stimInfo
+            stimInfo = [[[StimInfo alloc] init] retain];
+            [stimInfo readFromFile:stimInfoFile];
+            [stimInfo readMonitorSyncs];
+            [stimInfo readDescriptor];
+            [stimInfo getFramePoints];
+            //[stimInfo getTriggerSignalWithThreshold:1500.0];
+        }
     }
-    //load stimInfo
-    stimInfo = [[[StimInfo alloc] init] retain];
-    [stimInfo readFromFile:stimInfoFile];
-    [stimInfo readMonitorSyncs];
 	//only reset clusters if data has already been loaded
     if( ([self Clusters] != nil) && (dataloaded == YES ) )
     {
@@ -1016,7 +1032,14 @@
         //update the raster
         if( [[[self rasterView] window] isVisible] )
         {
-            [rasterView createVertices:[[notification object] getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)] withColor:[[self activeCluster] color]];
+            if( [self stimInfo] == NULL )
+            {
+                [rasterView createVertices:[[notification object] getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)] withColor:[[self activeCluster] color]];
+            }
+            else
+            {
+                [rasterView createVertices:[[notification object] getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)] withColor:[[self activeCluster] color] andRepBoundaries:[[self stimInfo] repBoundaries]];
+            }
         }
         if( [[[self wfv] window] isVisible] )
         {
@@ -1537,7 +1560,14 @@
         }
         ///register raster view for notifications
         [[NSNotificationCenter defaultCenter] addObserver:[self rasterView] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
-        [rasterView createVertices:ctimes withColor:[NSData dataWithData:[[self activeCluster] color]]];
+        if( [self stimInfo] == NULL )
+        {
+            [rasterView createVertices:ctimes withColor:[NSData dataWithData:[[self activeCluster] color]]];
+        }
+        else
+        {
+            [rasterView createVertices:ctimes withColor:[NSData dataWithData:[[self activeCluster] color]] andRepBoundaries:[[self stimInfo] repBoundaries]];
+        }
 		[[rasterView window] makeKeyAndOrderFront:self];
     }
         
@@ -1942,7 +1972,14 @@
 		}
         if( [[[self rasterView] window] isVisible] )
         {
-            [rasterView createVertices:[firstCluster getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)] withColor:[firstCluster color]];
+            if([self stimInfo] == NULL )
+            {
+                [rasterView createVertices:[firstCluster getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)] withColor:[firstCluster color]];
+            }
+            else
+            {
+                [rasterView createVertices:[firstCluster getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)] withColor:[firstCluster color] andRepBoundaries:[[self stimInfo] repBoundaries]];
+            }
         }
 		NSInteger idx = [selectClusterOption indexOfSelectedItem];
 		NSString *selection = [selectClusterOption titleOfSelectedItem];

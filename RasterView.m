@@ -119,6 +119,7 @@
     if( [[self openGLContext] view] == self)
     {
 		[self reshape];
+        [[self openGLContext] makeCurrentContext];
         [[self openGLContext] update];
     }
 }
@@ -150,23 +151,43 @@
 	[[self openGLContext] flushBuffer];
 	
 }
-
 -(void)createVertices: (NSData*)points withColor: (NSData*)color
+{
+    [self createVertices:points withColor:color andRepBoundaries:nil];
+}
+
+-(void)createVertices:(NSData *)points withColor:(NSData *)color andRepBoundaries:(NSData*)boundaries
 {
     //make sure no points are highlgihted
     highlightedPoints = NULL;
     GLfloat *_color = (GLfloat *)[color bytes];
 	npoints = [points length];
 	npoints = npoints/sizeof(unsigned long long int);
-	//create an index
+    	//create an index
 	int i;
 	GLuint *_indices = NSZoneMalloc([self zone], npoints*sizeof(GLuint));
 	GLfloat *_colors = NSZoneMalloc([self zone], 4*npoints*sizeof(GLfloat));
 	GLfloat *_vertices = NSZoneMalloc([self zone], 3*npoints*sizeof(GLfloat));
 	unsigned long long int *_points = (unsigned long long int*)[points bytes];
-    unsigned int tidx;
+    unsigned int tidx,j;
+    double *_boundaries = NULL;
+    unsigned int _nboundaries = 0;
+    if(boundaries != nil )
+    {
+        _boundaries = (double*)[boundaries bytes];
+        _nboundaries = [boundaries length]/sizeof(double);
+        /*
+        if(_boundaries[0]==0)
+        {
+            //skip zero
+            _boundaries+=1;
+            _nboundaries-=1;
+        }*/
+    }
+
     //xmax
     xmax = -INFINITY;
+    j = 0;
 	for(i=0;i<npoints;i++)
 	{
 		_indices[i] = i;
@@ -178,8 +199,21 @@
 		_vertices[3*i] = (GLfloat)((double)(_points[i])/1000);
         
 		//_vertices[3*i+1] = 50.0;
-        tidx = (unsigned int)(_vertices[3*i]/30000.0);
-        _vertices[3*i] -= tidx*30000.0;
+        if (_boundaries == NULL )
+        {
+            tidx = (unsigned int)(_vertices[3*i]/30000.0);
+            _vertices[3*i] -= tidx*30000.0;
+        }
+        else
+        {
+            while( (_vertices[3*i]>_boundaries[j] ) && (j < _nboundaries) )
+            {
+                j+=1;
+            }
+            //get the largest boundary point smaller than _vertices[3*i]
+            tidx = j-1;
+            _vertices[3*i]-=_boundaries[tidx];
+        }
         _vertices[3*i+1] = (GLfloat)(tidx);
         //in the future, the z-value could be used to i.e. segregate into frames
         //for now, use z-value equal to y-value
@@ -217,6 +251,7 @@
 	NSZoneFree([self zone], _indices);
 	NSZoneFree([self zone], _colors);
 	NSZoneFree([self zone], _vertices);
+    //[self display];
 	[self setNeedsDisplay:YES];
 }
 
