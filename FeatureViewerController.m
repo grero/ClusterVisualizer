@@ -17,7 +17,7 @@
 @synthesize Clusters;
 @synthesize ClusterOptions;
 @synthesize isValidCluster;
-@synthesize filterClustersPredicate;
+//@synthesize filterClustersPredicate;
 @synthesize clustersSortDescriptor;
 @synthesize clustersSortDescriptors;
 @synthesize waveformsFile;
@@ -1079,6 +1079,7 @@
 	
 	
 }
+
 - (IBAction) changeDim3: (id)sender
 {
     //[fw selectDimensions:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:2],@"dim", [NSNumber numberWithInt: [sender indexOfSelectedItem]],@"dim_data",nil]];
@@ -2071,8 +2072,8 @@
         }
         //load cluster in feature view
         //not the best solution
-        //hide the previously selected cluster
-        if(( [self selectedCluster] != nil))// && ([selectedCluster isEqual:firstCluster] == NO) )
+        //hide the previously selected cluster, only if it is not also active
+        if(( [self selectedCluster] != nil) && ([selectedCluster active] == NO) )
         {
             [[self fw] hideCluster:selectedCluster];
         }

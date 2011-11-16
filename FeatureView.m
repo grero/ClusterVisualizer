@@ -328,7 +328,6 @@
     currentCluster = cluster;
     [selectedClusters addObject: cluster];
 	unsigned int new_size = [[cluster npoints] intValue];
-    //do this in a very inane way for now, just to see if it works
 	[[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
     GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
@@ -396,6 +395,7 @@
 		//originz = -centroid[1];
         //NSZoneFree([self zone], centroid);
 		[indexset addIndexes: [cluster indices]];
+        nindices = [indexset count];
 		//calculate the centroid of the cluster in the current space
 		[self changeZoom];
         [self setNeedsDisplay:YES];
@@ -405,6 +405,10 @@
 -(void) hideCluster: (Cluster *)cluster
 {
     //first check it the cluster is even shown
+    if( [cluster isKindOfClass:[Cluster class]] == NO )
+    {
+        return;
+    }
     if( [selectedClusters containsObject:cluster] == NO )
     {
         //if not, do nothing
@@ -416,7 +420,7 @@
         currentCluster = [selectedClusters lastObject];
     }
 	unsigned int new_size = [[cluster npoints] intValue];
-	//first check if hiding this cluste takes away all indices, if so, simply set nindices to 0
+	//first check if hiding this cluster takes away all indices, if so, simply set nindices to 0
 	if(nindices - new_size ==0)
 	{
 		nindices = 0;
@@ -476,12 +480,13 @@
             nindices-=new_size;
             if(nindices<0)
                 nindices=0;
+            nindices = [indexset count];
             NSUInteger *_index = malloc(nindices*sizeof(NSUInteger));
             [indexset getIndexes: _index maxCount:nindices*sizeof(NSUInteger) inIndexRange:nil];
             for(i=0;i<nindices;i++)
             {
                 indices[i] = (unsigned int)_index[i];
-                tmp_indices[i] = (unsigned int) _index[i];
+                tmp_indices[i] = (GLuint) _index[i];
             }
             //push the new indices
             //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
