@@ -115,6 +115,7 @@
 - (IBAction)saveFeatureSpace:(id)sender;
 -(void)cycleDimensionsUsingTimer:(NSTimer*)timer;
 
+
 //@property (assign) IBOutlet NSWindow *window;
 @property (assign) IBOutlet FeatureView *fw;
 @property (assign) IBOutlet WaveformsView *wfv;

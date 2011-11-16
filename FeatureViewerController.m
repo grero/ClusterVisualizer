@@ -1609,13 +1609,45 @@
         NSEnumerator *clusterEnumerator = [candidates objectEnumerator];
         Cluster *_useCluster = [clusterEnumerator nextObject];
         int cidx = 1;
-    
+        
+        BOOL replaceAll = NO;
+        //create an NSAlert instance to handle the possible file overwrites
+        NSAlert *alert = [[NSAlert alloc] init];
+        [alert addButtonWithTitle:@"Replace"];
+        [alert addButtonWithTitle:@"Replace all"];
+        [alert addButtonWithTitle:@"Skip"];
+        [alert addButtonWithTitle:@"Skip all"];
+        [alert setInformativeText:@"If you choose replace, existing data will be lost"];
+        [alert setAlertStyle:NSWarningAlertStyle];
+        
         while(_useCluster )
         {
             NSString *clusterPath = [clusterBasePath stringByAppendingPathComponent:[NSString stringWithFormat:@"cluster%.2ds", cidx]];
-            //check if path exists
             [[NSFileManager defaultManager] createDirectoryAtPath:clusterPath withIntermediateDirectories:YES attributes:nil error:nil];
             clusterPath = [clusterPath stringByAppendingPathComponent:@"adjspikes.mat"];
+            if( ([[NSFileManager defaultManager] fileExistsAtPath:clusterPath] ) && (replaceAll == NO) )
+            {
+                [alert setMessageText:[NSString stringWithFormat:@"File %@ already exists. Do you want to replace it?", clusterPath]];
+                int response = [alert runModal];
+                
+                if(response == NSAlertSecondButtonReturn )
+                {
+                    replaceAll = YES;
+                }
+                else if (response == NSAlertThirdButtonReturn )
+                {
+                    //skip this cluster
+                    _useCluster = [clusterEnumerator nextObject];
+                    cidx+=1;
+                    continue;
+                }
+                else if( response == NSAlertThirdButtonReturn+1 )
+                {
+                    //abort the loop
+                    break;
+                }
+                
+            }
             const char *fname = [clusterPath cStringUsingEncoding:NSASCIIStringEncoding];
             double *sptrain;
             int nframes,nreps,nspikes;
@@ -2079,6 +2111,7 @@
 	[formatter release];
 	//
 }
+
 
 -(void)dealloc
 {
