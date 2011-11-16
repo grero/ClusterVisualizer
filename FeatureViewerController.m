@@ -775,7 +775,7 @@
     
     
     [selectClusterOption removeAllItems];
-    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Show raster",nil];
+    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Show raster",@"Save clusters",nil];
     //test
     //clusterOptionsMenu  = [[[NSMenu alloc] initWithTitle:@"Options"] autorelease];
     //add some items
@@ -1583,6 +1583,55 @@
             [[rasterView window] makeKeyAndOrderFront:self];
         }
     }
+    else if ([selection isEqualToString: @"Save clusters"] )
+    {
+        //check to see if the proper hierarchy exists
+        //analyze waveforms file to get the different components
+        NSString *sessionName = nil;
+        NSString *group = nil;
+        /*if( [self stimInfo] != nil )
+        {
+            sessionName = [stimInfo sessionName];
+        }
+        else
+        {*/
+            //have to figure out everything from the waveforms file
+            //the patterns is [sessionmame][gXXXX]waveforms.bin
+        NSString *baseName = [[self waveformsFile] lastPathComponent];
+        NSRange _r = [baseName rangeOfString:@"waveforms"];
+        
+        group = [NSString stringWithFormat:@"group%@",[baseName substringWithRange:NSMakeRange(_r.location-4,4)]];
+        sessionName = [baseName substringWithRange:NSMakeRange(0,_r.location-5)];
+        //}
+        
+        NSString *clusterBasePath =  [[[self waveformsFile] stringByDeletingLastPathComponent] stringByAppendingPathComponent:group];
+        //now go through the selected clusters and save them
+        NSEnumerator *clusterEnumerator = [candidates objectEnumerator];
+        Cluster *_useCluster = [clusterEnumerator nextObject];
+        int cidx = 1;
+    
+        while(_useCluster )
+        {
+            NSString *clusterPath = [clusterBasePath stringByAppendingPathComponent:[NSString stringWithFormat:@"cluster%.2ds", cidx]];
+            //check if path exists
+            [[NSFileManager defaultManager] createDirectoryAtPath:clusterPath withIntermediateDirectories:YES attributes:nil error:nil];
+            clusterPath = [clusterPath stringByAppendingPathComponent:@"adjspikes.mat"];
+            const char *fname = [clusterPath cStringUsingEncoding:NSASCIIStringEncoding];
+            double *sptrain;
+            int nframes,nreps,nspikes;
+            nframes = [[self stimInfo] nframes];
+            nreps = [[self stimInfo] nreps];
+            double *framepts = (double*)[[[self stimInfo ] framepts] bytes];
+            nspikes = [[_useCluster npoints] intValue];
+            [_useCluster getSpiketrain:&sptrain fromTimestamps:timestamps];
+            writeAdjSpikesObject(fname, framepts, nframes, sptrain, nspikes, nreps);
+            free(sptrain);
+            cidx+=1;
+            _useCluster = [clusterEnumerator nextObject];
+        }
+
+    }
+
         
                                                                                  
 }

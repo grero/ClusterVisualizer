@@ -45,6 +45,7 @@
 		DB34A523144FAF79005E7E66 /* libopen-rte.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB34A521144FAF79005E7E66 /* libopen-rte.0.dylib */; };
 		DB4F63C0146FA65500AD54B3 /* StimInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4F63BF146FA65500AD54B3 /* StimInfo.m */; };
 		DB91841B13440F580025F64A /* fileReaders.c in Sources */ = {isa = PBXBuildFile; fileRef = DB91841A13440F580025F64A /* fileReaders.c */; };
+		DB9415A214726507008C1663 /* fileWriters.c in Sources */ = {isa = PBXBuildFile; fileRef = DB9415A114726507008C1663 /* fileWriters.c */; };
 		DBA05985136A42A1008639C2 /* libhdf5_hl.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DBA05984136A42A1008639C2 /* libhdf5_hl.6.dylib */; };
 		DBA05987136A42A1008639C2 /* libhdf5.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DBA05986136A42A1008639C2 /* libhdf5.6.dylib */; };
 		DBA05988136A42AE008639C2 /* libhdf5_hl.6.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBA05984136A42A1008639C2 /* libhdf5_hl.6.dylib */; };
@@ -134,6 +135,8 @@
 		DB4F63BF146FA65500AD54B3 /* StimInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StimInfo.m; sourceTree = "<group>"; };
 		DB91841913440F580025F64A /* fileReaders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fileReaders.h; sourceTree = "<group>"; };
 		DB91841A13440F580025F64A /* fileReaders.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fileReaders.c; sourceTree = "<group>"; };
+		DB9415A114726507008C1663 /* fileWriters.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fileWriters.c; sourceTree = "<group>"; };
+		DB9415A314726524008C1663 /* fileWriters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fileWriters.h; sourceTree = "<group>"; };
 		DBA05984136A42A1008639C2 /* libhdf5_hl.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libhdf5_hl.6.dylib; path = /usr/local/lib/libhdf5_hl.6.dylib; sourceTree = "<absolute>"; };
 		DBA05986136A42A1008639C2 /* libhdf5.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libhdf5.6.dylib; path = /usr/local/lib/libhdf5.6.dylib; sourceTree = "<absolute>"; };
 		DBA05AC1136ACB41008639C2 /* computeFeatures.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = computeFeatures.h; sourceTree = "<group>"; };
@@ -251,6 +254,8 @@
 			children = (
 				C710DD7912E30CF300CCCE0C /* GLString.m */,
 				C710DD7A12E30CF300CCCE0C /* GLString.h */,
+				DB9415A114726507008C1663 /* fileWriters.c */,
+				DB9415A314726524008C1663 /* fileWriters.h */,
 				256AC3F00F4B6AF500CF3369 /* FeatureViewer_Prefix.pch */,
 				C7D281F11257A52B007D19EA /* nptLoadingEngine.c */,
 				C79EA891125F02CE0066BCAD /* utils.c */,
@@ -411,6 +416,7 @@
 				DBA05AC3136ACB41008639C2 /* computeFeatures.c in Sources */,
 				DB1995A013881966003A6D89 /* RasterView.m in Sources */,
 				DB4F63C0146FA65500AD54B3 /* StimInfo.m in Sources */,
+				DB9415A214726507008C1663 /* fileWriters.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

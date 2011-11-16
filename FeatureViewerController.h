@@ -20,6 +20,7 @@
 #import "computeFeatures.h"
 #import "RasterView.h"
 #import "StimInfo.h"
+#import "fileWriters.h"
 
 @interface FeatureViewerController : NSController {
     
