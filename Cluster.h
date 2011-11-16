@@ -81,4 +81,6 @@
 -(void)encodeWithCoder:(NSCoder*)coder;
 -(id)initWithCoder:(NSCoder*)coder;
 -(NSData*)getRelevantData:(NSData*)data withElementSize:(unsigned int)elsize;
+-(void)getSpiketrain: (double**)sptrain fromTimestamps: (NSData*)timestamps
+;
 @end

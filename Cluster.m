@@ -472,6 +472,19 @@
 
 }
 
+-(void)getSpiketrain: (double**)sptrain fromTimestamps: (NSData*)timestamps
+{
+    unsigned int nspikes = [npoints unsignedIntValue];
+    *sptrain = malloc(nspikes*sizeof(double));
+    unsigned long long int *_timestamps = (unsigned long long int*)[timestamps bytes];
+    unsigned int *_points = (unsigned int*)[points bytes];
+    unsigned int i;
+    for(i=0;i<nspikes;i++)
+    {
+        (*sptrain)[i] = (double)(_timestamps[_points[i]]/1000.0);
+    }
+}
+
 -(void) dealloc
 {
     [name release];
