@@ -28,7 +28,7 @@
     NSMutableArray *ClusterOptions;
     //menu object for performing cluster options
     NSMenu *clusterOptionsMenu;
-    Cluster *activeCluster;
+    Cluster *activeCluster,*selectedCluster;
     NSArray *clusterModel;
     NSPredicate *isValidCluster, *filterClustersPredicate;
 	NSIndexSet *selectedClusters;
@@ -132,7 +132,7 @@
 @property (retain, readwrite) NSSortDescriptor *clustersSortDescriptor;
 @property (retain, readwrite) NSMutableArray *clustersSortDescriptors;
 @property (retain, readwrite) NSString *waveformsFile;
-@property (assign,readwrite) Cluster *activeCluster;
+@property (assign,readwrite) Cluster *activeCluster, *selectedCluster;
 @property (assign,readwrite) NSIndexSet *selectedClusters;
 @property (retain,readwrite) NSString *selectedWaveform;
 @property (retain,readwrite) NSNumber *featureCycleInterval;

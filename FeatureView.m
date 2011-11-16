@@ -405,6 +405,12 @@
 
 -(void) hideCluster: (Cluster *)cluster
 {
+    //first check it the cluster is even shown
+    if( [selectedClusters containsObject:cluster] == NO )
+    {
+        //if not, do nothing
+        return;
+    }
     [selectedClusters removeObject:cluster];
     if( [selectedClusters count] >= 1 )
     {

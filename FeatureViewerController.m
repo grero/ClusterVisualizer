@@ -21,7 +21,7 @@
 @synthesize clustersSortDescriptor;
 @synthesize clustersSortDescriptors;
 @synthesize waveformsFile;
-@synthesize activeCluster;
+@synthesize activeCluster,selectedCluster;
 @synthesize selectedClusters;
 @synthesize selectedWaveform;
 @synthesize featureCycleInterval;
@@ -2050,6 +2050,9 @@
 	//this should be called when a cluster is selected (by clicking on the thumbnail).Draw the waveforms of (the first) selected cluster
     //TODO: what happens if we right-click? nothing
 	NSUInteger firstIndex = [indexes firstIndex];
+    //get active clusters
+    //NSArray *candidates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"active == YES"]];
+
 	if( firstIndex < [Clusters count] )
 	{
 		//TODO: This does not work if the clusters were sorted in the NSCollectionView, since the index is valid for the sorted and not
@@ -2077,17 +2080,21 @@
         }
         //load cluster in feature view
         //not the best solution
-        [[self fw] hideAllClusters];
-        //
+        //hide the previously selected cluster
+        if(( [self selectedCluster] != nil))// && ([selectedCluster isEqual:firstCluster] == NO) )
+        {
+            [[self fw] hideCluster:selectedCluster];
+        }
         [[self fw] showCluster:firstCluster];
 		NSInteger idx = [selectClusterOption indexOfSelectedItem];
 		NSString *selection = [selectClusterOption titleOfSelectedItem];
-		NSString *new_selection = [selection stringByReplacingOccurrencesOfString:@"Show" withString:@"Hide"];
-		[selectClusterOption removeItemAtIndex:idx];
-		[selectClusterOption insertItemWithTitle:new_selection atIndex:idx];
+		//NSString *new_selection = [selection stringByReplacingOccurrencesOfString:@"Show" withString:@"Hide"];
+		//[selectClusterOption removeItemAtIndex:idx];
+		//[selectClusterOption insertItemWithTitle:new_selection atIndex:idx];
 		//make sure the waveforms view receives notification of highlights
 		[[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
 		selectedClusters = [[[NSIndexSet alloc] initWithIndexSet:indexes] retain];
+        [self setSelectedCluster:firstCluster];
 	}
 	
 }
