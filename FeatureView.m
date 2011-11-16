@@ -327,15 +327,14 @@
 {
     currentCluster = cluster;
     [selectedClusters addObject: cluster];
-    int cid = [cluster.name intValue];
 	unsigned int new_size = [[cluster npoints] intValue];
     //do this in a very inane way for now, just to see if it works
-    int i;
 	[[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
     GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
 	//
-	//gluErrorString(<#GLenum error#>)
+    GLuint error = glGetError();
+	const GLbyte *errstr = gluErrorString(error);
 	//
     if(tmp_indices!=NULL)
     {
@@ -425,72 +424,76 @@
 		[self setNeedsDisplay:YES];
 		return;
 	}
-	[[self openGLContext] makeCurrentContext];
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-    GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
-    if((tmp_indices != NULL) && (new_size>0) )
+	
+    if(new_size>0)
     {
-		
-        unsigned int *points = (unsigned int*)[[cluster points] bytes];
-		//unsigned int *_points = (unsigned int*)malloc((nindices-new_size)*sizeof(unsigned int));
-        //new_size = [[cluster indices] count];
-		int i,j,k,found;
-		i = 0;
-		//TODO: The following is a very naiv way of doing intersection. Should fix this 
-		//      One way to fix make it more efficient is to make sure the indices are sorted. This can
-		//      be done by maintaining a heap, for instance. 
-		//dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-		//dispatch_apply(nindices, queue, ^(size_t j)
-		
-		for(j=0;j<nindices;j++)
-		{
-			//int i,k,found;
+        [[self openGLContext] makeCurrentContext];
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+        GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
+        if( tmp_indices != NULL)
+        {
+            
+            unsigned int *points = (unsigned int*)[[cluster points] bytes];
+            //unsigned int *_points = (unsigned int*)malloc((nindices-new_size)*sizeof(unsigned int));
+            //new_size = [[cluster indices] count];
+            int i,j,k,found;
+            i = 0;
+            //TODO: The following is a very naiv way of doing intersection. Should fix this 
+            //      One way to fix make it more efficient is to make sure the indices are sorted. This can
+            //      be done by maintaining a heap, for instance. 
+            //dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+            //dispatch_apply(nindices, queue, ^(size_t j)
+            
+            for(j=0;j<nindices;j++)
+            {
+                //int i,k,found;
 
-			found = 0;
-			//i = 0;
-			for(k=0;k<new_size;k++)
-			{
-				if(tmp_indices[j]==points[k])
-				{
-					found=1;
-					//once we've found a match, abort
-					break;
-				}
-			}
-			if(found==0)
-			{
-				indices[i] = tmp_indices[j];
-				i+=1;
-			}
-		}//);
-		//alternative to the above: Use IndexSets
-		//NSMutableIndexSet *tmp = [NSMutableIndexSet 
-		[indexset removeIndexes: [cluster indices]];
-		
-		NSRange range;
-		range.location = 0;
-		range.length =nindices;
-		//count = [indexset getIndexes: tmp_indices maxCount: nindices-new_size inIndexRange: nil];
-		nindices-=new_size;
-		if(nindices<0)
-			nindices=0;
-		NSUInteger *_index = malloc(nindices*sizeof(NSUInteger));
-        [indexset getIndexes: _index maxCount:nindices*sizeof(NSUInteger) inIndexRange:nil];
-		for(i=0;i<nindices;i++)
-		{
-			indices[i] = (unsigned int)_index[i];
-			tmp_indices[i] = (unsigned int) _index[i];
-		}
-        glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-		//push the new indices
-		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, nindices*sizeof(unsigned int), indices, GL_DYNAMIC_DRAW);
-		//free(_points);
-		//reset origin
-		originx = 0.0;
-		originy = 0.0;
-		originz = -2.0;        
-		[self setNeedsDisplay:YES];
+                found = 0;
+                //i = 0;
+                for(k=0;k<new_size;k++)
+                {
+                    if(tmp_indices[j]==points[k])
+                    {
+                        found=1;
+                        //once we've found a match, abort
+                        break;
+                    }
+                }
+                if(found==0)
+                {
+                    indices[i] = tmp_indices[j];
+                    i+=1;
+                }
+            }//);
+            //alternative to the above: Use IndexSets
+            //NSMutableIndexSet *tmp = [NSMutableIndexSet 
+            [indexset removeIndexes: [cluster indices]];
+            
+            NSRange range;
+            range.location = 0;
+            range.length =nindices;
+            //count = [indexset getIndexes: tmp_indices maxCount: nindices-new_size inIndexRange: nil];
+            nindices-=new_size;
+            if(nindices<0)
+                nindices=0;
+            NSUInteger *_index = malloc(nindices*sizeof(NSUInteger));
+            [indexset getIndexes: _index maxCount:nindices*sizeof(NSUInteger) inIndexRange:nil];
+            for(i=0;i<nindices;i++)
+            {
+                indices[i] = (unsigned int)_index[i];
+                tmp_indices[i] = (unsigned int) _index[i];
+            }
+            //push the new indices
+            //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+            //glBufferData(GL_ELEMENT_ARRAY_BUFFER, nindices*sizeof(unsigned int), indices, GL_DYNAMIC_DRAW);
+            //free(_points);
+            //reset origin
+            originx = 0.0;
+            originy = 0.0;
+            originz = -2.0;
+            glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+            [self setNeedsDisplay:YES];
+        }
 
     }
 }

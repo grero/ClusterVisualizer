@@ -22,7 +22,7 @@
 @synthesize clustersSortDescriptors;
 @synthesize waveformsFile;
 @synthesize activeCluster,selectedCluster;
-@synthesize selectedClusters;
+//@synthesize selectedClusters;
 @synthesize selectedWaveform;
 @synthesize featureCycleInterval;
 @synthesize releasenotes;
@@ -1010,26 +1010,15 @@
 
 -(void)ClusterStateChanged:(NSNotification*)notification
 {
+    if( [[notification object] isKindOfClass:[Cluster class]] == NO )
+    {
+        return;
+    }
     if( [[notification object] active] )
     {
         [fw showCluster:[notification object]];
         [self setActiveCluster:[notification object]];
-		//we don't want to do this any more since we are using selectedClusters to manage what to draw in
-		//the waveformsview
-		/*
-        if([[[self wfv] window] isVisible])
-        {
-            //if we are showing waveforms
-            [self loadWaveforms:[notification object]];
-            //if no image has been created for this cluster,create one
-            if( [[self activeCluster] waveformsImage] == NULL )
-            {
-                //BOOL cd = [[self wfv] canDraw];
-                NSImage *img = [[self wfv] image];
-                [[self activeCluster] setWaveformsImage:img];
-                
-            }
-        }*/
+		
         //update the raster
         if( [[[self rasterView] window] isVisible] )
         {
@@ -1049,7 +1038,8 @@
         
 
     }
-    else {
+    else 
+    {
         [fw hideCluster: [notification object]];
         if([[self activeCluster] isEqualTo:[notification object]] )
         {
@@ -2059,6 +2049,7 @@
 		//the original array
 		//Cluster *firstCluster = [Clusters objectAtIndex:firstIndex];
 		Cluster *firstCluster = [[clusterController selectedObjects] objectAtIndex:0];
+                
 		[self loadWaveforms: firstCluster];
 		[[wfv window] orderFront: self];
 		//make sure we also update the waveformsImage
