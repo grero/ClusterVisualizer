@@ -12,6 +12,7 @@
 
 @synthesize indexset;
 @synthesize highlightedPoints,highlightedClusterPoints;
+@synthesize showFrame;
 
 -(BOOL) acceptsFirstResponder
 {
@@ -931,7 +932,10 @@ static void drawAnObject()
 	glTranslatef(originx, originy, originz);
 	glRotatef(rotatey,0, 1, 0);
 	glRotatef(rotatez, 0, 0,1);
-	drawFrame();
+    if ([self showFrame] )
+    {
+        drawFrame();
+    }
 	
 	/*This code is for testing mouse clicks
 	if(picked)
@@ -1128,6 +1132,8 @@ static void drawAnObject()
     else if( [[notification name] isEqualToString:NSUserDefaultsDidChangeNotification])
     {
         [self setDrawLabels:[[[NSUserDefaults standardUserDefaults] objectForKey:@"showFeatureAxesLabels"] boolValue]];
+        [self setShowFrame: [[[NSUserDefaults standardUserDefaults] objectForKey:@"showFeatureAxesFrame"] boolValue]];
+        [self setNeedsDisplay:YES];
     }
 }
 
