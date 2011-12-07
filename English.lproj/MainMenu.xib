@@ -1419,6 +1419,7 @@
 							<int key="NSvFlags">274</int>
 							<string key="NSFrame">{{228, 20}, {578, 578}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
 							<string key="NSClassName">FeatureView</string>
 						</object>
@@ -1427,6 +1428,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{18, 570}, {93, 28}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="1018268506"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="894479466">
@@ -1452,6 +1454,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{75, 538}, {132, 26}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="454658205"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSComboBoxCell" key="NSCell" id="278769875">
@@ -1568,6 +1571,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{75, 510}, {132, 26}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="55133914"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSComboBoxCell" key="NSCell" id="697598084">
@@ -1644,6 +1648,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{75, 482}, {132, 26}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="306122547"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSComboBoxCell" key="NSCell" id="624010506">
@@ -1720,6 +1725,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{24, 543}, {55, 17}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="521366301"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="199031584">
@@ -1742,6 +1748,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{24, 515}, {55, 17}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="332633016"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="912087720">
@@ -1759,6 +1766,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{24, 487}, {55, 17}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="887443069"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="185667678">
@@ -1776,6 +1784,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{34, 453}, {79, 28}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="900355133"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="741067985">
@@ -1797,6 +1806,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{117, 453}, {79, 28}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="578570483"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="243551748">
@@ -1828,6 +1838,7 @@
 											<int key="NSvFlags">274</int>
 											<string key="NSFrameSize">{180, 362}</string>
 											<reference key="NSSuperview" ref="1036601397"/>
+											<reference key="NSWindow"/>
 											<reference key="NSNextKeyView" ref="562166226"/>
 											<string key="NSMinGridSize">{0, 0}</string>
 											<string key="NSMaxGridSize">{0, 0}</string>
@@ -1845,6 +1856,7 @@
 									</object>
 									<string key="NSFrame">{{1, 1}, {180, 362}}</string>
 									<reference key="NSSuperview" ref="965531265"/>
+									<reference key="NSWindow"/>
 									<reference key="NSNextKeyView" ref="154252107"/>
 									<reference key="NSDocView" ref="154252107"/>
 									<reference key="NSBGColor" ref="777380276"/>
@@ -1855,6 +1867,7 @@
 									<int key="NSvFlags">-2147483392</int>
 									<string key="NSFrame">{{234, 1}, {15, 143}}</string>
 									<reference key="NSSuperview" ref="965531265"/>
+									<reference key="NSWindow"/>
 									<reference key="NSNextKeyView" ref="378715752"/>
 									<reference key="NSTarget" ref="965531265"/>
 									<string key="NSAction">_doScroller:</string>
@@ -1866,6 +1879,7 @@
 									<int key="NSvFlags">-2147483392</int>
 									<string key="NSFrame">{{1, 144}, {233, 15}}</string>
 									<reference key="NSSuperview" ref="965531265"/>
+									<reference key="NSWindow"/>
 									<reference key="NSNextKeyView" ref="899121013"/>
 									<int key="NSsFlags">1</int>
 									<reference key="NSTarget" ref="965531265"/>
@@ -1875,6 +1889,7 @@
 							</object>
 							<string key="NSFrame">{{24, 20}, {182, 364}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="1036601397"/>
 							<int key="NSsFlags">133682</int>
 							<reference key="NSVScroller" ref="562166226"/>
@@ -1886,6 +1901,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{25, 428}, {97, 18}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="235186991"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="318283038">
@@ -1914,6 +1930,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{24, 398}, {183, 26}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="965531265"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSPopUpButtonCell" key="NSCell" id="90877847">
@@ -1981,6 +1998,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{113, 570}, {93, 28}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="845734985"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="674560360">
@@ -2000,6 +2018,7 @@
 					</object>
 					<string key="NSFrameSize">{826, 646}</string>
 					<reference key="NSSuperview"/>
+					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="644717327"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1280, 778}}</string>
@@ -2047,6 +2066,7 @@
 						<int key="NSvFlags">268</int>
 						<string key="NSFrame">{{13, 89}, {22, 18}}</string>
 						<reference key="NSSuperview" ref="436918885"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="582731180"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSButtonCell" key="NSCell" id="1055539112">
@@ -2070,6 +2090,7 @@
 						<int key="NSvFlags">268</int>
 						<string key="NSFrame">{{38, 89}, {75, 17}}</string>
 						<reference key="NSSuperview" ref="436918885"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="431967856"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="261438901">
@@ -2099,6 +2120,7 @@
 						</object>
 						<string key="NSFrame">{{38, 17}, {108, 67}}</string>
 						<reference key="NSSuperview" ref="436918885"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSImageCell" key="NSCell" id="13236304">
@@ -2114,6 +2136,7 @@
 				</object>
 				<string key="NSFrameSize">{163, 125}</string>
 				<reference key="NSSuperview"/>
+				<reference key="NSWindow"/>
 				<reference key="NSNextKeyView" ref="281155523"/>
 			</object>
 			<object class="NSArrayController" id="915484218">
@@ -2144,12 +2167,14 @@
 							<int key="NSvFlags">274</int>
 							<string key="NSFrame">{{20, 20}, {322, 167}}</string>
 							<reference key="NSSuperview" ref="653920158"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
 							<string key="NSClassName">WaveformsView</string>
 						</object>
 					</object>
 					<string key="NSFrameSize">{362, 207}</string>
 					<reference key="NSSuperview"/>
+					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="396204797"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1280, 778}}</string>
@@ -3544,6 +3569,7 @@
 							<int key="NSvFlags">258</int>
 							<string key="NSFrame">{{20, 10}, {96, 22}}</string>
 							<reference key="NSSuperview" ref="129914619"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="262913256">
@@ -3565,6 +3591,7 @@
 					</object>
 					<string key="NSFrameSize">{136, 39}</string>
 					<reference key="NSSuperview"/>
+					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="755222859"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1280, 778}}</string>
@@ -3591,6 +3618,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{18, 327}, {170, 18}}</string>
 							<reference key="NSSuperview" ref="389487376"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="662679654"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="70513749">
@@ -3614,6 +3642,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{46, 299}, {116, 18}}</string>
 							<reference key="NSSuperview" ref="389487376"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="771295020"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="916810333">
@@ -3637,6 +3666,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{46, 279}, {91, 18}}</string>
 							<reference key="NSSuperview" ref="389487376"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="831175527"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="654165422">
@@ -3660,6 +3690,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{26, 9}, {96, 32}}</string>
 							<reference key="NSSuperview" ref="389487376"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="401366576"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="762211740">
@@ -3681,6 +3712,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{134, 9}, {96, 32}}</string>
 							<reference key="NSSuperview" ref="389487376"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="494333748">
@@ -3702,6 +3734,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{18, 86}, {159, 18}}</string>
 							<reference key="NSSuperview" ref="389487376"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="1021479521"/>
 							<string key="NSReuseIdentifierKey">_NS:239</string>
 							<bool key="NSEnabled">YES</bool>
@@ -3727,6 +3760,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{18, 146}, {177, 18}}</string>
 							<reference key="NSSuperview" ref="389487376"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="925645472"/>
 							<string key="NSReuseIdentifierKey">_NS:239</string>
 							<bool key="NSEnabled">YES</bool>
@@ -3752,6 +3786,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{18, 66}, {144, 18}}</string>
 							<reference key="NSSuperview" ref="389487376"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="335270237"/>
 							<string key="NSReuseIdentifierKey">_NS:239</string>
 							<bool key="NSEnabled">YES</bool>
@@ -3777,6 +3812,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{18, 126}, {177, 18}}</string>
 							<reference key="NSSuperview" ref="389487376"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="74347937"/>
 							<string key="NSReuseIdentifierKey">_NS:239</string>
 							<bool key="NSEnabled">YES</bool>
@@ -3802,6 +3838,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{54, 196}, {87, 38}}</string>
 							<reference key="NSSuperview" ref="389487376"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="718081579"/>
 							<string key="NSReuseIdentifierKey">_NS:266</string>
 							<bool key="NSEnabled">YES</bool>
@@ -3953,6 +3990,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{17, 239}, {100, 17}}</string>
 							<reference key="NSSuperview" ref="389487376"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="748383398"/>
 							<string key="NSReuseIdentifierKey">_NS:3936</string>
 							<bool key="NSEnabled">YES</bool>
@@ -3972,6 +4010,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{18, 106}, {194, 18}}</string>
 							<reference key="NSSuperview" ref="389487376"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="556796821"/>
 							<string key="NSReuseIdentifierKey">_NS:239</string>
 							<bool key="NSEnabled">YES</bool>
@@ -3997,6 +4036,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{17, 171}, {150, 17}}</string>
 							<reference key="NSSuperview" ref="389487376"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="570381816"/>
 							<string key="NSReuseIdentifierKey">_NS:3936</string>
 							<bool key="NSEnabled">YES</bool>
@@ -4016,6 +4056,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{176, 168}, {51, 22}}</string>
 							<reference key="NSSuperview" ref="389487376"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="345534136"/>
 							<string key="NSReuseIdentifierKey">_NS:248</string>
 							<bool key="NSEnabled">YES</bool>
@@ -4034,6 +4075,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 					</object>
 					<string key="NSFrameSize">{247, 358}</string>
 					<reference key="NSSuperview"/>
+					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="533284453"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1280, 778}}</string>
@@ -4331,6 +4373,7 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{20, 20}, {297, 215}}</string>
 							<reference key="NSSuperview" ref="161254900"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
 							<string key="NSReuseIdentifierKey">_NS:499</string>
 							<string key="NSClassName">RasterView</string>
@@ -4338,6 +4381,7 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 					</object>
 					<string key="NSFrameSize">{337, 255}</string>
 					<reference key="NSSuperview"/>
+					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="1032390306"/>
 					<string key="NSReuseIdentifierKey">_NS:2837</string>
 				</object>
@@ -4369,10 +4413,9 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 				<bool key="NSMenuExcludeMarkColumn">YES</bool>
 			</object>
 			<object class="NSTextField" id="315496673">
-				<reference key="NSNextResponder"/>
+				<nil key="NSNextResponder"/>
 				<int key="NSvFlags">268</int>
 				<string key="NSFrameSize">{38, 17}</string>
-				<reference key="NSSuperview"/>
 				<string key="NSReuseIdentifierKey">_NS:3936</string>
 				<bool key="NSEnabled">YES</bool>
 				<object class="NSTextFieldCell" key="NSCell" id="691762684">
@@ -5735,22 +5778,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBBindingConnection" key="connection">
-						<string key="label">value: values.drawWaveformAxesLabels</string>
-						<reference key="source" ref="74347937"/>
-						<reference key="destination" ref="19477037"/>
-						<object class="NSNibBindingConnector" key="connector">
-							<reference key="NSSource" ref="74347937"/>
-							<reference key="NSDestination" ref="19477037"/>
-							<string key="NSLabel">value: values.drawWaveformAxesLabels</string>
-							<string key="NSBinding">value</string>
-							<string key="NSKeyPath">values.drawWaveformAxesLabels</string>
-							<int key="NSNibBindingConnectorVersion">2</int>
-						</object>
-					</object>
-					<int key="connectionID">1170</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBBindingConnection" key="connection">
 						<string key="label">value: values.autoLoadWaveforms</string>
 						<reference key="source" ref="662679654"/>
 						<reference key="destination" ref="19477037"/>
@@ -5820,6 +5847,22 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 						<reference key="destination" ref="420181659"/>
 					</object>
 					<int key="connectionID">1193</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBBindingConnection" key="connection">
+						<string key="label">value: values.showWaveformAxesLabels</string>
+						<reference key="source" ref="74347937"/>
+						<reference key="destination" ref="19477037"/>
+						<object class="NSNibBindingConnector" key="connector">
+							<reference key="NSSource" ref="74347937"/>
+							<reference key="NSDestination" ref="19477037"/>
+							<string key="NSLabel">value: values.showWaveformAxesLabels</string>
+							<string key="NSBinding">value</string>
+							<string key="NSKeyPath">values.showWaveformAxesLabels</string>
+							<int key="NSNibBindingConnectorVersion">2</int>
+						</object>
+					</object>
+					<int key="connectionID">1194</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -8787,9 +8830,1125 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 				<reference key="dict.values" ref="0"/>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">1193</int>
+			<int key="maxID">1194</int>
 		</object>
-		<object class="IBClassDescriber" key="IBDocument.Classes"/>
+		<object class="IBClassDescriber" key="IBDocument.Classes">
+			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
+				<bool key="EncodedWithXMLCoder">YES</bool>
+				<object class="IBPartialClassDescription">
+					<string key="className">ClusterView</string>
+					<string key="superclassName">NSView</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/ClusterView.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">FeatureView</string>
+					<string key="superclassName">NSView</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/FeatureView.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">FeatureViewerAppDelegate</string>
+					<string key="superclassName">NSObject</string>
+					<object class="NSMutableDictionary" key="outlets">
+						<string key="NS.key.0">controller</string>
+						<string key="NS.object.0">FeatureViewerController</string>
+					</object>
+					<object class="NSMutableDictionary" key="toOneOutletInfosByName">
+						<string key="NS.key.0">controller</string>
+						<object class="IBToOneOutletInfo" key="NS.object.0">
+							<string key="name">controller</string>
+							<string key="candidateClassName">FeatureViewerController</string>
+						</object>
+					</object>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/FeatureViewerAppDelegate.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">FeatureViewerController</string>
+					<string key="superclassName">NSController</string>
+					<object class="NSMutableDictionary" key="actions">
+						<bool key="EncodedWithXMLCoder">YES</bool>
+						<object class="NSArray" key="dict.sortedKeys">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>changeAllClusters:</string>
+							<string>changeCycleInterval:</string>
+							<string>changeDim1:</string>
+							<string>changeDim2:</string>
+							<string>changeDim3:</string>
+							<string>chooseWaveforms:</string>
+							<string>clusterThumbClicked:</string>
+							<string>cycleDims:</string>
+							<string>loadClusterIds:</string>
+							<string>loadFeatureFile:</string>
+							<string>performClusterOption:</string>
+							<string>saveClusters:</string>
+							<string>saveFeatureSpace:</string>
+							<string>saveTemplates:</string>
+						</object>
+						<object class="NSMutableArray" key="dict.values">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+						</object>
+					</object>
+					<object class="NSMutableDictionary" key="actionInfosByName">
+						<bool key="EncodedWithXMLCoder">YES</bool>
+						<object class="NSArray" key="dict.sortedKeys">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>changeAllClusters:</string>
+							<string>changeCycleInterval:</string>
+							<string>changeDim1:</string>
+							<string>changeDim2:</string>
+							<string>changeDim3:</string>
+							<string>chooseWaveforms:</string>
+							<string>clusterThumbClicked:</string>
+							<string>cycleDims:</string>
+							<string>loadClusterIds:</string>
+							<string>loadFeatureFile:</string>
+							<string>performClusterOption:</string>
+							<string>saveClusters:</string>
+							<string>saveFeatureSpace:</string>
+							<string>saveTemplates:</string>
+						</object>
+						<object class="NSMutableArray" key="dict.values">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<object class="IBActionInfo">
+								<string key="name">changeAllClusters:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">changeCycleInterval:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">changeDim1:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">changeDim2:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">changeDim3:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">chooseWaveforms:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">clusterThumbClicked:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">cycleDims:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">loadClusterIds:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">loadFeatureFile:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performClusterOption:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">saveClusters:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">saveFeatureSpace:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">saveTemplates:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+						</object>
+					</object>
+					<object class="NSMutableDictionary" key="outlets">
+						<bool key="EncodedWithXMLCoder">YES</bool>
+						<object class="NSArray" key="dict.sortedKeys">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>allActive</string>
+							<string>clusterController</string>
+							<string>clusterMenu</string>
+							<string>cyclePanel</string>
+							<string>dim1</string>
+							<string>dim2</string>
+							<string>dim3</string>
+							<string>filterClustersPanel</string>
+							<string>filterPredicates</string>
+							<string>fw</string>
+							<string>histView</string>
+							<string>inputPanel</string>
+							<string>progressPanel</string>
+							<string>rasterView</string>
+							<string>selectClusterOption</string>
+							<string>wfv</string>
+						</object>
+						<object class="NSMutableArray" key="dict.values">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>NSButton</string>
+							<string>NSArrayController</string>
+							<string>NSMenu</string>
+							<string>NSPanel</string>
+							<string>NSComboBox</string>
+							<string>NSComboBox</string>
+							<string>NSComboBox</string>
+							<string>NSPanel</string>
+							<string>NSPredicateEditor</string>
+							<string>FeatureView</string>
+							<string>HistogramView</string>
+							<string>NSPanel</string>
+							<string>ProgressPanel</string>
+							<string>RasterView</string>
+							<string>NSPopUpButton</string>
+							<string>WaveformsView</string>
+						</object>
+					</object>
+					<object class="NSMutableDictionary" key="toOneOutletInfosByName">
+						<bool key="EncodedWithXMLCoder">YES</bool>
+						<object class="NSArray" key="dict.sortedKeys">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>allActive</string>
+							<string>clusterController</string>
+							<string>clusterMenu</string>
+							<string>cyclePanel</string>
+							<string>dim1</string>
+							<string>dim2</string>
+							<string>dim3</string>
+							<string>filterClustersPanel</string>
+							<string>filterPredicates</string>
+							<string>fw</string>
+							<string>histView</string>
+							<string>inputPanel</string>
+							<string>progressPanel</string>
+							<string>rasterView</string>
+							<string>selectClusterOption</string>
+							<string>wfv</string>
+						</object>
+						<object class="NSMutableArray" key="dict.values">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<object class="IBToOneOutletInfo">
+								<string key="name">allActive</string>
+								<string key="candidateClassName">NSButton</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">clusterController</string>
+								<string key="candidateClassName">NSArrayController</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">clusterMenu</string>
+								<string key="candidateClassName">NSMenu</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">cyclePanel</string>
+								<string key="candidateClassName">NSPanel</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">dim1</string>
+								<string key="candidateClassName">NSComboBox</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">dim2</string>
+								<string key="candidateClassName">NSComboBox</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">dim3</string>
+								<string key="candidateClassName">NSComboBox</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">filterClustersPanel</string>
+								<string key="candidateClassName">NSPanel</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">filterPredicates</string>
+								<string key="candidateClassName">NSPredicateEditor</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">fw</string>
+								<string key="candidateClassName">FeatureView</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">histView</string>
+								<string key="candidateClassName">HistogramView</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">inputPanel</string>
+								<string key="candidateClassName">NSPanel</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">progressPanel</string>
+								<string key="candidateClassName">ProgressPanel</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">rasterView</string>
+								<string key="candidateClassName">RasterView</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">selectClusterOption</string>
+								<string key="candidateClassName">NSPopUpButton</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">wfv</string>
+								<string key="candidateClassName">WaveformsView</string>
+							</object>
+						</object>
+					</object>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/FeatureViewerController.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">FirstResponder</string>
+					<string key="superclassName">NSObject</string>
+					<object class="NSMutableDictionary" key="actions">
+						<bool key="EncodedWithXMLCoder">YES</bool>
+						<object class="NSArray" key="dict.sortedKeys">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>alignCenter:</string>
+							<string>alignJustified:</string>
+							<string>alignLeft:</string>
+							<string>alignRight:</string>
+							<string>arrangeInFront:</string>
+							<string>capitalizeWord:</string>
+							<string>centerSelectionInVisibleArea:</string>
+							<string>changeFont:</string>
+							<string>checkSpelling:</string>
+							<string>clear:</string>
+							<string>clearRecentDocuments:</string>
+							<string>complete:</string>
+							<string>copy:</string>
+							<string>copyFont:</string>
+							<string>copyRuler:</string>
+							<string>cut:</string>
+							<string>delete:</string>
+							<string>deminiaturize:</string>
+							<string>hide:</string>
+							<string>hideOtherApplications:</string>
+							<string>loadFeatureFile:</string>
+							<string>loosenKerning:</string>
+							<string>lowerBaseline:</string>
+							<string>lowercaseWord:</string>
+							<string>makeBaseWritingDirectionLeftToRight:</string>
+							<string>makeBaseWritingDirectionNatural:</string>
+							<string>makeBaseWritingDirectionRightToLeft:</string>
+							<string>makeKeyAndOrderFront:</string>
+							<string>makeTextWritingDirectionLeftToRight:</string>
+							<string>makeTextWritingDirectionNatural:</string>
+							<string>makeTextWritingDirectionRightToLeft:</string>
+							<string>miniaturize:</string>
+							<string>newDocument:</string>
+							<string>openDocument:</string>
+							<string>orderBack:</string>
+							<string>orderFront:</string>
+							<string>orderFrontColorPanel:</string>
+							<string>orderFrontHelpPanel:</string>
+							<string>orderOut:</string>
+							<string>outline:</string>
+							<string>paste:</string>
+							<string>pasteAsPlainText:</string>
+							<string>pasteAsRichText:</string>
+							<string>pasteFont:</string>
+							<string>pasteRuler:</string>
+							<string>pause:</string>
+							<string>performClose:</string>
+							<string>performFindPanelAction:</string>
+							<string>performMiniaturize:</string>
+							<string>performZoom:</string>
+							<string>play:</string>
+							<string>print:</string>
+							<string>printDocument:</string>
+							<string>raiseBaseline:</string>
+							<string>record:</string>
+							<string>redo:</string>
+							<string>resume:</string>
+							<string>revertDocumentToSaved:</string>
+							<string>run:</string>
+							<string>runPageLayout:</string>
+							<string>runToolbarCustomizationPalette:</string>
+							<string>saveAllDocuments:</string>
+							<string>saveDocument:</string>
+							<string>saveDocumentAs:</string>
+							<string>saveDocumentTo:</string>
+							<string>selectAll:</string>
+							<string>selectText:</string>
+							<string>showGuessPanel:</string>
+							<string>showHelp:</string>
+							<string>start:</string>
+							<string>startSpeaking:</string>
+							<string>stop:</string>
+							<string>stopSpeaking:</string>
+							<string>subscript:</string>
+							<string>superscript:</string>
+							<string>terminate:</string>
+							<string>tightenKerning:</string>
+							<string>toggleAutomaticLinkDetection:</string>
+							<string>toggleAutomaticQuoteSubstitution:</string>
+							<string>toggleContinuousSpellChecking:</string>
+							<string>toggleGrammarChecking:</string>
+							<string>toggleRuler:</string>
+							<string>toggleSmartInsertDelete:</string>
+							<string>toggleToolbarShown:</string>
+							<string>turnOffKerning:</string>
+							<string>turnOffLigatures:</string>
+							<string>underline:</string>
+							<string>undo:</string>
+							<string>unhideAllApplications:</string>
+							<string>unscript:</string>
+							<string>uppercaseWord:</string>
+							<string>useAllLigatures:</string>
+							<string>useStandardKerning:</string>
+							<string>useStandardLigatures:</string>
+						</object>
+						<object class="NSMutableArray" key="dict.values">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+						</object>
+					</object>
+					<object class="NSMutableDictionary" key="actionInfosByName">
+						<bool key="EncodedWithXMLCoder">YES</bool>
+						<object class="NSArray" key="dict.sortedKeys">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>alignCenter:</string>
+							<string>alignJustified:</string>
+							<string>alignLeft:</string>
+							<string>alignRight:</string>
+							<string>arrangeInFront:</string>
+							<string>capitalizeWord:</string>
+							<string>centerSelectionInVisibleArea:</string>
+							<string>changeFont:</string>
+							<string>checkSpelling:</string>
+							<string>clear:</string>
+							<string>clearRecentDocuments:</string>
+							<string>complete:</string>
+							<string>copy:</string>
+							<string>copyFont:</string>
+							<string>copyRuler:</string>
+							<string>cut:</string>
+							<string>delete:</string>
+							<string>deminiaturize:</string>
+							<string>hide:</string>
+							<string>hideOtherApplications:</string>
+							<string>loadFeatureFile:</string>
+							<string>loosenKerning:</string>
+							<string>lowerBaseline:</string>
+							<string>lowercaseWord:</string>
+							<string>makeBaseWritingDirectionLeftToRight:</string>
+							<string>makeBaseWritingDirectionNatural:</string>
+							<string>makeBaseWritingDirectionRightToLeft:</string>
+							<string>makeKeyAndOrderFront:</string>
+							<string>makeTextWritingDirectionLeftToRight:</string>
+							<string>makeTextWritingDirectionNatural:</string>
+							<string>makeTextWritingDirectionRightToLeft:</string>
+							<string>miniaturize:</string>
+							<string>newDocument:</string>
+							<string>openDocument:</string>
+							<string>orderBack:</string>
+							<string>orderFront:</string>
+							<string>orderFrontColorPanel:</string>
+							<string>orderFrontHelpPanel:</string>
+							<string>orderOut:</string>
+							<string>outline:</string>
+							<string>paste:</string>
+							<string>pasteAsPlainText:</string>
+							<string>pasteAsRichText:</string>
+							<string>pasteFont:</string>
+							<string>pasteRuler:</string>
+							<string>pause:</string>
+							<string>performClose:</string>
+							<string>performFindPanelAction:</string>
+							<string>performMiniaturize:</string>
+							<string>performZoom:</string>
+							<string>play:</string>
+							<string>print:</string>
+							<string>printDocument:</string>
+							<string>raiseBaseline:</string>
+							<string>record:</string>
+							<string>redo:</string>
+							<string>resume:</string>
+							<string>revertDocumentToSaved:</string>
+							<string>run:</string>
+							<string>runPageLayout:</string>
+							<string>runToolbarCustomizationPalette:</string>
+							<string>saveAllDocuments:</string>
+							<string>saveDocument:</string>
+							<string>saveDocumentAs:</string>
+							<string>saveDocumentTo:</string>
+							<string>selectAll:</string>
+							<string>selectText:</string>
+							<string>showGuessPanel:</string>
+							<string>showHelp:</string>
+							<string>start:</string>
+							<string>startSpeaking:</string>
+							<string>stop:</string>
+							<string>stopSpeaking:</string>
+							<string>subscript:</string>
+							<string>superscript:</string>
+							<string>terminate:</string>
+							<string>tightenKerning:</string>
+							<string>toggleAutomaticLinkDetection:</string>
+							<string>toggleAutomaticQuoteSubstitution:</string>
+							<string>toggleContinuousSpellChecking:</string>
+							<string>toggleGrammarChecking:</string>
+							<string>toggleRuler:</string>
+							<string>toggleSmartInsertDelete:</string>
+							<string>toggleToolbarShown:</string>
+							<string>turnOffKerning:</string>
+							<string>turnOffLigatures:</string>
+							<string>underline:</string>
+							<string>undo:</string>
+							<string>unhideAllApplications:</string>
+							<string>unscript:</string>
+							<string>uppercaseWord:</string>
+							<string>useAllLigatures:</string>
+							<string>useStandardKerning:</string>
+							<string>useStandardLigatures:</string>
+						</object>
+						<object class="NSMutableArray" key="dict.values">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<object class="IBActionInfo">
+								<string key="name">alignCenter:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">alignJustified:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">alignLeft:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">alignRight:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">arrangeInFront:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">capitalizeWord:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">centerSelectionInVisibleArea:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">changeFont:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">checkSpelling:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">clear:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">clearRecentDocuments:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">complete:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">copy:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">copyFont:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">copyRuler:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">cut:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">delete:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">deminiaturize:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">hide:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">hideOtherApplications:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">loadFeatureFile:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">loosenKerning:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">lowerBaseline:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">lowercaseWord:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">makeBaseWritingDirectionLeftToRight:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">makeBaseWritingDirectionNatural:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">makeBaseWritingDirectionRightToLeft:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">makeKeyAndOrderFront:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">makeTextWritingDirectionLeftToRight:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">makeTextWritingDirectionNatural:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">makeTextWritingDirectionRightToLeft:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">miniaturize:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">newDocument:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">openDocument:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderBack:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFront:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontColorPanel:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderFrontHelpPanel:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">orderOut:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">outline:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">paste:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">pasteAsPlainText:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">pasteAsRichText:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">pasteFont:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">pasteRuler:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">pause:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performClose:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performFindPanelAction:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performMiniaturize:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">performZoom:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">play:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">print:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">printDocument:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">raiseBaseline:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">record:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">redo:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">resume:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">revertDocumentToSaved:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">run:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">runPageLayout:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">runToolbarCustomizationPalette:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">saveAllDocuments:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">saveDocument:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">saveDocumentAs:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">saveDocumentTo:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">selectAll:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">selectText:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">showGuessPanel:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">showHelp:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">start:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">startSpeaking:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">stop:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">stopSpeaking:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">subscript:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">superscript:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">terminate:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">tightenKerning:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">toggleAutomaticLinkDetection:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">toggleAutomaticQuoteSubstitution:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">toggleContinuousSpellChecking:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">toggleGrammarChecking:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">toggleRuler:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">toggleSmartInsertDelete:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">toggleToolbarShown:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">turnOffKerning:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">turnOffLigatures:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">underline:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">undo:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">unhideAllApplications:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">unscript:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">uppercaseWord:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">useAllLigatures:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">useStandardKerning:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">useStandardLigatures:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+						</object>
+					</object>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/FirstResponder.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">HistogramView</string>
+					<string key="superclassName">NSView</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/HistogramView.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">NSDocument</string>
+					<object class="NSMutableDictionary" key="actions">
+						<bool key="EncodedWithXMLCoder">YES</bool>
+						<object class="NSArray" key="dict.sortedKeys">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>printDocument:</string>
+							<string>revertDocumentToSaved:</string>
+							<string>runPageLayout:</string>
+							<string>saveDocument:</string>
+							<string>saveDocumentAs:</string>
+							<string>saveDocumentTo:</string>
+						</object>
+						<object class="NSMutableArray" key="dict.values">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+							<string>id</string>
+						</object>
+					</object>
+					<object class="NSMutableDictionary" key="actionInfosByName">
+						<bool key="EncodedWithXMLCoder">YES</bool>
+						<object class="NSArray" key="dict.sortedKeys">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>printDocument:</string>
+							<string>revertDocumentToSaved:</string>
+							<string>runPageLayout:</string>
+							<string>saveDocument:</string>
+							<string>saveDocumentAs:</string>
+							<string>saveDocumentTo:</string>
+						</object>
+						<object class="NSMutableArray" key="dict.values">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<object class="IBActionInfo">
+								<string key="name">printDocument:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">revertDocumentToSaved:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">runPageLayout:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">saveDocument:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">saveDocumentAs:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+							<object class="IBActionInfo">
+								<string key="name">saveDocumentTo:</string>
+								<string key="candidateClassName">id</string>
+							</object>
+						</object>
+					</object>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/NSDocument.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">ProgressPanel</string>
+					<string key="superclassName">NSPanel</string>
+					<object class="NSMutableDictionary" key="outlets">
+						<bool key="EncodedWithXMLCoder">YES</bool>
+						<object class="NSArray" key="dict.sortedKeys">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>progressIndicator</string>
+							<string>title</string>
+						</object>
+						<object class="NSMutableArray" key="dict.values">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>NSProgressIndicator</string>
+							<string>NSTextField</string>
+						</object>
+					</object>
+					<object class="NSMutableDictionary" key="toOneOutletInfosByName">
+						<bool key="EncodedWithXMLCoder">YES</bool>
+						<object class="NSArray" key="dict.sortedKeys">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>progressIndicator</string>
+							<string>title</string>
+						</object>
+						<object class="NSMutableArray" key="dict.values">
+							<bool key="EncodedWithXMLCoder">YES</bool>
+							<object class="IBToOneOutletInfo">
+								<string key="name">progressIndicator</string>
+								<string key="candidateClassName">NSProgressIndicator</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">title</string>
+								<string key="candidateClassName">NSTextField</string>
+							</object>
+						</object>
+					</object>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/ProgressPanel.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">RasterView</string>
+					<string key="superclassName">NSView</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/RasterView.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">WaveformsPanel</string>
+					<string key="superclassName">NSPanel</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/WaveformsPanel.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">WaveformsView</string>
+					<string key="superclassName">NSView</string>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/WaveformsView.h</string>
+					</object>
+				</object>
+			</object>
+		</object>
 		<int key="IBDocument.localizationMode">0</int>
 		<string key="IBDocument.TargetRuntimeIdentifier">IBCocoaFramework</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginDeclaredDependencyDefaults">

@@ -17,13 +17,13 @@
 
 @synthesize highlightWaves;
 @synthesize highlightedChannels;
-@synthesize drawLabels;//,drawMean,drawStd;
+@synthesize shouldDrawLabels;//,drawMean,drawStd;
 @synthesize wfMean, wfStd;
 
 -(void)awakeFromNib
 {
     wfDataloaded = NO;
-    drawLabels = NO;
+    shouldDrawLabels = NO;
     drawMean = YES;
     drawStd = YES;
     //register for defaults updates
@@ -894,7 +894,7 @@ static void wfDrawAnObject()
     //glClear(GL_DEPTH_BUFFER_BIT);
     if(wfDataloaded)
     {
-        if (drawLabels) {
+        if ([self shouldDrawLabels]) {
             [self drawLabels];
         }
 		glMatrixMode(GL_PROJECTION);
@@ -1226,7 +1226,7 @@ static void wfDrawAnObject()
     {
         [self setDrawMean:[[NSUserDefaults standardUserDefaults] boolForKey:@"showWaveformsMean"]];
         [self setDrawStd:[[NSUserDefaults standardUserDefaults] boolForKey:@"showWaveformsStd"]];
-        [self setDrawLabels:[[NSUserDefaults standardUserDefaults] boolForKey:@"showWaveformAxesLabels"]];
+        [self setShouldDrawLabels:[[NSUserDefaults standardUserDefaults] boolForKey:@"showWaveformAxesLabels"]];
     }
 }
     
