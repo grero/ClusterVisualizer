@@ -2031,7 +2031,7 @@
         unsigned int nclusters = [Clusters count];
         unsigned int _npoints = [clusterPoints length]/sizeof(unsigned int);
         Cluster *newCluster = [[Cluster alloc] init];
-        [newCluster setClusterId:[NSNumber numberWithUnsignedInt: nclusters+1]];
+        [newCluster setClusterId:[NSNumber numberWithUnsignedInt: nclusters]];
         //the highlighted points in fw corresponds to global coordinates, so we can use them directly.
         [newCluster setPoints:[NSMutableData dataWithData:clusterPoints]];
         [newCluster setNpoints:[NSNumber numberWithUnsignedInt:[clusterPoints length]/sizeof(unsigned int)]];
@@ -2177,14 +2177,8 @@
     //make sure there are clusters to save
     if ([Clusters count] > 0)
     {
-        //NSMutableArray *cluster_indices = [NSMutableArray arrayWithCapacity:params.rows];
-        //NSMutableIndexSet *index = [NSMutableIndexSet indexSet];
-		
-        NSMutableDictionary *cluster_indices = [NSMutableDictionary dictionaryWithCapacity:params.rows];
-        //enumreate all valid clusters
-        //do it the "c" way
-        //FILE *cluster_file = fopen("FeatureViewer.clusters","w");
-        
+        int* cluster_indices = malloc((params.rows+1)*sizeof(int));    
+        cluster_indices[0] = (unsigned int)[Clusters count];
         NSEnumerator *cluster_enumerator = [[Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"valid==1"]] objectEnumerator];
         int i;
         int npoints;
@@ -2195,44 +2189,36 @@
             npoints = [[cluster npoints] intValue];
             for(i=0;i<npoints;i++)
             {
-                [cluster_indices setObject: [NSNumber numberWithUnsignedInteger: (NSUInteger)clusteridx[i]] forKey:[cluster clusterId]];
-                //[index addIndex:(NSUInteger)clusteridx[i]];
+                cluster_indices[clusteridx[i]+1] = (unsigned int)[[cluster clusterId] unsignedIntValue];
             }
         }
-        //now, join the components by sorting according to the index
-        //this allows me to try out blocks!! wohooo
-        //basically, I'm just telling the dictionary containing the cluster names and indices to sort itself by comparing the values
-        //i.e. the indices
-        NSString *cidx_string = [[cluster_indices keysSortedByValueUsingComparator: ^(id obj1, id obj2) {
-            if ([obj1 unsignedIntValue] < [obj2 unsignedIntValue] ) {
-                return (NSComparisonResult)NSOrderedAscending;
-            }
-            else
-            {
-                return (NSComparisonResult)NSOrderedDescending;
-            }
-
-            
-        }] componentsJoinedByString:@"\n"];
-		//open panel to get filename
-
-		NSSavePanel *savePanel = [NSSavePanel savePanel];
+        		NSSavePanel *savePanel = [NSSavePanel savePanel];
 		[savePanel setNameFieldStringValue:[NSString stringWithFormat: @"%@.cut",currentBaseName]];
-		/*
-		[savePanel beginWithCompletionHandler:^(NSInteger result) 
-		 {
-			 if(result == NSFileHandlingPanelOKButton )
-			 {
-				 [cidx_string writeToFile:[savePanel nameFieldStringValue] atomically:YES];
-			 }
-		 }];*/
+		
 		NSInteger result = [savePanel runModal];
 		if(result == NSFileHandlingPanelOKButton )
 		{
-			[cidx_string writeToFile:[[[savePanel directoryURL] path] stringByAppendingPathComponent: [savePanel nameFieldStringValue]] atomically:YES];
+            const char* fname = [[savePanel nameFieldStringValue] cStringUsingEncoding:NSASCIIStringEncoding];
+            //check the extensions
+            NSString *ext = [[savePanel nameFieldStringValue] pathExtension];
+			if([ext isEqualToString:@"cut"])
+            {
+                writeCutFile(fname, cluster_indices+1, params.rows);
+            }
+            else
+            {
+                NSRange r = [[savePanel nameFieldStringValue] rangeOfString:@"clu"];
+                if(r.location != NSNotFound )
+                {
+                    writeCutFile(fname, cluster_indices, params.rows+1);
+                }
+            }
+            
 		}
+        free(cluster_indices);
         //[cidx_string writeToFile:[NSString stringWithFormat: @"%@.cut",currentBaseName] atomically:YES];
         //now write a file containing the template clusters
+        
         NSArray *templates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"isTemplate==1"]];
         NSEnumerator *templateEnumerator = [templates objectEnumerator];
         NSMutableArray *templateIds = [NSMutableArray arrayWithCapacity:[templates count]];
@@ -2361,6 +2347,12 @@
 {
     [cluster makeInactive];
     [cluster makeInvalid];
+    //since we want to maintain contigous order, shift the other clusters accordingly
+    NSArray *candidates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"clusterId>%d", [[cluster clusterId] unsignedIntValue]]];
+    [candidates enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        NSUInteger cid = [[obj clusterId] unsignedIntValue];
+        [obj setClusterId:[NSNumber numberWithUnsignedInt: cid-1]];
+    }];
     
     NSEnumerator *parentsEnumerator = [[cluster parents] objectEnumerator];
     id parent;
@@ -2371,6 +2363,8 @@
         [parent makeValid];
     }
     [fw hideCluster:cluster];
+    //give the points back to the noise cluster
+    [[Clusters objectAtIndex:0] addPoints:[cluster points]];
     [self removeObjectFromClustersAtIndex: [Clusters indexOfObject:cluster]];
 }
 
