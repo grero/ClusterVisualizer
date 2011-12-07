@@ -8,6 +8,9 @@
 
 #import "Cluster.h"
 
+#ifndef PI
+#define PI 3.141592653589793
+#endif
 
 @implementation Cluster
 
@@ -31,8 +34,10 @@
 @synthesize isiIdx;
 @synthesize mask;
 @synthesize waveformsImage;
-@synthesize featureDims;
+@synthesize featureDims,det;
 @synthesize description;
+@synthesize isolationInfo;
+@synthesize wfMean, wfCov;
 
 -(void)setActive:(NSInteger)value
 {
@@ -83,7 +88,16 @@
 
 -(void)createName
 {
-    [self setName: [[[[self clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[self npoints] stringValue]]];
+    if([ self name] != NULL )
+    {
+        NSString *_name = [self name];
+        NSRange _range = [_name rangeOfString:@":"];
+        [self setName:[_name stringByReplacingCharactersInRange:NSMakeRange(_range.location+1,[_name length]-_range.location-1) withString:[[self npoints] stringValue]]];
+    }
+    else
+    {
+        [self setName: [[[[self clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[self npoints] stringValue]]];
+    }
 }
 
 -(void)setColor:(NSData*)new_color
@@ -213,20 +227,117 @@
     
 }
 
+-(void)computeBelonginess:(NSData*)features
+{
+    //compute the degree to which each point in the cluster belongs to this cluster
+    //this can only be computed if we have already loaded the model
+    if(([self mean] == nil) || ([self covi] == nil) )
+    {
+        return;
+    }
+    float *_fpoints = (float*)[features bytes];
+    float *v;
+    unsigned int cols = featureDims;
+    NSUInteger k = [[self indices] firstIndex];
+    double *p = malloc(sizeof(double)*[[self npoints] unsignedIntValue]);
+    unsigned int i = 0;
+    float *q = malloc(sizeof(float)*cols);
+    float *d = malloc(sizeof(float)*cols);
+
+    float *_mean = (float*)[[self mean] bytes];
+    float *_covi = (float*)[[self covi] bytes];
+    float x;
+    float f = sqrt(1.0/(pow(2*PI,cols))*[self det]);
+    unsigned m,l;
+    while(k != NSNotFound )
+    {
+        v = _fpoints+k*cols;
+        //subtract the mean
+        vDSP_vsub(_mean,1,v,1,d,1,cols);
+        //divide by covariance matrix
+        //cblas_sgemv(CblasRowMajor,CblasNoTrans,cols,cols,1,_covi,cols,d,1,0,q,1);
+        for(m=0;m<cols;m++)
+        {
+            q[m] = 0;
+            for(l=0;l<cols;l++)
+            {
+                q[m]+=_covi[m*cols+l]*d[l];
+            }
+        }
+        //compute mahalanobis distance
+        x = cblas_sdsdot(cols, 0, d, 1, q, 1);
+        p[i] = -0.5*x + log(f);
+        k = [[self indices] indexGreaterThanIndex:k];
+        i+=1;
+    }
+    free(q);
+    free(d);
+    free(p);
+}
+
+-(NSData*)computeWaveformProbability:(NSData*)waveforms length:(NSUInteger)nwaves
+{
+    //computes the probability of the waveforms to be generated from this cluster, given the mean and covariance matrix
+    
+    NSUInteger wavesize = (NSUInteger)[waveforms length]/(nwaves*sizeof(float));
+
+    float *_waves = (float*)[waveforms bytes];
+    float *_mean = (float*)[[self wfMean] bytes];
+    float *_cov = (float*)[[self wfCov] bytes];
+    double *prob = malloc(nwaves*sizeof(double));
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    dispatch_apply(nwaves, queue, ^(size_t i) {
+        float a,b,c,C;
+        unsigned int j;
+        b = 0;
+        C = 1;
+        for(j=0;j<wavesize;j++)
+        {
+            c = _cov[j];
+            C*=c;
+            a=(_waves[i*wavesize+j]-_mean[j]);
+            b += (a*a)/(c*c);
+        }
+        prob[i] = 1.0/sqrt(pow(2*PI,wavesize)*C)*exp(-b);
+    });
+    NSData *probData = [NSData dataWithBytes:prob length:nwaves*sizeof(double)];
+    return probData;
+}
+
 -(void)computeFeatureMean:(NSData*)data
 {
 	uint64_t datasize = [data length];
 	int cols = featureDims;
 	uint64_t rows = datasize/(cols*sizeof(float));
-	float *_mean = malloc(cols*sizeof(float));
+	float *_mean = calloc(cols,sizeof(float));
 	float *_data = (float*)[data bytes];
-	int i;
+    float *v;
+	NSUInteger i,k,j;
+    k = [[self indices] firstIndex];
 	//compute mean for each dimension
+    /*
 	for(i=0;i<cols;i++)
 	{
 		vDSP_meanv(_data+i, cols, _mean+i, rows);
 	}
-	mean = [[NSData dataWithBytes:_mean length:sizeof(_mean)] retain];
+     */
+    j = 0;
+    while(k != NSNotFound )
+    {
+        v = _data + k*cols;
+        for(i=0;i<cols;i++)
+        {
+            _mean[i]+=v[i];
+        }
+        j+=1;
+        k = [[self indices] indexGreaterThanIndex:k];
+    }
+    
+    for(i=0;i<cols;i++)
+    {
+        _mean[i]/=([[self indices] count]);
+    }
+	mean = [[NSData dataWithBytes:_mean length:cols*sizeof(float)] retain];
 	free(_mean);
 }
 
@@ -288,7 +399,85 @@
 	free(D);
 }
 
--(NSDictionary*)computeXCorr:(Cluster*)cluster timepoints:(NSData*)timepts;
+-(void)computeIsolationInfo:(NSData*)data
+{
+    //computes the KL-divergence between this cluster and the nearest neighbour cluster; approximate the KL-divergence as the log ratio between nearest neighbour distance in this cluster and the nearest neighbour distance for all points
+    if( (data == nil) || ([self indices] == nil ) )
+    {
+        [self setIsolationInfo:[NSNumber numberWithDouble:0]];
+        return;
+    }
+    unsigned int _npoints_bg = [data length]/sizeof(float)/featureDims;
+    float *_points = (float*)[data bytes];
+    unsigned int i,j,cols;
+    cols = featureDims;
+    NSUInteger k;
+    unsigned int _npoints = [[self indices] count];
+    if(_npoints<=1)
+    {
+        [self setIsolationInfo:[NSNumber numberWithDouble:0]];
+        return ;
+    }
+    k = [[self indices] firstIndex];
+    //for each point in this cluster, find the nearest distance
+    float *v1,*v2;
+    float *dmin = calloc(_npoints,sizeof(float));
+    float *dmin_bg = calloc(_npoints,sizeof(float));
+    float *vd = malloc(_npoints*sizeof(float));
+    //initialize
+    for(i=0;i<_npoints;i++)
+    {
+        dmin[i] = HUGE_VALF;
+        dmin_bg[i]= HUGE_VALF;
+    }
+    float d;
+    j = 0;
+    while(k != NSNotFound )
+    {
+        v1 = _points + k*cols;
+        for(i=0;i<_npoints_bg;i++)
+        {
+            if(i!=k)
+            {
+                v2 = _points + i*cols;
+                //compute distance
+                //subtract v1 from v2
+                vDSP_vsub(v1, 1, v2, 1, vd, 1, cols);
+                //compute the square sum
+                vDSP_dotpr(vd, 1, vd, 1, &d, cols);
+                d = sqrt(d);
+                if([[self indices] containsIndex:i])
+                {
+                    //dmin[j] = MIN(dmin[j], d );
+                    if(d < dmin[j])
+                        dmin[j] = d;
+                }
+                else
+                {
+                    //dmin_bg[j] = MIN(dmin_bg[j],d);
+                    if(d < dmin_bg[j])
+                        dmin_bg[j] = d;
+                }
+            }
+               
+        }
+        k = [[self indices] indexGreaterThanIndex:k];
+        j+=1;
+    }
+    d = 0;
+    for(i=0;i<_npoints;i++)
+    {
+        d+=log2(dmin_bg[i]/dmin[i]);
+    }
+    d*=(double)cols/_npoints;
+    d+=log2(_npoints_bg/(_npoints-1));
+    free(dmin);
+    free(dmin_bg);
+    free(vd);
+    [self setIsolationInfo: [NSNumber numberWithDouble: d]];
+}
+
+-(NSDictionary*)computeXCorr:(Cluster*)cluster timepoints:(NSData*)timepts
 {
     if( timepts == NULL)
     {
@@ -354,14 +543,14 @@
     
     //unsigned int*_mask = (unsigned int*)[[self mask] bytes];
     //unsigned int lmask = [[self mask] length]/sizeof(uint8);
-    unsigned int _npoints = [[self indices] count]-_nrpoints;
+    
     int i;
     for(i=0;i<_nrpoints;i++)
     {
         //_mask[_rpoints[i]] = 0;
         [[self indices] removeIndex:_rpoints[i]];
     }
-    
+    unsigned int _npoints = [[self indices] count];
     NSUInteger* _points = malloc(_npoints*sizeof(NSUInteger));
     [[self indices] getIndexes:_points maxCount:_npoints*sizeof(NSUInteger) inIndexRange:nil];
     
@@ -384,13 +573,14 @@
 {
     unsigned int* _rpoints = (unsigned int*)[rpoints bytes];
     unsigned int _nrpoints = [rpoints length]/sizeof(unsigned int);
-    unsigned int _npoints = [[self indices] count]+_nrpoints;
+    
 
     int i;
     for(i=0;i<_nrpoints;i++)
     {
         [[self indices] addIndex:_rpoints[i]];
     }
+    unsigned int _npoints = [[self indices] count];
     NSUInteger* _points = malloc(_npoints*sizeof(NSUInteger));
     [[self indices] getIndexes:_points maxCount:_npoints*sizeof(NSUInteger) inIndexRange:nil];
     unsigned int* _ppoints = malloc(_npoints*sizeof(unsigned int));
@@ -483,6 +673,43 @@
     {
         (*sptrain)[i] = (double)(_timestamps[_points[i]]/1000.0);
     }
+}
+
+-(void)computeWaveformStats:(NSData*)wfData withChannels:(NSUInteger)channels andTimepoints:(NSUInteger)timepoints
+{
+    //compute the mean and the covariance matrix of the waveforms currently assigned to this cluster
+    float *_data = (float*)[wfData bytes];
+    NSUInteger wavesize = timepoints*channels;
+
+    float *_mean = malloc(wavesize*sizeof(float));
+    float *_std = malloc(wavesize*sizeof(float));
+    NSUInteger nwaves = [wfData length]/(channels*timepoints*sizeof(float));
+    //compute the mean for each time point and for each channel
+    int i,j;
+    float *m,*msq;
+    for(i=0;i<channels;i++)
+    {
+        for(j=0;j<timepoints;j++)
+        {
+            //compute mean
+            m = _mean + (i*timepoints+j);
+            vDSP_meanv(_data+(i*timepoints+j), channels*timepoints, m, nwaves);
+            //compute mean square
+            msq = _std + (i*timepoints+j);
+            vDSP_measqv(_data+(i*timepoints+j), channels*timepoints, msq, nwaves);
+            //substract the square of the mean
+            *msq = *msq-(*m)*(*m);
+            //take the square root and add back the mean
+            *msq = sqrt(*msq);
+                        
+        }
+    }
+    [self setWfMean:[NSData dataWithBytes:_mean length:wavesize*sizeof(float)]];
+    [self setWfCov:[NSData dataWithBytes:_std length:wavesize*sizeof(float)]];
+    free(_mean);
+    free(_std);
+    
+    
 }
 
 -(void) dealloc

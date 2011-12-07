@@ -70,7 +70,7 @@ short int* getWaves(char *fname, nptHeader *header, unsigned int *index, unsigne
     int chs = header->channels;
     int pts = header->timepts;
     int waveLength = chs*pts;
-    fprintf(stderr,"waveLength: %d",waveLength); 
+    //fprintf(stderr,"waveLength: %d",waveLength); 
     int i;
     //
     //

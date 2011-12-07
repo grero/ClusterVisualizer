@@ -73,4 +73,27 @@
         return NO;
     }
 }
+
+-(id)init
+{
+    //set up user defaults
+    NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys: 
+                          [NSNumber numberWithInt:0], @"autoScaleAxes",
+                          [NSNumber numberWithBool: NO], @"showFeatureAxesLabels",
+                          [NSNumber numberWithBool: NO],@"showFeatureAxesFrame",
+                          [NSNumber numberWithBool: NO], @"showWaveformsAxesLabels",
+                          [NSNumber numberWithBool: NO], @"showWaveformsMean",
+                          [NSNumber numberWithBool: NO], @"showWaveformsStd",
+                          [NSNumber numberWithBool: YES],@"stimInfo",
+                          [NSNumber numberWithBool: YES], @"autoLoadFeatures",
+                          [NSNumber numberWithBool: YES], @"autoLoadWaveforms",
+                          [NSNumber numberWithInt: 5000], @"maxWaveformsDrawn",nil];
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults registerDefaults:dict];
+    //[defaults setObject:[NSNumber numberWithBool:YES] forKey:@"autoLoadWaveforms"];
+    [super init];
+    return self;
+
+}
 @end

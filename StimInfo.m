@@ -13,6 +13,8 @@
 @synthesize descriptor;
 @synthesize framepts,repBoundaries;
 @synthesize nframes,framesPerRep,nreps;
+@synthesize sessionName,sessionPath;
+@synthesize repDuration;
 
 - (id)init
 {
@@ -38,7 +40,7 @@
         
         NSEnumerator *linesEnumerator = [lines objectEnumerator];
         NSString *line = [linesEnumerator nextObject];
-        NSDictionary *currentDict;
+        NSMutableDictionary *currentDict;
         
         while( line )
         {
@@ -47,7 +49,7 @@
                 NSArray *keysAndObjects = [line componentsSeparatedByString: @"="];
                 if([keysAndObjects count] > 1 )
                 {
-                    [currentDict addObject: [keysAndObjects objectAtIndex:1] forKey: [keysAndObjects objectAtIndex:0]]; 
+                    [currentDict setObject: [keysAndObjects objectAtIndex:1] forKey: [keysAndObjects objectAtIndex:0]]; 
                 }
                 else if ([keysAndObjects count] ==1 )
                 {
@@ -56,7 +58,7 @@
                     NSRange _r2 = [keyName rangeOfString: @"]"];
                     keyName = [[keyName substringWithRange: NSMakeRange(_r1.location+1,_r2.location-_r1.location-1)] capitalizedString];
                     
-                    [data addObject: [NSMutableDictionary dictionary] forKey: keyName];
+                    [data setObject: [NSMutableDictionary dictionary] forKey: keyName];
                     currentDict = [data objectForKey: keyName];
                 }
             }
@@ -164,10 +166,16 @@
     int _nreps = [self nreps];
     int _framesPerRep = _nframes/_nreps;
     double *_repBoundaries = malloc(_nreps*sizeof(double));
+    double _repDuration = 0;
+    double offset = 0;
+    //get the repetition boundaries and compute the (average) rep duration
     for(i=0;i<_nreps;i++)
     {
         _repBoundaries[i] = _framepts[i*_framesPerRep];
+        _repDuration += _repBoundaries[i]-offset;
+        offset =_repBoundaries[i];
     }
+    [self setRepDuration:[NSNumber numberWithDouble:_repDuration/_nreps]];
     [self setFramesPerRep:_framesPerRep];
     [self setFramepts:[NSData dataWithBytes:_framepts length:_nframes*sizeof(double)]];
     [self setNframes:_nframes];

@@ -38,7 +38,7 @@
     NSData *timestamps;
 	NSMutableArray *featureNames;
     header params;
-    BOOL dataloaded,autoLoadWaveforms;
+    BOOL dataloaded,autoLoadWaveforms, shouldShowRaster, shouldShowWaveforms;
 	NSInteger nchannels;
     //name of current cluster set
     NSString *currentBaseName;
@@ -64,6 +64,7 @@
 	IBOutlet NSPanel *cyclePanel;
 	IBOutlet NSArrayController *clusterController;
 	IBOutlet NSPredicateEditor *filterPredicates;
+    IBOutlet NSMenu *clusterMenu;
     
     
     
@@ -96,7 +97,8 @@
 -(void) setAvailableFeatures:(NSArray*)channels;
 -(void) receiveNotification:(NSNotification*)notification;
 //This might go away
--(void) computeFeature:(NSData*)waveforms withChannels:(NSUInteger)channels andTimepoints:(NSUInteger)timepoints;
+-(void) computeFeature:(NSData*)waveforms withNumberOfSpikes: (NSUInteger)nwaves andChannels:(NSUInteger)channels andTimepoints:(NSUInteger)timepoints;
+-(void)addPointsToCluster:(Cluster*)cluster;
 //
 - (IBAction) loadFeatureFile: (id)sender;
 - (IBAction) loadClusterIds: (id)sender;
@@ -108,6 +110,7 @@
 - (IBAction) changeAllClusters: (id)sender;
 - (IBAction) performClusterOption: (id)sender;
 - (IBAction) saveClusters:(id)sender;
+-(IBAction)saveTemplates:(id)sender;
 - (IBAction) cycleDims: (id)sender;
 - (IBAction) clusterThumbClicked: (id)sender;
 - (IBAction) chooseWaveforms: (id)sender;
@@ -124,6 +127,7 @@
 @property (assign) IBOutlet NSComboBox *dim3;
 @property (assign) IBOutlet HistogramView *histView;
 @property (assign) IBOutlet RasterView *rasterView;
+@property (assign) IBOutlet NSMenu *clusterMenu;
 
 @property (retain,readwrite) NSMutableArray *Clusters;
 @property (retain,readwrite) NSMutableArray *ClusterOptions;

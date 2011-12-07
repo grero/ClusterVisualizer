@@ -15,6 +15,7 @@
     NSData *syncs,*framepts,*repBoundaries;
     NSString *sessionName, *sessionPath;
     NSUInteger nframes, framesPerRep,nreps;
+    NSNumber *repDuration;
 }
 
 -(void)readFromFile:(NSString*)fname;
@@ -29,4 +30,6 @@
 @property (assign,readwrite) NSUInteger nframes;
 @property (assign,readwrite) NSUInteger framesPerRep;
 @property (assign,readwrite) NSUInteger nreps;
+@property (retain,readwrite) NSString *sessionName,*sessionPath;
+@property (retain, readwrite) NSNumber *repDuration;
 @end

@@ -8,7 +8,9 @@
 
 #import "WaveformsView.h"
 
+#ifndef MIN
 #define MIN(a,b) ((a)>(b)?(b):(a))
+#endif
 #define PI 3.141516
 
 @implementation WaveformsView
@@ -16,6 +18,7 @@
 @synthesize highlightWaves;
 @synthesize highlightedChannels;
 @synthesize drawLabels;//,drawMean,drawStd;
+@synthesize wfMean, wfStd;
 
 -(void)awakeFromNib
 {
@@ -138,6 +141,7 @@
 -(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints andColor: (NSData*)color andOrder: (NSData*)order;
 {
 	//TODO: modify this should that multiple clusters can be drawn in the same view, with each cluster a different color
+    numSpikesAtLeastMean = nwaves;
     wavesize = channels*timepoints;
     waveIndexSize = channels*(2*timepoints-2);
 	//+3 to make room for mean waveform and +/- std
@@ -176,10 +180,8 @@
     highlightWave = -1;
     float *tmp = (float*)[vertex_data bytes];
     
-    int i,j,k;
-    unsigned int offset = 0;
-	unsigned int moffset = 0;
-	unsigned int stdoffset = 0;
+    //int i,j,k;
+   
     //3 dimensions X 2
     wfMinmax = calloc(6,sizeof(float));
 	chMinMax = NSZoneCalloc([self zone], 2*chs, sizeof(float));
@@ -191,12 +193,15 @@
 	if( order == NULL )
 	{
 		
-		for(i=0;i<nwaves;i++)
-		//dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, NULL);
-		//dispatch_apply(nwaves, queue, ^(size_t i){
-			//int j,k;
-		//	unsigned int offset;
-		{
+		//for(i=0;i<nwaves;i++)
+        //TODO: by using disptach queue instead of for loop, we need to change the way the mean and standard deviation is computed
+		dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, NULL);
+		dispatch_apply(nwaves, queue, ^(size_t i){
+			int j,k;
+            unsigned int offset = 0;
+            unsigned int moffset = 0;
+            unsigned int stdoffset = 0;
+		//{
 			for(j=0;j<channels;j++)
 			{
 				for(k=0;k<timepoints;k++)
@@ -244,12 +249,15 @@
 				}
 				
 			}
-		}//);
+		});
 	}
 	else 
 	{
 		unsigned int* reorder_index  = (unsigned int*)[order bytes];
-		
+		int i,j,k;
+        unsigned int offset = 0;
+        unsigned int moffset = 0;
+        unsigned int stdoffset = 0;
 		for(i=0;i<nwaves;i++)
 		{
 			for(j=0;j<channels;j++)
@@ -269,6 +277,7 @@
 					//z
 					wfVertices[3*offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
 					
+                    
 					//mean
 					//this line is strictly not necessary
 					wfVertices[3*moffset] = wfVertices[3*offset];
@@ -306,7 +315,58 @@
 		}
 		
 	}
-	//finalize computation of standard devation
+    //compute mean and standard deviation separately;
+    float *_mean = malloc(wavesize*sizeof(float));
+    float *_std = malloc(wavesize*sizeof(float));
+    int i,j;
+    float *m,*msq;
+    for(i=0;i<channels;i++)
+    {
+        for(j=0;j<timepoints;j++)
+        {
+            //compute mean
+            m = wfVertices + nwaves*3*channels*timepoints + 3*(i*timepoints+j)+1;
+            vDSP_meanv(wfVertices+3*(i*timepoints+j)+1, 3*channels*timepoints, m, nwaves);
+            _mean[i*timepoints+j] = *m;
+            //compute mean square
+            msq = wfVertices + (nwaves+2)*3*channels*timepoints + 3*(i*timepoints+j)+1;
+            vDSP_measqv(wfVertices+3*(i*timepoints+j)+1, 3*channels*timepoints, msq, nwaves);
+            //substract the square of the mean
+            *msq = *msq-(*m)*(*m);
+            //take the square root and add back the mean
+            *msq = sqrt(*msq);
+            _std[i*timepoints+j] = *msq;
+            wfVertices[3*((nwaves+1)*channels*timepoints+i*timepoints+j)+1] = *m- (*msq)*1.96;
+            *msq = *m+(*msq)*1.96;
+            
+            //also set the x and z-components
+            wfVertices[3*((nwaves+2)*wavesize+i*timepoints+j)] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)];
+            wfVertices[3*((nwaves+2)*wavesize+i*timepoints+j)+2] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)+2];
+            wfVertices[3*((nwaves+1)*wavesize+i*timepoints+j)] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)];
+            wfVertices[3*((nwaves+1)*wavesize+i*timepoints+j)+2] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)+2];
+
+        }
+    }
+    if(wfMean == NULL)
+    {
+        wfMean = [[NSMutableData dataWithBytes:_mean length:wavesize*sizeof(float)] retain];
+    }
+    else
+    {
+        [wfMean replaceBytesInRange:NSMakeRange(0, wavesize*sizeof(float)) withBytes:_mean];
+    }
+    if(wfStd == NULL )
+    {
+        wfStd = [[NSMutableData dataWithBytes:_std length:wavesize*sizeof(float)] retain];
+    }
+    else
+    {
+        [wfStd replaceBytesInRange:NSMakeRange(0, wavesize*sizeof(float)) withBytes:_std];
+    }
+    free(_mean);
+    free(_std);
+	//finalize computation of standrd devation
+    /*
 	float w1,w2,s;
 	for(i=0;i<wavesize;i++)
 	{
@@ -320,7 +380,7 @@
 		wfVertices[3*((nwaves+2)*wavesize+i)+2] = wfVertices[3*(nwaves*wavesize+i)+2];
 		
 	}
-	
+	*/
 	wfMinmax[0] = 0;
     wfMinmax[1] = channels*(timepoints+channelHop);
 	xmin = 0;
@@ -350,7 +410,8 @@
         wfIndices = malloc(nWfIndices*sizeof(GLuint));
 
     }
-
+    int k;
+    unsigned offset;
     for(i=0;i<nwaves+3;i++)
     {
         for(j=0;j<channels;j++)
@@ -408,8 +469,100 @@
     //draw
     //[self highlightWaveform:0];
     //wavesize = (2*timepoints-2)*channels;
-    [self setNeedsDisplay: YES];
+    //check if we are to draw mean and standard deviation;default is yes for both
+    if( drawStd == NO )
+    {
+        drawStd = YES;
+        [self setDrawStd:NO];
+    }
+
+    if( drawMean == NO )
+    {
+        //trick to force a change
+        drawMean = YES;
+        [self setDrawMean:NO];
+    }
+        [self setNeedsDisplay: YES];
     
+}
+
+-(void)computeMeandAndStd
+{
+    int i,j,k;
+    float *m,*msq;
+    float q;
+    unsigned int timepoints = timepts;
+    unsigned int channels = chs;
+    unsigned int nwaves = orig_num_spikes;
+    unsigned int offset = 0;
+    float *_mean = malloc(timepoints*channels*sizeof(float));
+    float *_std = malloc(timepoints*channels*sizeof(float));
+
+    NSUInteger *_indices = malloc(num_spikes*sizeof(NSUInteger));
+    //get the indices
+    [waveformIndices getIndexes:_indices maxCount:num_spikes inIndexRange:nil];
+    [[self openGLContext] makeCurrentContext];
+    glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
+    float *_wfVertices = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
+    for(i=0;i<channels;i++)
+    {
+        for(j=0;j<timepoints;j++)
+        {
+            //compute mean
+            m = _wfVertices + nwaves*3*channels*timepoints + 3*(i*timepoints+j)+1;
+            //vDSP_meanv(_wfVertices+3*(i*timepoints+j)+1, 3*channels*timepoints, m, nwaves);
+            *m = 0;
+            //compute mean square
+            msq = _wfVertices + (nwaves+2)*3*channels*timepoints + 3*(i*timepoints+j)+1;
+            *msq = 0;
+            offset = 3*(i*timepoints+j)+1;
+            for(k=0;k<num_spikes;k++)
+            {
+                q =_wfVertices[offset+3*channels*timepoints*_indices[k]];
+                *m += q;
+                *msq+=q*q;
+            }
+            *m/=num_spikes;
+            *msq/=num_spikes;
+            //vDSP_measqv(_wfVertices+3*(i*timepoints+j)+1, 3*channels*timepoints, msq, nwaves);
+            //substract the square of the mean
+            *msq = *msq-(*m)*(*m);
+            //take the square root and add back the mean
+            *msq = sqrt(*msq);
+            _wfVertices[3*((nwaves+1)*channels*timepoints+i*timepoints+j)+1] = *m- (*msq)*1.96;
+            *msq = *m+(*msq)*1.96;
+            _mean[i*timepoints+j] = *m;
+            _std[i*timepoints +j] = *msq;
+            /*
+            //also set the x and z-components
+            _wfVertices[3*((nwaves+2)*wavesize+i*timepoints+j)] = _wfVertices[3*(nwaves*wavesize+i*timepoints+j)];
+            _wfVertices[3*((nwaves+2)*wavesize+i*timepoints+j)+2] = _wfVertices[3*(nwaves*wavesize+i*timepoints+j)+2];
+            _wfVertices[3*((nwaves+1)*wavesize+i*timepoints+j)] = _wfVertices[3*(nwaves*wavesize+i*timepoints+j)];
+            _wfVertices[3*((nwaves+1)*wavesize+i*timepoints+j)+2] = _wfVertices[3*(nwaves*wavesize+i*timepoints+j)+2];
+            */
+        }
+    }
+    if(wfMean == NULL)
+    {
+        wfMean = [[NSMutableData dataWithBytes:_mean length:wavesize*sizeof(float)] retain];
+    }
+    else
+    {
+        [wfMean replaceBytesInRange:NSMakeRange(0, wavesize*sizeof(float)) withBytes:_mean];
+    }
+    if(wfStd == NULL )
+    {
+        wfStd = [[NSMutableData dataWithBytes:_std length:wavesize*sizeof(float)] retain];
+    }
+    else
+    {
+        [wfStd replaceBytesInRange:NSMakeRange(0, wavesize*sizeof(float)) withBytes:_std];
+    }
+
+    free(_mean);
+    free(_std);
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+
 }
 
 static void wfPushVertices()
@@ -520,9 +673,14 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
         {
             //need to reset z-value of previously highlighted waveform
             //idx = _hpoints[i];
-            idx = _indexes[_hpoints[i]];
-			zvalue = -1.0;
-            vDSP_vfill(&zvalue,_data+(idx*timepts*chs*3)+2,3,timepts*chs);
+            //TODO: we should be able to do without this check
+            if( _hpoints[i] < num_spikes )
+            {
+                idx = _indexes[_hpoints[i]];
+                zvalue = -1.0;
+                vDSP_vfill(&zvalue,_data+(idx*timepts*chs*3)+2,3,timepts*chs);
+        
+            }
         }
 		//alternative way of doing this, since we have an index set
 		
@@ -987,14 +1145,23 @@ static void wfDrawAnObject()
 		wfVertices[3*(k*wavesize+l)+2] = wfVertices[3*(num_spikes*wavesize+l)+2];
 	}*/
 	//reset mean and std waveform index
-	for(l=0;l<waveIndexSize;l++)
-	{
-		new_idx[k*waveIndexSize+l] = tmp_idx[num_spikes*waveIndexSize+l];
-		new_idx[(k+1)*waveIndexSize+l] = tmp_idx[(num_spikes+1)*waveIndexSize+l];
-		new_idx[(k+2)*waveIndexSize+l] = tmp_idx[(num_spikes+2)*waveIndexSize+l];
+    //if( drawMean )
+    //{
+        for(l=0;l<waveIndexSize;l++)
+        {
+            new_idx[k*waveIndexSize+l] = tmp_idx[num_spikes*waveIndexSize+l];
+        }
+    //}
+    //if ( drawStd )
+    //{
+        for(l=0;l<waveIndexSize;l++)
+        {
+            new_idx[(k+1)*waveIndexSize+l] = tmp_idx[(num_spikes+1)*waveIndexSize+l];
+            new_idx[(k+2)*waveIndexSize+l] = tmp_idx[(num_spikes+2)*waveIndexSize+l];
 
-
-	}
+        }
+    //}
+    
     glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
     num_spikes-=_npoints;
     if(num_spikes<0)
@@ -1013,12 +1180,28 @@ static void wfDrawAnObject()
     //glGenBuffers(1,&wfVertexBuffer);
     //glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
     //push data to the current buffer
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, nWfIndices*sizeof(GLuint), new_idx, GL_DYNAMIC_DRAW);
+    //TODO: If mean and/or standard devation is not drawn, we have to add something to accomodate them
+    int extra = 0;
+    if(drawStd==NO)
+    {
+        extra+=2;
+    }
+    if(drawMean==NO)
+    {
+        extra+=1;
+    }
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (nWfIndices+extra*waveIndexSize)*sizeof(GLuint), new_idx, GL_DYNAMIC_DRAW);
     //update waveform indices
 	for(i=0;i<_npoints;i++)
 	{
 		[waveformIndices removeIndex:_index[_points[i]]];
 	}
+    //update mean if change is larger than 10%
+    if(num_spikes < 0.9*numSpikesAtLeastMean )
+    {
+        [self computeMeandAndStd];
+        numSpikesAtLeastMean = num_spikes;
+    }
     [self setNeedsDisplay: YES];
     
 }
@@ -1376,12 +1559,16 @@ static void wfDrawAnObject()
         [self interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
     } else {
 		//TODO: this should be made more general, i.e. I don't want to have to rely on arcane key combinations
-		if( [[theEvent characters] isEqualToString: @"z"] )
+		if( ([[theEvent characters] isEqualToString: @"z"] ) && (highlightedChannels != NULL ))
 		{
+            if([highlightedChannels count] == 0)
+            {
+                return;
+            }
 			//[self highlightChannels: highlightedChannels]
 			float minChannel = [[highlightedChannels objectAtIndex:0] floatValue];
 			float maxChannel = [[highlightedChannels lastObject] floatValue];
-			if (minChannel<maxChannel)
+			if (minChannel<=maxChannel)
 			{
 				xmin = (GLfloat)(((int)minChannel)*(timepts+channelHop));
 				xmax = (GLfloat)(((int)(maxChannel+1))*(timepts+channelHop));
@@ -1434,6 +1621,10 @@ static void wfDrawAnObject()
 		{
 			[self hideOutlierWaveforms];
 		}
+        else if( [[theEvent characters] isEqualToString:@"s"] )
+        {
+            
+        }
 		else if ([ theEvent modifierFlags] & NSControlKeyMask )
 		{
 			unsigned int minChannel = [[highlightedChannels objectAtIndex:0] unsignedIntValue];
@@ -1580,30 +1771,32 @@ static void wfDrawAnObject()
             else
             {*/
                 //since we are drawing just the standard deviation, we have to shift the indices to skip the mean waveform
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
-                unsigned int *idx = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
-                if(idx)
+                //make sure we are using the correct context
+            [[self openGLContext] makeCurrentContext];
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
+            unsigned int *idx = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
+            if(idx)
+            {
+                unsigned int i,j,start;
+                if (drawStd == YES)
                 {
-                    unsigned int i,j,start;
-                    if (drawStd == YES)
-                    {
-                        start = (nWfIndices/waveIndexSize - 3);
-                    }
-                    else
-                    {
-                        start = (nWfIndices/waveIndexSize - 1);
-                    }
-                    for(i=start;i<(start+2);i++)
-                    {
-                        for(j=0;j<waveIndexSize;j++)
-                        {
-                            idx[i*waveIndexSize+j] = idx[(i+1)*waveIndexSize+j];
-                        }
-                    }
-                    nWfIndices-=waveIndexSize;
-                    glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+                    start = (nWfIndices/waveIndexSize - 3);
                 }
-                
+                else
+                {
+                    start = (nWfIndices/waveIndexSize - 1);
+                }
+                for(i=start;i<(start+2);i++)
+                {
+                    for(j=0;j<waveIndexSize;j++)
+                    {
+                        idx[i*waveIndexSize+j] = idx[(i+1)*waveIndexSize+j];
+                    }
+                }
+                nWfIndices-=waveIndexSize;
+                glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+            }
+            
                 
             //}
         }
@@ -1617,35 +1810,36 @@ static void wfDrawAnObject()
             else
             {*/
              //shift indices
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
-                unsigned int *idx = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
-                if(idx)
+            [[self openGLContext] makeCurrentContext];
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
+            unsigned int *idx = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
+            if(idx)
+            {
+                unsigned int i,j,start;
+                if( drawStd == YES )
                 {
-                    unsigned int i,j,start;
-                    if( drawStd == YES )
-                    {
-                        start = (nWfIndices/waveIndexSize -2);
-                    }
-                    else
-                    {
-                        start = (nWfIndices/waveIndexSize);
-                    }
-                    //first shift std up
-                    for(i=start+1;i>=(start);i--)
-                    {
-                        for(j=0;j<waveIndexSize;j++)
-                        {
-                            idx[(i+1)*waveIndexSize+j] = idx[i*waveIndexSize+j];
-                        }
-                    }
-                    //then fill in the mean
+                    start = (nWfIndices/waveIndexSize -2);
+                }
+                else
+                {
+                    start = (nWfIndices/waveIndexSize);
+                }
+                //first shift std up
+                for(i=start+1;i>=(start);i--)
+                {
                     for(j=0;j<waveIndexSize;j++)
                     {
-                        idx[start*waveIndexSize+j] = idx[(start-1)*waveIndexSize+j] + wavesize;
+                        idx[(i+1)*waveIndexSize+j] = idx[i*waveIndexSize+j];
                     }
-                    nWfIndices+=waveIndexSize;
-                    glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
                 }
+                //then fill in the mean
+                for(j=0;j<waveIndexSize;j++)
+                {
+                    idx[start*waveIndexSize+j] = idx[(start-1)*waveIndexSize+j] + wavesize;
+                }
+                nWfIndices+=waveIndexSize;
+                glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+            }
 
                 
             //}
@@ -1653,7 +1847,12 @@ static void wfDrawAnObject()
         }
         drawMean = _drawMean;
         [self setNeedsDisplay:YES]; 
-    }   
+    }
+    else
+    {
+        //even if we don't have any data, updated the variable
+        drawMean = _drawMean;
+    }
 }
 
 -(void)setDrawStd:(BOOL)_drawStd
@@ -1680,6 +1879,10 @@ static void wfDrawAnObject()
         }
         drawStd = _drawStd;
         [self setNeedsDisplay:YES];
+    }
+    else
+    {
+        drawStd = _drawStd;
     }
 }
 

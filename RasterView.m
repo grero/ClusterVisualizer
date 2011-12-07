@@ -7,9 +7,31 @@
 //
 
 #import "RasterView.h"
+#ifndef PI
+#define PI 3.141592653589793
+#endif
 
+static void drawCircle(GLfloat r, GLuint n)
+{
+    int i;
+    float dt = 2*PI/n;
+    float x,y,z;
+    z = 0;
+    
+    glBegin(GL_LINE_LOOP);
+    for(i=0;i<n;i++)
+    {
+        x = r*cos(i*dt);
+        y = r*sin(i*dt);
+        glVertex3f(x, y, z);
+        glColor3f(1.0, 0.0, 0.0);
+    }
+    glEnd();
+}
 
 @implementation RasterView
+
+@synthesize drawHightlightCircle;
 
 -(BOOL)acceptsFirstResponder
 {
@@ -17,7 +39,6 @@
 }
 -(void)awakeFromNib
 {
-	int i = 0;
     xmin = 0;
     xmax = 1000;
     ymax = 100.0;
@@ -26,6 +47,10 @@
     zmax = 1;
     yscale = 1.0;
     xscale = 100;
+    dataLoaded = NO;
+    picked.x = -100;
+    picked.y = -100;
+    [self setDrawHightlightCircle:YES];
 }
 
 +(NSOpenGLPixelFormat*) defaultPixelFormat
@@ -203,6 +228,7 @@
         {
             tidx = (unsigned int)(_vertices[3*i]/30000.0);
             _vertices[3*i] -= tidx*30000.0;
+            NSLog(@"No stimulus frame information found. Assuming 30 second repetitions");
         }
         else
         {
@@ -266,10 +292,16 @@
 	
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(xmin, xmax, ymin, ymax, zmin, zmax);
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();
-	
+    float _xmin,_xmax,_ymin,_ymax,rx,ry;
+    rx = xmax-xmin;
+    ry = ymax-ymin;
+    _xmin = xmin-0.05*rx;
+    _xmax = xmax + 0.05*rx;
+    _ymin = ymin-0.05*ry;
+    _ymax = ymax+0.05*ry;
+	glOrtho(_xmin, _xmax, _ymin, _ymax, zmin, zmax);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 	glBindBuffer(GL_ARRAY_BUFFER, rVertexBuffer);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_FLOAT, 0, (void*)0);
@@ -286,6 +318,14 @@
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_INDEX_ARRAY);
+    if( [self drawHightlightCircle] )
+    {
+        glPushMatrix();
+        glTranslatef(picked.x, picked.y, 0);
+        drawCircle(5.0, 150);
+        glPopMatrix();
+    }
+
 	[[self openGLContext] flushBuffer];
 }
 
@@ -294,6 +334,15 @@
     NSData *points = [params objectForKey:@"points"];
     unsigned int *_points = (unsigned int*)[points bytes];
     unsigned int _npoints = [points length]/sizeof(unsigned int);
+    if(_npoints > 0)
+    {
+        [[self openGLContext] makeCurrentContext];
+        glBindBuffer(GL_ARRAY_BUFFER, rVertexBuffer);
+        float *_vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+        picked.x = _vertices[3*(_points[0])];
+        picked.y = _vertices[3*(_points[0])+1];
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+    }
     unsigned int i,k;
     //change colors; first reset colors of already highlihted points
     [[self openGLContext] makeCurrentContext];
@@ -357,6 +406,8 @@
     glReadPixels(currentPoint.x, currentPoint.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, depth);
     //get object coordinates
     gluUnProject(currentPoint.x, currentPoint.y, depth[0], m, p, view, &objXNear, &objYNear, &objZNear);
+    
+    
     double dmin = INFINITY;
     double dT = INFINITY;
     //get a handle for the vertices
@@ -390,6 +441,8 @@
         }
 
     }
+    picked.x = use_vertices[3*wfidx];
+    picked.y = use_vertices[3*wfidx+1];;
     //if command key was pressed, add the currently selected point to the already highlighted points
     NSMutableData *wfidxData = [NSMutableData dataWithBytes: &wfidx length: sizeof(unsigned int)];
     if( ([theEvent modifierFlags] & NSCommandKeyMask) && (highlightedPoints != NULL) )

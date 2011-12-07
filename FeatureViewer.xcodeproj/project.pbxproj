@@ -53,6 +53,7 @@
 		DBA05AC3136ACB41008639C2 /* computeFeatures.c in Sources */ = {isa = PBXBuildFile; fileRef = DBA05AC2136ACB41008639C2 /* computeFeatures.c */; };
 		DBA2EE68146A805700D798CD /* libmatio.2.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBA2EE67146A805700D798CD /* libmatio.2.dylib */; };
 		DBCB7212144E86F70016ACAC /* libmpi.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBCB7211144E86F70016ACAC /* libmpi.0.dylib */; };
+		DBD41D251489E863005FEB4E /* ClusterView.m in Sources */ = {isa = PBXBuildFile; fileRef = DBD41D241489E863005FEB4E /* ClusterView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -143,6 +144,8 @@
 		DBA05AC2136ACB41008639C2 /* computeFeatures.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = computeFeatures.c; sourceTree = "<group>"; };
 		DBA2EE67146A805700D798CD /* libmatio.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libmatio.2.dylib; sourceTree = "<group>"; };
 		DBCB7211144E86F70016ACAC /* libmpi.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libmpi.0.dylib; sourceTree = "<group>"; };
+		DBD41D231489E863005FEB4E /* ClusterView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ClusterView.h; sourceTree = "<group>"; };
+		DBD41D241489E863005FEB4E /* ClusterView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ClusterView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -170,13 +173,15 @@
 			isa = PBXGroup;
 			children = (
 				256AC3D80F4B6AC300CF3369 /* FeatureViewerAppDelegate.h */,
+				DBD41D231489E863005FEB4E /* ClusterView.h */,
+				DBD41D241489E863005FEB4E /* ClusterView.m */,
+				C7D281C91257906F007D19EA /* WaveformsView.m */,
 				C71B0FD01257014400F594EA /* OpenPanelDelegate.h */,
 				C7D281C81257906F007D19EA /* WaveformsView.h */,
 				DB19959E13881966003A6D89 /* RasterView.h */,
 				DB19959F13881966003A6D89 /* RasterView.m */,
 				C75C02CB126946D1000E9BA8 /* ProgressPanel.h */,
 				C75C02CC126946D1000E9BA8 /* ProgressPanel.m */,
-				C7D281C91257906F007D19EA /* WaveformsView.m */,
 				C71B0FD11257014400F594EA /* OpenPanelDelegate.m */,
 				C7233919124EE6BD00FC9EF6 /* Cluster.h */,
 				C78C34461250AE34002BB91A /* todo.txt */,
@@ -417,6 +422,7 @@
 				DB1995A013881966003A6D89 /* RasterView.m in Sources */,
 				DB4F63C0146FA65500AD54B3 /* StimInfo.m in Sources */,
 				DB9415A214726507008C1663 /* fileWriters.c in Sources */,
+				DBD41D251489E863005FEB4E /* ClusterView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

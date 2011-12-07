@@ -8,8 +8,12 @@
  */
 #import <Accelerate/Accelerate.h>
 #import <dispatch/dispatch.h>
+#import <string.h>
 
 
-float *computeSpikeWidth(float *input, unsigned int stride, unsigned int N, float *output);
-float *computeSpikeArea(float *input, unsigned int stride, unsigned int N, float *output);
+void *computeSpikeWidth(float *input, unsigned int stride_in, unsigned int N, unsigned int stride_out,float *output);
+void *computeSpikeArea(float *input, unsigned int stride_in, unsigned int N, unsigned int stride_out, float *output);
 
+void *computeSpikeFFT(float *input, unsigned int stride_in, unsigned int N, unsigned int stride_out, float* ouput);
+
+void computeSpikePCA(float *input,unsigned int stride_in, unsigned int N1, unsigned int N2, unsigned int stride_out, float* output);

@@ -49,6 +49,8 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color);
 	//data to hold information on which waveforms are active
 	NSMutableIndexSet *waveformIndices;
     BOOL drawLabels, drawMean, drawStd;
+    NSUInteger numSpikesAtLeastMean;
+    NSMutableData *wfMean, *wfStd;
     
     
 }
@@ -56,6 +58,7 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color);
 @property (retain,readwrite) NSMutableData *highlightWaves;
 @property (retain,readwrite) NSMutableArray *highlightedChannels;
 @property (assign,readwrite) BOOL drawLabels, drawMean, drawStd;
+@property (readonly) NSMutableData *wfMean, *wfStd;
 
 //OpenGL related functions
 +(NSOpenGLPixelFormat*)defaultPixelFormat;
@@ -75,6 +78,7 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color);
 -(BOOL)isOpaque;
 //others
 -(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints andColor: (NSData*)color andOrder: (NSData*)order;
+-(void)computeMeandAndStd;
 -(void) highlightWaveform:(NSUInteger)wfidx;
 -(void) highlightWaveforms:(NSData*)wfidx;
 -(void) highlightChannels:(NSArray*)channels;

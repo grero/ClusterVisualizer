@@ -16,8 +16,8 @@ unsigned int *histogram_sorted(float *data, int datal, float*bins, int binsl,uns
 }
 
 
-//compute matrix inverse via LU factorization
-int matrix_inverse(float *A,int N)
+//compute matrix inverse of square matrix A via LU factorization
+int matrix_inverse(float *A,int N, float *det)
 {
 	//pivots
 	int *IPIV = malloc((N+1)*sizeof(int));
@@ -26,8 +26,19 @@ int matrix_inverse(float *A,int N)
 
 	int INFO;
 	sgetrf_(&N,&N,A,&N,IPIV,&INFO);
+    if ( det != NULL)
+    {
+        //compute determinant
+        int i;
+        *det = 0;
+        for(i=0;i<N;i++)
+        {
+            *det+= A[i*N+i];
+        }
+    }
+
 	sgetri_(&N,A,&N,IPIV,WORK,&LWORK,&INFO);
-	free(IPIV);
+    free(IPIV);
 	free(WORK);
 
 	return INFO;

@@ -253,7 +253,6 @@
         minmax[2*cl+1] = 1.5;
     }
 	scale = 1.0;
-    //minmax = getMinMax(minmax, vertices, rows, cols);
     draw_dims[0] = 0;
     draw_dims[1] = 1;
     draw_dims[2] = 3;
@@ -262,8 +261,7 @@
     indices = malloc(nindices*sizeof(GLuint));
     colors = malloc(nindices*3*sizeof(GLfloat));
     [[self openGLContext] makeCurrentContext];
-    //glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]+1], 1.1*minmax[2*draw_dims[2]]);
-	//glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
+    
 
 	modifyVertices(use_vertices);
     modifyIndices(indices);
@@ -326,8 +324,15 @@
 -(void) showCluster: (Cluster *)cluster
 {
     currentCluster = cluster;
+    float *_color = (float*)[[cluster color] bytes];
     [selectedClusters addObject: cluster];
 	unsigned int new_size = [[cluster npoints] intValue];
+    /*
+    if( nindices + new_size > rows )
+    {
+        return;
+    }
+     */
 	[[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
     GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
@@ -337,10 +342,19 @@
 	//
     if(tmp_indices!=NULL)
     {
-        unsigned int *points = (unsigned int*)[[cluster points] bytes];
-        //new_size = [cluster.indices count];
+                //new_size = [cluster.indices count];
         //tmp_indices = realloc(tmp_indices, new_size*sizeof(GLuint));
         int j = 0;
+        [indexset addIndexes: [cluster indices]];
+        nindices = [indexset count];
+        NSUInteger *_indices = malloc(nindices*sizeof(NSUInteger));
+        [indexset getIndexes:_indices maxCount:nindices inIndexRange:nil];
+        for(j=0;j<nindices;j++)
+        {
+            tmp_indices[j] = (unsigned int)_indices[j];
+        }
+        free(_indices);
+        glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
         /*for(i=0;i<rows;i++)
         {
             if(cids[i+1]==cid)
@@ -350,11 +364,11 @@
             }
         }*/
 		//float *centroid = NSZoneMalloc([self zone], 3*sizeof(float));
+        unsigned int *points = (unsigned int*)[[cluster points] bytes];
 		float *cluster_minmax = NSZoneCalloc([self zone], 6,sizeof(float));
-		
         for(j=0;j<new_size;j++)
         {
-            tmp_indices[nindices+j] = points[j];
+            //tmp_indices[nindices+j] = points[j];
 			//compute centroid
 			//centroid[0] += vertices[points[j]*cols + draw_dims[0]];
 			//centroid[1] += vertices[points[j]*cols + draw_dims[1]];
@@ -371,7 +385,9 @@
 			
 
         }
-		/*
+        
+        //colors
+                /*
 		scale = 1.0;
 		for(j=0;j<3;j++)
 		{
@@ -383,8 +399,8 @@
         //this does not work for a 64 bit application, as NSUInteger is then 64 bit, while the tm_indices is 32 bit.
         //int count = [indexset getIndexes:(NSUInteger*)tmp_indices maxCount:nindices+new_size inIndexRange:nil];
         //glBufferData(GL_ELEMENT_ARRAY_BUFFER, new_size*sizeof(GLuint), tmp_indices, GL_DYNAMIC_DRAW);
-		glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-		nindices += new_size;
+		
+		//nindices += new_size;
 
 		//normalize
 		//centroid[0]/=new_size;
@@ -394,9 +410,10 @@
 		//originy = -centroid[1];
 		//originz = -centroid[1];
         //NSZoneFree([self zone], centroid);
-		[indexset addIndexes: [cluster indices]];
-        nindices = [indexset count];
-		//calculate the centroid of the cluster in the current space
+				//calculate the centroid of the cluster in the current space
+        //do colors
+        [self setClusterColors:_color forIndices:(unsigned int*)[[cluster points] bytes] length:[[cluster npoints] unsignedIntValue]];
+        //
 		[self changeZoom];
         [self setNeedsDisplay:YES];
     }
@@ -425,6 +442,8 @@
 	{
 		nindices = 0;
         [indexset removeAllIndexes];
+        //also remove highlights
+        [[self highlightedPoints] setLength:0];
 		[self setNeedsDisplay:YES];
 		return;
 	}
@@ -447,7 +466,7 @@
             //      be done by maintaining a heap, for instance. 
             //dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
             //dispatch_apply(nindices, queue, ^(size_t j)
-            
+            /*
             for(j=0;j<nindices;j++)
             {
                 //int i,k,found;
@@ -469,17 +488,38 @@
                     i+=1;
                 }
             }//);
+             */
             //alternative to the above: Use IndexSets
             //NSMutableIndexSet *tmp = [NSMutableIndexSet 
             [indexset removeIndexes: [cluster indices]];
             
+            j = 0;
+            if( [[self highlightedPoints] length] >0 )
+            {
+                //check if the currentl highltighted points belong to this cluster
+                unsigned int *_points = (unsigned int*)[[self highlightedPoints] bytes];
+                unsigned int _npoints = [[self highlightedPoints] length]/sizeof(unsigned int);
+                //new array to hold the higlighted points we keep
+                unsigned int* newpoints = malloc(_npoints*sizeof(unsigned int  ));
+                for(i=0;i<_npoints;i++)
+                {
+                    if([ [cluster indices] containsIndex:(NSUInteger)_points[i]] == NO )
+                    {
+                        newpoints[j]=_points[i];
+                        j++;
+                    }
+                }
+            
+                [[self highlightedPoints] setData:[NSData dataWithBytes:newpoints length:j*sizeof(unsigned int)]];
+                free(newpoints);
+            }
             NSRange range;
             range.location = 0;
             range.length =nindices;
             //count = [indexset getIndexes: tmp_indices maxCount: nindices-new_size inIndexRange: nil];
-            nindices-=new_size;
-            if(nindices<0)
-                nindices=0;
+            //nindices-=new_size;
+            //if(nindices<0)
+            //    nindices=0;
             nindices = [indexset count];
             NSUInteger *_index = malloc(nindices*sizeof(NSUInteger));
             [indexset getIndexes: _index maxCount:nindices*sizeof(NSUInteger) inIndexRange:nil];
@@ -535,8 +575,17 @@
 {
     //draw selected points in complementary color
     NSData *points = [params objectForKey: @"points"];
+    unsigned int* _points = (unsigned int*)[points bytes];
+    unsigned int _npoints = (unsigned int)([points length]/sizeof(unsigned int));
+    int i;
     //store the points such that multiple selections will work
-    [self setHighlightedClusterPoints:points];
+    NSMutableIndexSet *hcp = [NSMutableIndexSet indexSet];
+    for(i=0;i<_npoints;i++)
+    {
+        [hcp addIndex:(NSUInteger)_points[i]];
+    }
+    //[self setHighlightedClusterPoints:points];
+    [self setHighlightedClusterPoints:hcp];
     //NSData *color = [params objectForKey:@"color"];
 	//need to make this work when cluster is nil
 	NSData *color;
@@ -556,11 +605,8 @@
 		//if no cluster is given, just use an index
 		_clusterPoints = NULL;	
 	}
-    unsigned int* _points = (unsigned int*)[points bytes];
-    unsigned int _npoints = (unsigned int)([points length]/sizeof(unsigned int));
-    //get the indices to redraw
+        //get the indices to redraw
     [[self openGLContext] makeCurrentContext];
-    int i;
     GLuint *idx = malloc(_npoints*sizeof(GLuint));
 	if( _clusterPoints != NULL )
 	{
@@ -618,6 +664,9 @@
 
     }
 	free(idx);
+    //update the menu
+    [[[self menu] itemWithTitle:@"Add points to cluster"] setEnabled:YES];
+    [[[self menu] itemWithTitle:@"Remove points from cluster"] setEnabled:YES];
     [self setNeedsDisplay:YES];
 }
 
@@ -1141,7 +1190,8 @@ static void drawAnObject()
 {
     if([[notification name] isEqualToString:@"highlight"])
     {
-        [self highlightPoints:[notification userInfo] inCluster: [notification object]];
+        if([[self window] isVisible] )
+            [self highlightPoints:[notification userInfo] inCluster: [notification object]];
     }
     else if( [[notification name] isEqualToString:NSUserDefaultsDidChangeNotification])
     {
@@ -1167,7 +1217,12 @@ static void drawAnObject()
 		NSDictionary *params  = [NSDictionary dictionaryWithObjectsAndKeys:[theEvent characters],@"selected",nil];
 		[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:self userInfo: params];
 	
-    } 
+    }
+    else if( ([theEvent modifierFlags] & NSCommandKeyMask) && ([[theEvent characters] isEqualToString:@"f"]))
+    {
+        [self enterFullScreenMode:[NSScreen mainScreen] withOptions:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:0], NSFullScreenModeWindowLevel, nil]];    
+    }
+                                                               
 	else 
 	{
         if( [[theEvent characters] isEqualToString:@"+" ] )
@@ -1178,6 +1233,18 @@ static void drawAnObject()
 		{
 			[self zoomOut];
 		}
+        else if( [theEvent keyCode] == 53 )
+        {
+            if( [self isInFullScreenMode] )
+            {
+                [self exitFullScreenModeWithOptions:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:0], NSFullScreenModeWindowLevel, nil]];
+            }
+        }
+        else
+        {
+            [self interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
+        }
+        
     }
 	[formatter release];
 }
@@ -1303,6 +1370,7 @@ static void drawAnObject()
 		pickedPoint[0] = objXNear;
 		pickedPoint[1] = objYNear;
 		pickedPoint[2] = objZNear;
+    
 		//once we have the ray, we can look for intersections
 		//since we are only interested in points, we can simply check whether the point +/- its radius encompasses the line 
 		//line given by x0 + ray[0](x-x0), y0 + ray[1](y-y0), z0 + ray[2](z-z0)
@@ -1317,23 +1385,28 @@ static void drawAnObject()
         //[indexset enumerateIndexesUsingBlock:^(NSUInteger k, BOOL *stop)
         k = [indexset firstIndex];
         i = 0;
+        float vX,vY,vZ;
         while(k != NSNotFound )
         //for(i=0;i<nindices;i++)
 		{
 			double a = 0;
+            vX = vertices[k*cols+draw_dims[0]];
+            vY = vertices[k*cols+draw_dims[1]];
+            vZ = vertices[k*cols+draw_dims[2]];
 			//component along ray
 			//k = indices[i];
-			a+=ray[0]*(use_vertices[3*k] - objXNear);
-			a+=ray[1]*(use_vertices[3*k+1] - objYNear);
-			a+=ray[2]*(use_vertices[3*k+2] - objZNear);
+            //Eureka! also care about which dimensions we are drawing,i.e. the ordering could change
+			a+=ray[0]*(vX - objXNear);
+			a+=ray[1]*(vY - objYNear);
+			a+=ray[2]*(vZ - objZNear);
 
 			double v[3];
 			double rv = 0;
-			v[0] = (use_vertices[3*k]-objXNear)-a*ray[0];
+			v[0] = (vX-objXNear)-a*ray[0];
 			rv+=v[0]*v[0];
-			v[1] = (use_vertices[3*k+1]-objYNear)-a*ray[1];
+			v[1] = (vY-objYNear)-a*ray[1];
 			rv+=v[1]*v[1];
-			v[2] = (use_vertices[3*k+2]-objZNear)-a*ray[2];
+			v[2] = (vZ-objZNear)-a*ray[2];
 			rv+=v[2]*v[2];
 
 			//this is the distance from the object to the ray
@@ -1383,21 +1456,44 @@ static void drawAnObject()
             //OK, this doesn't work
                     
         }
-		NSLog(@"depth: (%f,%f)", depth[0],depth[1]);
-		NSLog(@"x: %f, y: %f, z_near: %f, z_far: %f", objXNear,objYNear,objZNear,objZFar);
+		//NSLog(@"depth: (%f,%f)", depth[0],depth[1]);
+		//NSLog(@"x: %f, y: %f, z_near: %f, z_far: %f", objXNear,objYNear,objZNear,objZFar);
 		//NSLog(@"ray: (%f, %f, %f)", ray[0],ray[1],ray[2]);
-		NSLog(@"maxpoint: %d, smallest distance: %f, selected point: %d", nindices,dmin,wfidx);
+		//NSLog(@"maxpoint: %d, smallest distance: %f, selected point: %d", nindices,dmin,wfidx);
 
         //make sure we actually found a point first
 		if(wfidx < nindices)
 		{
             //TODO: this will not work; highlighted points is in global, not cluster coordinates
-            NSMutableData *wfidxData = [NSMutableData dataWithBytes: &wfidx length: sizeof(unsigned int)];
+            //NSMutableData *wfidxData = [NSMutableData dataWithBytes: &wfidx length: sizeof(unsigned int)];
+            NSMutableData *wfidxData = [NSMutableData dataWithCapacity:10*sizeof(unsigned int)];
             if( ([theEvent modifierFlags] & NSShiftKeyMask) && (highlightedClusterPoints != NULL) )
             {
-                [wfidxData appendData:highlightedClusterPoints];
-            }
+                //TODO: only append if point is not already highlighted
+                if( [[self highlightedClusterPoints] containsIndex:(NSUInteger)wfidx]==NO )
+                {
+                    [wfidxData appendBytes:&wfidx length:sizeof(unsigned)];
+                }
+                else
+                {
+                    //the point has already been highlighted; a second click means we want to remove it
+                    [[self highlightedClusterPoints] removeIndex:wfidx];
+                }
+                NSUInteger _count = [[self highlightedClusterPoints] count];
+                NSUInteger *hpc = malloc(_count*sizeof(NSUInteger));
+                [[self highlightedClusterPoints] getIndexes:hpc maxCount:_count inIndexRange:nil];
+                unsigned int f;
+                for(i=0;i<_count;i++)
+                {
+                    f = (unsigned int)hpc[i];
+                    [wfidxData appendBytes:&f length:sizeof(unsigned int)];
 
+                }
+            }
+            else
+            {
+                [wfidxData appendBytes:&wfidx length:sizeof(unsigned)];
+            }
 			[[self openGLContext] makeCurrentContext];
 			glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
 			float *color = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
@@ -1435,13 +1531,11 @@ static void drawAnObject()
 {
 	if( [event type] == NSEventTypeMagnify )
 	{
-		/*scale = scale+0.01*[event magnification];
-		[[self openGLContext] makeCurrentContext];
-		glMatrixMode(GL_MODELVIEW);
-		//glLoadIdentity();
-		glScaled(scale, scale, scale);
-		[self setNeedsDisplay: YES];*/
-	}
+        float f = [event magnification];
+        //convert from addititive to multiplicative
+        scale*=(1-f);
+        [self changeZoom];
+    }
 }
 
 -(void)mouseDragged:(NSEvent *)theEvent
@@ -1450,24 +1544,24 @@ static void drawAnObject()
 	BOOL needDisplay = NO;
 	if( [theEvent deltaX] < -1 )
 	{
-		originx-=0.1;
+		originx-=0.1*scale;
 		needDisplay = YES;
 	}
 	else if( [theEvent deltaX] > 1 )
 	{
-		originx+=0.1;
+		originx+=0.1*scale;
 		needDisplay = YES;
 
 	}
 	if( [theEvent deltaY] < -1 )
 	{
-		originy+=0.1;
+		originy+=0.1*scale;
 		needDisplay = YES;
 
 	}
 	else if( [theEvent deltaY] > 1 )
 	{
-		originy-=0.1;
+		originy-=0.1*scale;
 		needDisplay = YES;
 
 	}
@@ -1480,13 +1574,15 @@ static void drawAnObject()
 	BOOL needDisplay = NO;
 	if( [theEvent deltaY] < -1 )
 	{
-		originz-=0.1;
+		//originz-=0.1;
+        [self zoomIn];
 		needDisplay = YES;
 	}
 	else if( [theEvent deltaY] > 1 )
 	{
-		originz+=0.1;
-		needDisplay = YES;
+		//originz+=0.1;
+		[self zoomOut];
+        needDisplay = YES;
 		
 	}
 	[self setNeedsDisplay:needDisplay];
@@ -1496,6 +1592,30 @@ static void drawAnObject()
 -(void) setDrawLabels:(BOOL)_drawLabels
 {
     drawAxesLabels = _drawLabels;
+}
+
+-(void) deleteBackward:(id)sender
+{
+	//meant for deleting waveforms
+	//alert the application that we want to remove a waveform
+	NSDictionary *userInfo = [NSDictionary dictionaryWithObject:@"Remove waveforms" forKey:@"option"];
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"performClusterOption" object:self userInfo: userInfo];
+}
+
+-(void) performClusterOption:(id)sender
+{
+    NSString *option = [sender title];
+    NSMenuItem *item = [sender parentItem];
+    NSDictionary *params;
+    if([[item title] isEqualToString:@"Add points to cluster"] )
+    {
+        params = [NSDictionary dictionaryWithObjectsAndKeys:[item title], @"option", option, @"clusters",nil];
+    }
+    else
+    {
+        params = [NSDictionary dictionaryWithObjectsAndKeys:option, @"option", nil];
+    }
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"performClusterOption" object:self userInfo:params];
 }
 
 -(void)dealloc

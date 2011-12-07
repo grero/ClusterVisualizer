@@ -28,6 +28,7 @@
 @synthesize releasenotes;
 @synthesize rasterView;
 @synthesize stimInfo;
+@synthesize clusterMenu;
 
 -(void)awakeFromNib
 {
@@ -44,7 +45,9 @@
 	
 	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
 												 name:@"performClusterOption" object: nil];
-
+    
+    [[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
+												 name:NSUserDefaultsDidChangeNotification object: nil];
 	//load the nibs
 	//setup defaults
 	/*NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -61,7 +64,7 @@
 	NSString *rn = [[NSBundle mainBundle] pathForResource:@"release_notes" ofType: @"rtf"];
 	NSAttributedString *reln = [[NSAttributedString alloc] initWithPath:rn documentAttributes:NULL];
 	[self setReleasenotes: reln];
-	autoLoadWaveforms = YES;
+	
 	//set up predicates for filter
 	NSPredicateEditorRowTemplate *row = [[[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions: [NSArray arrayWithObjects:[NSExpression expressionForKeyPath:@"valid"],[NSExpression expressionForKeyPath: @"active"],nil] rightExpressions:
 										  [NSArray arrayWithObjects:[NSExpression expressionForConstantValue: [NSNumber numberWithInt:1]],[NSExpression expressionForConstantValue:[NSNumber numberWithInt:1]],nil] modifier: NSDirectPredicateModifier operators:
@@ -76,13 +79,17 @@
     
     
     //setup some usedefaults
-    [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithBool:YES], @"autoScaleAxes",
-                                      [NSNumber numberWithBool: YES], @"showFeatureAxesLabels",
-                                      [NSNumber numberWithBool: YES],@"showFeatureAxesFrame",
-                                      [NSNumber numberWithBool: NO], @"showWaveformsAxesLabels",
-                                      [NSNumber numberWithBool: YES], @"showWaveformsMean",
-                                      [NSNumber numberWithBool: YES], @"showWaveformsStd",
-                                       [NSNumber numberWithBool: YES],@"stimInfo",nil]];
+    /*
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if( [defaults objectForKey:@"autoLoadWaveforms"] == nil )
+    {
+        [defaults setBool:YES forKey:@"autoLoadWaveforms"];
+    }
+    */
+    shouldShowRaster = NO;
+    shouldShowWaveforms = NO;
+    autoLoadWaveforms = YES;
+    [selectClusterOption removeAllItems];
 }
 
 -(BOOL) acceptsFirstResponder
@@ -195,16 +202,18 @@
 						tmp_data2[j*H.rows+i] = tmp_data[i*H.cols+j];
 					}
 				}
-				//find max
+				/*//find max
 				float max,min;
 				float l;
 				vDSP_maxv(tmp_data2,1,&max,H.rows*(H.cols));
 				//find min
 				vDSP_minv(tmp_data2,1,&min,H.rows*(H.cols));
 				l = max-min;
+                 */
 				//scale each feature to be between -1 and +1 if autoscale is requested
                 //note that this is an overall scaling, so it should not distort the relationship
                 //between dimensions
+                /*
                 if( [[NSUserDefaults standardUserDefaults] boolForKey:@"autoScaleAxes"] == YES )
                 {
                     for(j=0;j<(H.rows)*(H.cols);j++)
@@ -212,7 +221,7 @@
                         tmp_data2[j] = 2*(tmp_data2[j]-min)/l-1;
                     }
 				}
-
+                */
 	
 				[data appendBytes:tmp_data2 length: H.rows*H.cols*sizeof(float)];
 				NSZoneFree([self zone], tmp_data);
@@ -270,7 +279,7 @@
 		//the file is a .fet file; it will have all the features written in ascii format, one row per line
 		//the first line contains the number of columns
 		filebase = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:0];
-		NSLog(@"LastComponent: %@",[path lastPathComponent]);
+		//NSLog(@"LastComponent: %@",[path lastPathComponent]);
 		currentBaseName = [[NSString stringWithString:filebase] retain];
 
 		NSArray *lines = [[NSString stringWithContentsOfFile:path] componentsSeparatedByString:@"\n"];
@@ -296,6 +305,8 @@
 				[tokens scanFloat:tmp_data+i*cols+j];
 			}
 		}
+        
+        /*
 		float max,min;
 		float l;
 		//find max
@@ -306,9 +317,9 @@
 		for(j=0;j<rows*cols;j++)
 		{
 			tmp_data[j] = 2*(tmp_data[j]-min)/l-1;
-		}
+		}*/
 		[data appendBytes:tmp_data length:rows*cols*sizeof(float)];
-		tmp_data2 = (float*)[data bytes];
+		//tmp_data2 = (float*)[data bytes];
 		//free(tmp_data);
 		//we don't know what the features are, so just call them by the the column
 		for(j=0;j<cols;j++)
@@ -323,26 +334,39 @@
 	range.length = rows*cols*sizeof(float);
 	
 	//scale data
-	//float max,min,l;
-	//this was not a good idea; scale the whole dataset instead
-	/*
-	for(i=0;i<cols;i++)
-	{
-		//find max
-		vDSP_maxv(tmp_data+i,cols,&max,rows);
+    float max,min,l;
+    if( [[NSUserDefaults standardUserDefaults] integerForKey:@"autoScaleAxes"] == 0 )
+    {
+        //find max
+		vDSP_maxv(tmp_data,1,&max,rows*cols);
 		//find min
-		vDSP_minv(tmp_data+i,cols,&min,rows);
-		//scale the data
+		vDSP_minv(tmp_data,1,&min,rows*cols);
 		l = max-min;
-		/*min *=-1;
-		vDSP_addv(tmp_data2+i,cols,&min,
-		vDSP_vsdiv(tmp_data2+i,cols,&l,tmp_data+i,cols,rows*cols);
-		for(j=0;j<rows;j++)
-		{
-			tmp_data[j*cols+i] = 2*(tmp_data[j*cols+i]-min)/l-1;
-		}
-	}
-	 */
+
+        for(j=0;j<rows*cols;j++)
+        {
+            tmp_data[j] = 2*(tmp_data[j]-min)/l-1;
+        }
+    }
+    else if( [[NSUserDefaults standardUserDefaults] integerForKey:@"autoScaleAxes"]==1 )
+    {
+        //scale each feature individually
+	   for(i=0;i<cols;i++)
+        {
+            //find max
+            vDSP_maxv(tmp_data+i,cols,&max,rows);
+            //find min
+            vDSP_minv(tmp_data+i,cols,&min,rows);
+            //scale the data
+            l = (max-min);
+            //vDSP_addv(tmp_data2+i,cols,&min,
+            //vDSP_vsdiv(tmp_data2+i,cols,&l,tmp_data+i,cols,rows*cols);
+            for(j=0;j<rows;j++)
+            {
+                tmp_data[j*cols+i] = 2*(tmp_data[j*cols+i]-min)/l-1;
+            }
+        }
+    }
 	/*
 	//find max
 	vDSP_maxv(tmp_data,1,&max,rows*cols);
@@ -357,18 +381,40 @@
 	[data replaceBytesInRange:range withBytes:tmp_data length: rows*cols*sizeof(float)];
 	 
 	NSZoneFree([self zone], tmp_data);
+    
 	[fw createVertices:data withRows:rows andColumns:cols];
 	//[fw loadVertices: [openPanel URL]];
 	[dim1 addItemsWithObjectValues:feature_names];
 	[dim2 addItemsWithObjectValues:feature_names];
 	[dim3 addItemsWithObjectValues:feature_names];
-	dataloaded = YES;
+	
 	
 	//get time data
 	//NSLog(@"XYZF: Is this going to work?");
 	//NSLog(@"Filebase: %@",filebase);
+    //check for the presence of xml file
+    
 	if (([self waveformsFile] == NULL ) && (autoLoadWaveforms == YES) )
 	{
+        //check for the presence of spk files; first we need to load some info
+        NSString *xmlFile = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:1];
+        xmlFile = [directory stringByAppendingPathComponent: [xmlFile stringByAppendingPathExtension:@"xml"]];
+        if( [[NSFileManager defaultManager] fileExistsAtPath:xmlFile] )
+        {
+            NSDictionary *info = [NSDictionary dictionaryWithContentsOfFile:xmlFile];
+            //now check for the presence of spk file
+            NSString *spkFile = [path stringByReplacingOccurrencesOfString:@"fet" withString:@"spk"];
+            NSUInteger group = [[path pathExtension] unsignedIntValue];
+            if( [[NSFileManager defaultManager] fileExistsAtPath:spkFile] )
+            {
+                //we only need to know the number of bits and the number of channels
+                NSNumber *nbits = [[info objectForKey:@"acquisitionSystem"] objectForKey:@"nBits"];
+                NSNumber *nchannels = [[[[info objectForKey: @"anatomicalDescription"] objectForKey:@"channelGroups"] objectAtIndex:group] count];
+                //now read the info from the file
+                //NSData *spikeData = [NSData dataWithContentsOfFile:spkFile];
+                
+            }
+        }
         //waveforms file usually resides in a directory above the feature file
 		NSArray *waveformfiles = [[[[NSFileManager defaultManager] contentsOfDirectoryAtPath: [directory stringByDeletingLastPathComponent] error: nil] 
 								   pathsMatchingExtensions:[NSArray arrayWithObjects:@"bin",nil]] filteredArrayUsingPredicate:
@@ -427,9 +473,10 @@
 												 name:@"setFeatures" object:nil];
 	
     
-    if( [[[NSUserDefaults standardUserDefaults] objectForKey:@"stimInfo"] boolValue]==YES)
+    if( [[NSUserDefaults standardUserDefaults] boolForKey:@"stimInfo"] ==YES)
     {
         NSString *stimInfoFile = NULL;
+        NSString *stimInfoDir = directory;
         if( waveformsFile != NULL )
         {
             //attempt to locate a simtinfo object. This should be located two levels above the waveformfile
@@ -444,12 +491,23 @@
                 _r = [stimInfoFile rangeOfString:@"g00"];
                 stimInfoFile = [stimInfoDir stringByAppendingPathComponent:[[stimInfoFile substringWithRange:NSMakeRange(0, _r.location)] stringByAppendingString:@"stimInfo.mat"]];
             }
-            if( [[NSFileManager defaultManager] fileExistsAtPath:stimInfoFile] == NO)
-            {
-                stimInfoFile=NULL;
-            }
-        
         }
+        if( [[NSFileManager defaultManager] fileExistsAtPath:stimInfoFile] == NO)
+        {
+            stimInfoFile=NULL;
+            //ask for the file name
+            NSOpenPanel *panel = [NSOpenPanel openPanel];
+            [panel setDirectory:stimInfoDir];
+            [panel setTitle:@"Open stimulus file"];
+            [panel setAllowedFileTypes: [NSArray arrayWithObjects:@"ini", nil]];
+            int result = [panel runModal];
+            if (result == NSOKButton )
+            {
+                stimInfoFile = [panel nameFieldStringValue];
+            }
+        }
+        
+        
         if(stimInfoFile != NULL)
         {
             //load stimInfo
@@ -460,13 +518,57 @@
             [stimInfo getFramePoints];
             //[stimInfo getTriggerSignalWithThreshold:1500.0];
         }
+        else
+        {
+            //pop up a dialog box asking for the necessary values; we can get by creating an approximate raster by getting the duration of each stimulus repetition
+        }
     }
 	//only reset clusters if data has already been loaded
     if( ([self Clusters] != nil) && (dataloaded == YES ) )
     {
         [self removeAllObjectsFromClusters];
     }
-    
+    dataloaded = YES;
+    //show window
+    if( [[[self fw] window] isVisible] == NO )
+    {
+        [[[self fw] window] orderFront:self];
+    }
+    //create a noise cluster with all points
+    Cluster *firstCluster = [[Cluster alloc] init];
+    [firstCluster setClusterId:[NSNumber numberWithInt:0]];
+    [firstCluster setIndices:[NSMutableIndexSet indexSetWithIndexesInRange:NSMakeRange(0, rows)]];
+    [firstCluster setNpoints:[NSNumber numberWithUnsignedInt: rows]];
+    unsigned int *points = malloc(rows*sizeof(unsigned int));
+    for(i=0;i<rows;i++)
+    {
+        points[i] = (unsigned int)i;
+    }
+    [firstCluster setPoints:[NSMutableData dataWithBytes:points length:rows*sizeof(unsigned int)]];
+    free(points);
+    [firstCluster createName];
+    [firstCluster makeActive];
+    //create cluster color
+    float *_ccolor = malloc(3*sizeof(float));
+    _ccolor[0] = 1.0f;//use_colors[3*cids[i+1]];
+    _ccolor[1] = 0.85f;//use_colors[3*cids[i+1]+1];
+    _ccolor[2] = 0.35f;//use_colors[3*cids[i+1]+2];
+    [firstCluster setColor: [NSData dataWithBytes:_ccolor length:3*sizeof(float)]];
+    free(_ccolor);
+    [selectClusterOption addItemWithTitle:@"Create cluster"];
+    [selectClusterOption addItemWithTitle:@"Add points to cluster"];
+    [clusterMenu addItemWithTitle:@"Add points to cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
+    [clusterMenu addItemWithTitle:@"Remove points from cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
+    //before we create the cluster, hide all existing clusters
+    [[self fw] hideAllClusters];
+    if([ self Clusters] != nil )
+    {
+        [self insertObject:firstCluster inClustersAtIndex:0];
+    }
+    else
+    {
+        [self setClusters:[NSMutableArray arrayWithObject:firstCluster]];
+    }
 }
 
 - (IBAction) loadClusterIds: (id)sender
@@ -770,12 +872,17 @@
 	}
     //since colors are now ccopied, we can free it
     NSZoneFree([self zone],cluster_colors);
+    if( ([self Clusters] != nil) && (dataloaded == YES ) )
+    {
+        [self removeAllObjectsFromClusters];
+    }
 	[self setClusters:tempArray];
     [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
     
     
-    [selectClusterOption removeAllItems];
-    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Show raster",@"Save clusters",nil];
+    //[selectClusterOption removeAllItems];
+    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",nil];
+    
     //test
     //clusterOptionsMenu  = [[[NSMenu alloc] initWithTitle:@"Options"] autorelease];
     //add some items
@@ -795,9 +902,14 @@
 	
 	NSEnumerator *clusterEn = [[self Clusters] objectEnumerator];
 	id cluster;
+    NSMenu *addToClustersMenu = [[[NSMenu alloc] init] autorelease];
 	while( (cluster=[clusterEn nextObject] ) ) 
 	{
-		if( [[cluster clusterId] unsignedIntValue] > 0 )
+        [cluster setFeatureDims:params.cols];
+        //update the menu
+        [addToClustersMenu addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[cluster clusterId] intValue] ] action:@selector(performClusterOption:) keyEquivalent:@""];
+        //check that there no more than 5000 points
+		if( ([[cluster clusterId] unsignedIntValue] > 0 ) && ([[cluster npoints] unsignedIntValue] < [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"]) )
 		{
 			[self loadWaveforms: cluster];
 			//make sure we also update the waverormsImage
@@ -811,10 +923,11 @@
 		[cluster setFeatureDims: params.cols];
 		
 	}
+    [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] setSubmenu:addToClustersMenu];
 	[[wfv window] orderOut: self];
 	[self performComputation:@"Compute Feature Mean" usingSelector:@selector(computeFeatureMean:)];
 	[allActive setState:1];
-	
+	[[self fw] showAllClusters];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(ClusterStateChanged:)
                                                  name:@"ClusterStateChanged" object:nil];
@@ -842,15 +955,37 @@
     nptHeader spikeHeader;
     spikeHeader = *getSpikeInfo(fpath,&spikeHeader);
     int _npoints = 1000;
+    //in case there aren't enough points
+    if (_npoints > spikeHeader.num_spikes) 
+    {
+        _npoints = spikeHeader.num_spikes;
+    }
     unsigned int *_points = NSZoneMalloc([self zone], _npoints*sizeof(unsigned int));
     int i;
-    for(i=0;i<_npoints;i++)
-    {
-        _points[i] = (unsigned int)((((float)rand())/RAND_MAX)*(spikeHeader.num_spikes));
-    }
     Cluster *cluster = [[Cluster alloc] init];
+    //create an index
+    [cluster setIndices:[NSMutableIndexSet indexSet]];
+    if( _npoints < spikeHeader.num_spikes)
+    {
+        for(i=0;i<_npoints;i++)
+        {
+            _points[i] = (unsigned int)((((float)rand())/RAND_MAX)*(spikeHeader.num_spikes));
+            [[cluster indices] addIndex:_points[i]];
+        }
+    }
+    else
+    {
+        for(i=0;i<_npoints;i++)
+        {
+            _points[i] = i;
+            [[cluster indices] addIndex:_points[i]];
+        }
+    }
+    
+    [cluster createName];
     [cluster setPoints:[NSMutableData dataWithBytes:_points length:_npoints*sizeof(unsigned int)]];
     [cluster setNpoints:[NSNumber numberWithUnsignedInt: _npoints]];
+    
     float color[3];
     color[0] = ((float)rand())/RAND_MAX;
     color[1] = ((float)rand())/RAND_MAX;
@@ -860,13 +995,136 @@
     [self loadWaveforms:cluster];
     //allow the waveforms view to receive notification about highlights
     [[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
+    //make the cluster valid
+    [cluster makeValid];
+    //add the cluster
+    if( [self Clusters] == nil )
+    {
+        [self setClusters:[NSMutableArray arrayWithObject:cluster]];
+    }
+    else
+    {
+        unsigned int nclusters = [[self Clusters] count];
+        [self insertObject:cluster inClustersAtIndex:nclusters];
+    }
+    //check if we are to compute features as well
+
+    if([[NSUserDefaults standardUserDefaults] objectForKey:@"autoLoadFeatures"])
+    {
+        //here we really want to load everything and compute features, but only if no features exist yet
+        //attempt to load feature files first; in general look in the FD directory below the waveforms file directory
+        BOOL found = NO;
+        NSString *featurePath = [[path stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"FD"];
+        //get the files in the directory
+        NSArray *files = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath:featurePath error: nil] pathsMatchingExtensions:[NSArray arrayWithObjects:@"fd",@"fet", nil]];
+        if( files == nil )
+        {
+            //no contents found, or an error occured
+        }
+        else
+        {
+            files = [files filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"SELF BEGINSWITH %@", [[path lastPathComponent] stringByDeletingPathExtension]]];
+            if([files count] > 0 )
+            {
+                [self openFeatureFile:[featurePath stringByAppendingPathComponent:[files objectAtIndex:0]]];
+                found = YES;
+            }
+            //hide all clusters
+            [allActive setState:0];
+            [[self fw] hideAllClusters];
+            //only show the feature points corresponding to the waveforms we are showing.
+            [[self fw] showCluster:cluster];
+            //set the colors
+            [[self fw] setClusterColors:(GLfloat*)[[cluster color] bytes] forIndices:(GLuint*)[[cluster points] bytes] length:[[cluster npoints] unsignedIntValue]];
+            
+            [[NSNotificationCenter defaultCenter] addObserver:[self fw] selector:@selector(receiveNotification:) name:NSUserDefaultsDidChangeNotification object:nil];
+            [cluster makeActive];
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(ClusterStateChanged:)
+                                                         name:@"ClusterStateChanged" object:nil];
+        }
+        //if we still haven't found anything, give the user a choice between manually locating the features, or computing them
+        if(found == NO )
+        {
+            NSAlert *alert = [[NSAlert alloc] init];
+            [alert setAlertStyle:NSInformationalAlertStyle];
+            [alert setMessageText:@"Unable to located features, would you like to manually locate them, have the program compute the features, or go ahead without features?"];
+            [alert addButtonWithTitle:@"Skip features"];
+            [alert addButtonWithTitle:@"Compute features"];
+            [alert addButtonWithTitle:@"Locate features"];
+            int result = [alert runModal];
+            if(result == NSAlertSecondButtonReturn )
+            {
+                //compute features
+                //load all the data in the waveforms file and compute features
+                NSLog(@"Computing features...");
+                _points = malloc(spikeHeader.num_spikes*sizeof(unsigned int));
+                //create an index to load everything
+                char *cpath = [path cStringUsingEncoding:NSASCIIStringEncoding]; 
+                for(i=0;i<spikeHeader.num_spikes;i++)
+                {
+                    _points[i] = i;
+                }
+                unsigned int wfSize = spikeHeader.num_spikes*spikeHeader.channels*spikeHeader.timepts;
+                short int *waveforms = malloc(wfSize*sizeof(short int));
+                waveforms = getWaves(cpath, &spikeHeader, _points, spikeHeader.num_spikes, waveforms);
+                    
+                //convert to float
+                float *fwaveforms = malloc(wfSize*sizeof(float));
+                vDSP_vflt16(waveforms, 1, fwaveforms, 1, wfSize);
+                free(waveforms);
+                
+                //computeFeatures
+                [self computeFeature:[NSData dataWithBytes:fwaveforms length:wfSize*sizeof(float)] withNumberOfSpikes: spikeHeader.num_spikes andChannels:spikeHeader.channels andTimepoints:spikeHeader.timepts];
+                //set the colors
+                [[self fw] setClusterColors:(GLfloat*)[[cluster color] bytes] forIndices:(GLuint*)[[cluster points] bytes] length:[[cluster npoints] unsignedIntValue]];
+                
+                [[NSNotificationCenter defaultCenter] addObserver:[self fw] selector:@selector(receiveNotification:) name:NSUserDefaultsDidChangeNotification object:nil];
+                //make sure we send notification about state changes
+                 [cluster makeActive];
+                [[NSNotificationCenter defaultCenter] addObserver:self
+                                                         selector:@selector(ClusterStateChanged:)
+                                                             name:@"ClusterStateChanged" object:nil];
+               
+                //[[NSNotificationCenter defaultCenter] addObserver:[self fw] selector:@selector(receiveNotification:) name:@"ClusterStateChanged" object:nil];
+            }
+            else if (result == NSAlertThirdButtonReturn)
+            {
+                [self loadFeatureFile:self];
+                //if the feature window is hidden, make it visible
+                if( [[[self fw] window] isVisible] == NO)
+                {
+                    [[[self fw] window] orderFront:self];
+                }
+                //hide all clusters
+                [allActive setState:0];
+                [[self fw] hideAllClusters];
+                //only show the feature points corresponding to the waveforms we are showing.
+                [[self fw] showCluster:cluster];
+                //set the colors
+                [[self fw] setClusterColors:(GLfloat*)[[cluster color] bytes] forIndices:(GLuint*)[[cluster points] bytes] length:[[cluster npoints] unsignedIntValue]];
+                
+                [[NSNotificationCenter defaultCenter] addObserver:[self fw] selector:@selector(receiveNotification:) name:NSUserDefaultsDidChangeNotification object:nil];
+                [cluster makeActive];
+                [[NSNotificationCenter defaultCenter] addObserver:self
+                                                         selector:@selector(ClusterStateChanged:)
+                                                             name:@"ClusterStateChanged" object:nil];
+                
+
+            }
+            [alert release];
+            
+        }
+        //[self computeFeature:<#(NSData *)#> withChannels:<#(NSUInteger)#> andTimepoints:<#(NSUInteger)#>
+    }
 
     
 }
 
 - (void) loadWaveforms: (Cluster*)cluster
 {
-    if (waveformsFile == NULL)
+    autoLoadWaveforms = [[NSUserDefaults standardUserDefaults] boolForKey:@"autoLoadWaveforms"];
+    if ( (waveformsFile == NULL) && ( autoLoadWaveforms))
     {
         NSOpenPanel *openPanel = [NSOpenPanel openPanel];
         //set a delegate for openPanel so that we can control which files can be opened
@@ -882,6 +1140,10 @@
             //Cluster *cluster = [Clusters objectAtIndex: 3];
             [self setWaveformsFile:[[openPanel URL] path]];
 			[[wfv window] orderFront: self];
+        }
+        else if( result == NSCancelButton )
+        {
+            [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:NO] forKey:@"autoLoadWaveforms"];
         }
     }
     if (waveformsFile != NULL)
@@ -905,12 +1167,28 @@
 		
         char *path = [[self waveformsFile] cStringUsingEncoding:NSASCIIStringEncoding];         
         unsigned int npoints = [[cluster npoints] unsignedIntValue];
-        
+        //TODO: check to avoid memory trouble; if there are too many points, load a subset
+        /*if(npoints > 5000)
+        {
+            //
+        }*/
         nptHeader spikeHeader;
         spikeHeader = *getSpikeInfo(path,&spikeHeader);
         unsigned int wfSize = npoints*spikeHeader.channels*spikeHeader.timepts;
         short int *waveforms = malloc(wfSize*sizeof(short int));
-        waveforms = getWaves(path, &spikeHeader, (unsigned int*)[[cluster points] bytes], npoints, waveforms);
+        
+        NSUInteger *idx = malloc(npoints*sizeof(NSUInteger));
+        [[cluster indices] getIndexes:idx maxCount:npoints inIndexRange:nil];
+        //convert to unsigned int
+        unsigned int *_idx = malloc(wfSize*sizeof(unsigned int));
+        int i;
+        for(i=0;i<npoints;i++)
+        {
+            _idx[i] = (unsigned int)idx[i];
+        }
+        free(idx);
+
+        waveforms = getWaves(path, &spikeHeader, _idx, npoints, waveforms);
         
         //convert to float
         float *fwaveforms = malloc(wfSize*sizeof(float));
@@ -920,6 +1198,8 @@
         [[wfv window] orderFront: self];
         [wfv createVertices:[NSData dataWithBytes:fwaveforms length:wfSize*sizeof(float)] withNumberOfWaves: npoints channels: (NSUInteger)spikeHeader.channels andTimePoints: (NSUInteger)spikeHeader.timepts 
                    andColor:[cluster color] andOrder:reorder_index];
+        [cluster setWfMean:[[self wfv] wfMean]];
+        [cluster setWfCov: [[self wfv] wfStd]];
         free(fwaveforms);
 		nchannels = spikeHeader.channels;
 		//setup self to recieve notification on feature computation
@@ -1020,6 +1300,10 @@
         [self setActiveCluster:[notification object]];
 		
         //update the raster
+        if( shouldShowRaster )
+        {
+            [[[self rasterView] window] orderFront: self];
+        }
         if( [[[self rasterView] window] isVisible] )
         {
             if( [self stimInfo] == NULL )
@@ -1031,6 +1315,11 @@
                 [rasterView createVertices:[[notification object] getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)] withColor:[[self activeCluster] color] andRepBoundaries:[[self stimInfo] repBoundaries]];
             }
         }
+        if( shouldShowWaveforms )
+        {
+            [[[self wfv] window] orderFront:self];
+        }
+             
         if( [[[self wfv] window] isVisible] )
         {
             [self loadWaveforms: [notification object]];
@@ -1041,6 +1330,36 @@
     else 
     {
         [fw hideCluster: [notification object]];
+        //also need to update raster and waveformsview; 
+        //get the active clusters
+        NSArray *candidates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"active == YES"]];
+        if( [candidates count] > 0 )
+        {
+            Cluster *candidate = [candidates objectAtIndex:0];
+            if( [[[self rasterView] window] isVisible] )
+            {
+                if( [self stimInfo] == NULL )
+                {
+                    [rasterView createVertices:[candidate getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)] withColor:[[self activeCluster] color]];
+                }
+                else
+                {
+                    [rasterView createVertices:[candidate getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)] withColor:[candidate color] andRepBoundaries:[[self stimInfo] repBoundaries]];
+                }
+            }
+
+            if( [[[self wfv] window] isVisible] )
+            {
+                [self loadWaveforms: candidate];
+            }
+        }
+        else
+        {
+            //No active clusters; hide both raster and waveforms view
+            [[[self wfv] window] orderOut:self];
+            [[[self rasterView] window] orderOut:self];
+        }
+        
         if([[self activeCluster] isEqualTo:[notification object]] )
         {
             //if the cluster we de-selected was the active one (i.e. last selected)
@@ -1195,8 +1514,7 @@
 	}
 	else if ( [[notification name] isEqualToString:@"computeSpikeWidth"] )
 	{
-		[self computeFeature:[[notification userInfo] objectForKey: @"data"] 
-				withChannels:[[[notification userInfo] objectForKey:@"channels"] unsignedIntValue]
+		[self computeFeature:[[notification userInfo] objectForKey: @"data"] withNumberOfSpikes:[[[notification userInfo] objectForKey:@"numspikes"] unsignedIntValue] andChannels:[[[notification userInfo] objectForKey:@"channels"] unsignedIntValue]
 			   andTimepoints:[[[notification userInfo] objectForKey:@"timepoints"] unsignedIntValue]];
 	}
 	else if ( [[notification name] isEqualToString:@"showInput" ] )
@@ -1230,28 +1548,72 @@
         
             [[self fw] highlightPoints:[notification userInfo] inCluster:[[self Clusters] objectAtIndex:[selectedClusters firstIndex]]];
         
-		}
-         */
+		}*/
+        
 		else
-		{
+		
+        {
 			//no cluster selected
-			[[self fw] highlightPoints:[notification userInfo] inCluster:[self activeCluster]];
-
-		}
-	}
-	else if ([[notification name] isEqualToString:@"performClusterOption"] )
-	{
-		//set the selected object
-		//check that the option is valid
-		NSUInteger idx = [[selectClusterOption itemTitles] indexOfObject:[[notification userInfo] objectForKey:@"option"]];
-		if (idx != NSNotFound )
-		{
-			[selectClusterOption selectItemAtIndex: idx];
-			[self performClusterOption:selectClusterOption];
-		}
-		//[[self ClusterOptions]] 
-	}
+            if([[[self fw] window] isVisible] )
+            {
+                [[self fw] highlightPoints:[notification userInfo] inCluster:[self selectedCluster]];
+            }
+		}	
+    }
 	
+    else if ([[notification name] isEqualToString:@"performClusterOption"] )
+	{
+        if ([[[notification userInfo] objectForKey: @"option"] isEqualToString:@"Add points to cluster"])
+        {
+            NSScanner *scanner = [NSScanner scannerWithString:[[notification userInfo] objectForKey:@"clusters"]];
+            //skip all letters
+            [scanner setCharactersToBeSkipped:[NSCharacterSet characterSetWithCharactersInString:@"Cluster "]];
+            int clusterID;
+            [scanner scanInt:&clusterID];
+            
+            NSArray *candidates = [[self Clusters] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"clusterId == %d",clusterID]];
+            
+            [self addPointsToCluster: [candidates objectAtIndex:0]];
+        }
+        else
+        {
+            //set the selected object
+            //check that the option is valid
+            NSUInteger idx = [[selectClusterOption itemTitles] indexOfObject:[[notification userInfo] objectForKey:@"option"]];
+            if (idx != NSNotFound )
+            {
+                [selectClusterOption selectItemAtIndex: idx];
+                [self performClusterOption:selectClusterOption];
+            }
+            //[[self ClusterOptions]] 
+        }
+	
+    }
+    else if ([[notification name] isEqualToString:NSUserDefaultsDidChangeNotification])
+    {
+        autoLoadWaveforms = [[NSUserDefaults standardUserDefaults] boolForKey:@"autoLoadWaveforms"];
+    }
+	
+}
+
+-(void)addPointsToCluster:(Cluster*)cluster
+{
+    
+    NSData *hpoints = [NSData dataWithData: [[self fw] highlightedPoints]];
+    [[self fw] hideCluster:selectedCluster];
+    
+    [selectedCluster removePoints:hpoints];
+    [cluster addPoints:hpoints];
+    [[self fw] setClusterColors:(GLfloat*)[[cluster color] bytes] forIndices:(unsigned int*)[[cluster points] bytes] length:[[cluster npoints] unsignedIntValue]];
+    [[[self fw] highlightedPoints] setLength:0];
+    [[self fw] setHighlightedPoints:nil];
+    
+    [[self fw] showCluster:selectedCluster];
+    if( [[[self wfv] window] isVisible] )
+    {
+        [self loadWaveforms:selectedCluster];
+    }
+
 }
 
 -(void) setAvailableFeatures:(NSArray*)channels
@@ -1387,6 +1749,7 @@
         [sender insertItemWithTitle:new_selection atIndex:idx];
         //make sure the waveforms view receives notification of highlights
         [[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
+        shouldShowWaveforms = YES;
 
     }
     else if ( [selection isEqualToString:@"Hide waveforms"] )
@@ -1398,6 +1761,7 @@
         [[NSNotificationCenter defaultCenter] removeObserver: [self wfv] name: @"highlight" object: nil];
         [[[self wfv] window] orderOut:self];
 		[inputPanel orderOut:self];
+        shouldShowWaveforms = NO;
         
     }
     else if( [selection isEqualToString:@"Filter clusters"] )
@@ -1417,10 +1781,29 @@
         [self setClustersSortDescriptors: descriptors];
 		//[self setCluster: [[self Clusters] sortUsingDescriptors:descriptors]];
     }
+    else if( [selection isEqualToString:@"Sort Isolation Info"] )
+    {
+        NSMutableArray *descriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"isolationInfo" ascending:NO]];
+        [self setClustersSortDescriptors: descriptors];
+
+    }
     else if( [selection isEqualToString:@"Compute Isolation Distance"])
     {
         [self performComputation:@"Compute Isolation Distance" usingSelector:@selector(computeIsolationDistance:)];
         
+    }
+    else if( [selection isEqualToString:@"Compute Isolation Info"] )
+    {
+        [self performComputation:@"Compute Isolation Info" usingSelector:@selector(computeIsolationInfo:)];
+        //TODO: The above doesn't work for some reason, so try and run this in a normal loop for now to debug
+        /*
+        NSEnumerator *clusterEnumerator = [candidates objectEnumerator];
+        Cluster *_cluster = [clusterEnumerator nextObject];
+        while(_cluster)
+        {
+            [_cluster computeIsolationInfo:[[self fw] getVertexData]];
+            _cluster = [clusterEnumerator nextObject];
+        }*/
     }
     else if( [selection isEqualToString:@"Shortest ISI"])
     {
@@ -1444,7 +1827,7 @@
                 spts[1] = pts[0]+1;
                 NSDictionary *_params = [NSDictionary dictionaryWithObjects: 
                                         [NSArray arrayWithObjects:                                                                             [NSData dataWithBytes:spts length:2*sizeof(unsigned int)],[activeCluster color],nil] forKeys: [NSArray arrayWithObjects:@"points",@"color",nil]];
-                [[NSNotificationCenter defaultCenter] postNotificationName: @"highlight" userInfo: _params];
+                [[NSNotificationCenter defaultCenter] postNotificationName: @"highlight" object: self userInfo: _params ];
                 free(spts);
             }
         }
@@ -1456,55 +1839,38 @@
         {
             //remove the currently selected waveforms
             unsigned int *selected = (unsigned int*)[[fw highlightedPoints] bytes];
-			unsigned int nselected = ([[fw highlightedPoints] length]);
+			unsigned int nselected = ([[fw highlightedPoints] length])/sizeof(unsigned int);
 			if (nselected == 0) {
 				return;
 			}
             //[[self activeCluster] setActive:0];
-            Cluster *selectedCluster = [[clusterController selectedObjects] objectAtIndex:0];
-			BOOL toggleActive = NO;
+            //Cluster *_selectedCluster = [[clusterController selectedObjects] objectAtIndex:0];
 			
-			if( [selectedCluster active] == 1 )
-			{
-				[selectedCluster setActive:0];
-				toggleActive = YES;
+            BOOL toggleActive = NO;
+			
+			//if( [selectedCluster active] == 1 )
+			//{
+			//	[selectedCluster setActive:0];
+			//	toggleActive = YES;
 				[fw hideCluster:selectedCluster];
 
-			}
+			//}
 			//[[Clusters objectAtIndex:0] setActive: 0];
             //[fw hideCluster:[self activeCluster]];
            
             
-            [selectedCluster removePoints:[NSData dataWithBytes: selected length: nselected]];
+            [selectedCluster removePoints:[NSData dataWithBytes: selected length: nselected*sizeof(unsigned int)]];
             //recompute ISI
             //TODO: Not necessary to recompute everything here
             [selectedCluster computeISIs:timestamps];
             //add this point to the noise cluster
-            [[Clusters objectAtIndex:0] addPoints:[NSData dataWithBytes: selected length: nselected]];
+            [[Clusters objectAtIndex:0] addPoints:[NSData dataWithBytes: selected length: nselected*sizeof(unsigned int)]];
             GLfloat *_color = (GLfloat*)[[[Clusters objectAtIndex:0] color] bytes];
             GLuint *_points = (GLuint*)selected;
             GLuint _length = nselected/sizeof(unsigned int);
-            //set the colors of the new cluster
-            //[fw setClusterColors:_color forIndices:_points length:_length];
-            if( toggleActive == YES )
-			{
-				[selectedCluster setActive:1];
-				[fw showCluster:selectedCluster];
-
-			}
-            //[[Clusters objectAtIndex:0] setActive: 1];
-            //reset the highlighted waves
-            /*
-            NSDictionary *params = [NSDictionary dictionaryWithObjects: [NSArray arrayWithObjects:
-                                                                         [NSData dataWithBytes:NULL length:0],[activeCluster color],nil]
-                                                               forKeys: [NSArray arrayWithObjects:@"points",@"color",nil]];
-            
-            //remove the highlights
-            [fw highlightPoints:params];
-             */
             [[fw highlightedPoints] setLength:0];
 			[fw setHighlightedPoints:NULL];
-		
+            [fw showCluster:selectedCluster];
 			if([[wfv window] isVisible])
 			{
 				
@@ -1515,6 +1881,9 @@
 				//[self loadWaveforms:selectedCluster];
 			}
 		}
+        [selectedCluster setWfMean:[NSData dataWithData:[[self wfv] wfMean]]];
+        [selectedCluster setWfCov:[NSData dataWithData:[[self wfv] wfStd]]];
+        [[[[self fw] menu] itemWithTitle:@"Remove points from cluster"] setEnabled:NO];
 		[fw setNeedsDisplay:YES];
 		
     }
@@ -1573,6 +1942,7 @@
             }
             [[rasterView window] makeKeyAndOrderFront:self];
         }
+        shouldShowRaster = YES;
     }
     else if ([selection isEqualToString: @"Save clusters"] )
     {
@@ -1653,6 +2023,138 @@
             _useCluster = [clusterEnumerator nextObject];
         }
 
+    }
+    else if ([ selection isEqualToString:@"Create cluster"] )
+    {
+        //use the currently selected points to create a new cluster
+        NSData *clusterPoints = [[self fw] highlightedPoints];
+        unsigned int nclusters = [Clusters count];
+        unsigned int _npoints = [clusterPoints length]/sizeof(unsigned int);
+        Cluster *newCluster = [[Cluster alloc] init];
+        [newCluster setClusterId:[NSNumber numberWithUnsignedInt: nclusters+1]];
+        //the highlighted points in fw corresponds to global coordinates, so we can use them directly.
+        [newCluster setPoints:[NSMutableData dataWithData:clusterPoints]];
+        [newCluster setNpoints:[NSNumber numberWithUnsignedInt:[clusterPoints length]/sizeof(unsigned int)]];
+        //set up color
+        float *_color = malloc(3*sizeof(float));
+        _color[0] = (float)random()/RAND_MAX;
+        _color[1] = (float)random()/RAND_MAX;
+        _color[2] = (float)random()/RAND_MAX;
+        [newCluster setColor:[NSData dataWithBytes:_color length:3*sizeof(float)]];
+        NSMutableIndexSet *index = [NSMutableIndexSet indexSet];
+        int i;
+        unsigned int* _clusterPoints = (unsigned int*)[clusterPoints bytes];
+        for(i=0;i<_npoints;i++)
+        {
+            [index addIndex:_clusterPoints[i]];
+        }
+        [newCluster setIndices:index];
+        [newCluster createName];
+        //change colors in fw
+        //first, remove highlights
+        [[self fw] setHighlightedPoints:nil];
+        [[self fw] setClusterColors: _color forIndices:_clusterPoints length:_npoints];
+         free(_color);
+        [newCluster makeValid];
+        //add cluster to the list
+        if([self Clusters] != nil )
+        {
+            [self insertObject:newCluster inClustersAtIndex:nclusters];
+        }
+        else
+        {
+            [self setClusters:[NSMutableArray arrayWithObject: newCluster]];
+        }
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(ClusterStateChanged:)
+                                                     name:@"ClusterStateChanged" object:nil];
+
+        
+    }
+    else if( [selection isEqualToString:@"Add points to cluster"])
+    {
+        //add the currently selected points to the selected clusters (i.e. the candidates)
+        NSData *clusterPoints = [[self fw] highlightedPoints];
+        unsigned int _npoints = [clusterPoints length]/sizeof(unsigned int);
+        unsigned int* _clusterPoints = (unsigned int*)[clusterPoints bytes];
+        NSEnumerator *clusterEnumerator = [candidates objectEnumerator];
+        Cluster *firstCluster = [clusterEnumerator nextObject];
+        int i;
+        while(firstCluster)
+        {
+            for(i=0;i<_npoints;i++)
+            {
+                [[firstCluster indices] addIndex:_clusterPoints[i]];
+                [[firstCluster points] appendBytes:_clusterPoints+i length:sizeof(unsigned int)];
+                [firstCluster setNpoints:[NSNumber numberWithUnsignedInt:[[firstCluster npoints] unsignedIntValue]+1]];
+            }
+        }
+    }
+    
+    else if( [selection isEqualToString:@"Assign to cluster"] )
+    {
+        //loop through each cluster and compute the probability for each waveform to belong to the given cluster
+        NSEnumerator *clusterEnumerator = [[self Clusters] objectEnumerator];
+        Cluster *clu = [clusterEnumerator nextObject];
+        int i;
+        nptHeader spikeHeader;
+        char *fname = [[self waveformsFile] cStringUsingEncoding: NSASCIIStringEncoding];
+        getSpikeInfo(fname, &spikeHeader);
+        wavesize = (spikeHeader.timepts)*(spikeHeader.channels);
+        [[self fw] hideCluster:selectedCluster];
+        [[selectedCluster indices] removeAllIndexes];
+        while(clu)
+        {
+            NSUInteger nwaves = [[clu indices] count];
+            if(nwaves>0)
+            {
+                
+                NSUInteger *idx = malloc(nwaves*sizeof(NSUInteger));
+                [[clu indices] getIndexes:idx maxCount:nwaves inIndexRange:nil];
+                //convert to unsigned int
+                unsigned int *_idx = malloc(nwaves*sizeof(unsigned int));
+                for(i=0;i<nwaves;i++)
+                {
+                    _idx[i] = (unsigned int)idx[i];
+                }
+                free(idx);
+                //get the waveforms
+                short *data = malloc(nwaves*wavesize*sizeof(short int));
+                 getWaves(fname, &spikeHeader, _idx, nwaves, data);
+                //convert to float
+                float *fwaveforms = malloc(nwaves*wavesize*sizeof(float));
+                vDSP_vflt16(data, 1, fwaveforms, 1, nwaves*wavesize);
+                free(data);
+                NSData *prob = [selectedCluster computeWaveformProbability: [NSData dataWithBytes:fwaveforms length:nwaves*wavesize*sizeof(float)] length: nwaves];
+                free(fwaveforms);
+                //add indexes to cluster
+                double *_prob = (double*)[prob bytes];
+                [[selectedCluster indices] addIndexes:[[clu indices] indexesPassingTest:^BOOL(NSUInteger idx, BOOL *stop) {
+                    return _prob[idx] >= 0.9;
+                }]];
+            }
+            clu = [clusterEnumerator nextObject];
+            
+        }
+        [selectedCluster setNpoints:[NSNumber numberWithUnsignedInt:[[selectedCluster indices] count]]];
+        //TODO: get rid of this
+        unsigned int _npoints = [[selectedCluster npoints] unsignedIntValue];
+        NSUInteger *idx = malloc(_npoints*sizeof(NSUInteger));
+        [[selectedCluster indices] getIndexes:idx maxCount:_npoints inIndexRange:nil];
+        //convert to unsigned int
+        unsigned int *_idx = malloc(_npoints*sizeof(unsigned int));
+        for(i=0;i<_npoints;i++)
+        {
+            _idx[i] = (unsigned int)idx[i];
+        }
+        free(idx);
+        [selectedCluster setPoints:[NSMutableData dataWithBytes:_idx length:_npoints*sizeof(unsigned int)]];
+        free(_idx);
+        [selectedCluster createName];
+        //reload the cluster
+        [[self fw] showCluster:selectedCluster];
+        [self loadWaveforms:selectedCluster];
+                
     }
 
         
@@ -1748,6 +2250,35 @@
     }
 }
 
+
+-(IBAction)saveTemplates:(id)sender
+{
+    NSArray *templates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"isTemplate==1"]];
+    if([templates count] == 0 )
+    {
+        return;
+    }
+    NSEnumerator *templateEnumerator = [templates objectEnumerator];
+    NSMutableArray *templateIds = [NSMutableArray arrayWithCapacity:[templates count]];
+    id template;
+    while( template = [templateEnumerator nextObject] )
+    {
+        [templateIds addObject:[NSString stringWithFormat: @"%d",[[template clusterId] intValue]]];
+    }
+    NSString *templateIdStr = [templateIds componentsJoinedByString:@"\n"];
+    NSSavePanel *savePanel = [NSSavePanel savePanel];
+    [savePanel setNameFieldStringValue:[NSString stringWithFormat: @"%@.scu",currentBaseName]];
+    [savePanel beginWithCompletionHandler:^(NSInteger result) 
+     {
+         if(result == NSFileHandlingPanelOKButton )
+         {
+             [templateIdStr writeToFile:[[[savePanel directoryURL] path] stringByAppendingPathComponent: [savePanel nameFieldStringValue]] atomically:YES];
+         }
+     }];
+
+    
+}
+
 - (IBAction)saveFeatureSpace:(id)sender
 {
 	//save an image of the currently shown figures space
@@ -1778,6 +2309,8 @@
     [points appendData:cluster1.points];
     [points appendData:cluster2.points];
     new_cluster.points = points;
+    [new_cluster setIndices:[[NSMutableIndexSet alloc] initWithIndexSet:[cluster1 indices]]];
+    [[new_cluster indices] addIndexes:[cluster2 indices]];
     //set the new cluster color to that of the first cluster
     NSData *new_color = [cluster1 color];
     [new_cluster setColor: new_color];
@@ -1803,6 +2336,17 @@
 		[fw setClusterColors:[[new_cluster color] bytes] forIndices:[[new_cluster points] bytes] length:[[new_cluster npoints] unsignedIntValue]];
 	}
     new_cluster.active = 1;
+    //make sure we also updated the waveforms image
+    [self loadWaveforms: new_cluster];
+    //make sure we also update the waverormsImage
+    if([new_cluster waveformsImage] == NULL)
+    {
+        NSImage *img = [[self wfv] image];
+        [new_cluster setWaveformsImage:img];
+    }
+    //make the new cluster the currently selected
+    [self setSelectedClusters:[NSIndexSet indexSetWithIndex:nclusters]];
+    selectedCluster = new_cluster;
 }
 
 -(void)deleteCluster: (Cluster *)cluster
@@ -1853,15 +2397,15 @@
     
     //NSScanner *scanner = [ NSScanner scannerWithString:[lines objectAtIndex:2]];
     //NSMutableArray *items = [NSMutableArray arrayWithCapacity:3];
-    NSDictionary *dict = [NSDictionary dictionaryWithObjects: [[lines objectAtIndex:2] componentsSeparatedByString:@" "] 
-                                                     forKeys: [NSArray arrayWithObjects:@"ndim",@"nclusters",@"npoints",nil]];
+    NSDictionary *dict = [NSDictionary dictionaryWithObjects: [[lines objectAtIndex:2] componentsSeparatedByString:@" "]                                                      forKeys: [NSArray arrayWithObjects:@"ndim",@"nclusters",@"npoints",nil]];
     //the second line contains the scaling
     int nclusters = [[dict valueForKey:@"nclusters"] intValue];
     int ndim = [[dict valueForKey:@"ndim"] intValue];
     int linesPerCluster = ndim+2;
-    int i;
+    int i,j,k;
     float *mean = malloc(ndim*sizeof(float));
     float *cov = malloc(ndim*ndim*sizeof(float));
+    float det = 0;
     //NSMutableArray *clusterParams = [NSMutableArray arrayWithCapacity:nclusters];
     for(i=0;i<nclusters;i++)
     {
@@ -1869,13 +2413,14 @@
         //[cluster setObject: [NSNumber numberWithFloat: [[[[lines objectAtIndex: 3+i*linesPerCluster] componentsSeparatedByString: @" "] objectAtIndex: 1] floatValue]] forKey:@"Mixture"];
         NSScanner *meanScanner = [NSScanner scannerWithString:[lines objectAtIndex:3+i*linesPerCluster+1]];
         
-        int j = 0;
+        j = 0;
         while ( [meanScanner isAtEnd] == NO)
         {
             [meanScanner scanFloat:mean+j];
             j+=1;
         }
         //[cluster setObject: [NSData dataWithBytes: mean length: ndim*sizeof(float)] forKey: @"Mean"];
+        [[Clusters objectAtIndex:i] setFeatureDims:ndim];
         [[Clusters objectAtIndex:i] setMean: [NSData dataWithBytes: mean length: ndim*sizeof(float)]];
         //now do covariance matrix
         NSRange range;
@@ -1883,17 +2428,28 @@
         range.length = ndim;
         NSScanner *covScanner = [NSScanner scannerWithString: [[lines subarrayWithRange: range] componentsJoinedByString:@" "]];
         j = 0;
+        
         while ( [covScanner isAtEnd] == NO )
         {
             [covScanner scanFloat:cov+j];
             j+=1;
         }
+        //we only get the lower triangular part
+        for(j=0;j<ndim;j++)
+        {
+            for(k=0;k<ndim;k++)
+            {
+                cov[j*ndim+k] = cov[k*ndim+j];
+            }
+        }
         //[cluster setObject: [NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)] forKey: @"Cov"];
         [[Clusters objectAtIndex:i] setCov:[NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)]];
         //compute inverse covariance matrix
-        int status = matrix_inverse(cov, ndim);
+        int status = matrix_inverse(cov, ndim, &det);
         //[cluster setObject: [NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)] forKey: @"Covi"];
         [[Clusters objectAtIndex:i] setCovi:[NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)]];
+        [[Clusters objectAtIndex:i] setDet:det];
+        //   [[Clusters objectAtIndex:i] computeBelonginess:[[self fw] getVertexData]];
         //[cluster setObject: [NSNumber numberWithUnsignedInteger: i] forKey: @"ID"];
         //[clusterParams addObject:cluster];
         //we can now go ahead and compute the L-ratio for this cluster
@@ -1933,8 +2489,7 @@
     for(i=0;i<nclusters;i++)
     {
         //Use NSInvocationOperation here
-        NSInvocationOperation *operation = [[NSInvocationOperation alloc] initWithTarget:[Clusters objectAtIndex:i]
-                                                                                selector:operationSelector object:[fw getVertexData]];
+        NSInvocationOperation *operation = [[NSInvocationOperation alloc] initWithTarget:[Clusters objectAtIndex:i] selector:operationSelector object:[fw getVertexData]];
         [allFinished addDependency:operation];
         [queue addOperation:operation];
         /*[queue addOperationWithBlock:^{
@@ -1957,41 +2512,75 @@
     [queue addOperation:op];
 }
 
--(void) computeFeature:(NSData*)waveforms withChannels:(NSUInteger)channels andTimepoints:(NSUInteger)timepoints
+-(void) computeFeature:(NSData*)waveforms withNumberOfSpikes: (NSUInteger)nwaves andChannels:(NSUInteger)channels andTimepoints:(NSUInteger)timepoints
 {
 	//allocate array for features
 	NSUInteger s = [waveforms length];
-	NSUInteger nwaves = s/(3*channels*timepoints*sizeof(float));
+    //stride is applicable if we are loading x,y,z values
+    NSUInteger stride = s/(nwaves*channels*timepoints*sizeof(float));
 	
 	float *wfdata = (float*)[waveforms bytes];
 	float *sparea = NSZoneMalloc([self zone], nwaves*channels*sizeof(float));
-	sparea = computeSpikeArea(wfdata,3*timepoints,channels*nwaves,sparea);
+    float *spwidth = malloc(nwaves*channels*sizeof(float));
+    float *spfft = malloc(nwaves*channels*timepoints*sizeof(float));
+    float *sppca = malloc(nwaves*channels*timepoints*sizeof(float));
+    //remember, if we are looking at raw waveform data, channel is the last dimension
+	//sparea = computeSpikeArea(wfdata,stride*timepoints,channels*nwaves,sparea);
+    int ch;
+    for(ch = 0;ch<channels;ch++)
+    {
+        computeSpikeArea(wfdata+ch, timepoints, nwaves, 1, sparea+ch*nwaves);
+        computeSpikeWidth(wfdata+ch, timepoints , nwaves, 1, spwidth+ch*nwaves);
+        computeSpikeFFT(wfdata+channels, timepoints, nwaves, timepoints, spfft+ch*nwaves*timepoints);
+        computeSpikePCA(wfdata+channels, channels, nwaves, timepoints, channels,sppca+ch*nwaves*timepoints);
 
+    }
 	//float *spwidth = NSZoneMalloc([self zone], nwaves*channels*sizeof(float));
-	float *spwidth = malloc(nwaves*channels*sizeof(float));
-	spwidth = computeSpikeWidth(wfdata, 3*timepoints, channels*nwaves, spwidth);
-	
-		
-	float *fv = NSZoneMalloc([self zone], 2*nwaves*channels*sizeof(float));
+	    
+	unsigned int fvsize = 2*nwaves*channels+2*nwaves*channels*timepoints;
+	float *fv = NSZoneCalloc([self zone], fvsize,sizeof(float));
 	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, NULL);
-	dispatch_apply(nwaves, q, ^(size_t i)
-	//for(i=0;i<nwaves;i++)
+	//feature vector needs to have form [x,y,z,x,y,z,...]
+    //dispatch_apply(nwaves, q, ^(size_t i)
+    size_t i;
+	for(i=0;i<nwaves;i++)
 	{
-		int j;
+		int j,k;
 		//write the columns feature by feature, i.e. first area, then width
+        //remember we are transposing, i.e. all features for channel 1 first, then channel 2
 		for(j=0;j<channels;j++)
 		{
-			fv[i*2*channels+j] = sparea[i*channels+j];
+			//fv[i*3*channels+j] = sparea[i*channels+j];
+            fv[i*channels*(2+2*timepoints)+j] = sparea[i*channels + j];
 		}
 		for(j=0;j<channels;j++)
 		{
-			fv[i*2*channels+channels+j] = spwidth[i*channels+j];
+			//fv[i*3*channels+channels+j] = spwidth[i*channels+j];
+            fv[i*channels*(2+timepoints)+channels+j] = spwidth[i*channels+j];
 		}
-	});
+        //fft has as many coefficients as timepoints
+        for(k=0;k<timepoints;k++)
+        {
+            for(j=0;j<channels;j++)
+            {
+                fv[i*channels*(2+2*timepoints) + 2*channels + k*channels+j] = spfft[i*channels*timepoints + j*timepoints+k];
+            }
+        }
+        //pca same as fft
+        for(k=0;k<timepoints;k++)
+        {
+            for(j=0;j<channels;j++)
+            {
+                fv[i*channels*(2+2*timepoints) + 2*channels +2*channels*timepoints+ k*channels+j] = sppca[i*channels*timepoints + j*timepoints+k];
+            }
+        }
+
+	}//);
 	
 	//scale each feature
 	int l = 0;
 	float mx,mi;
+    /*
 	for(l=0;l<2*channels;l++)
 	{
 		vDSP_maxv(fv+l, 2*channels, &mx, nwaves);
@@ -2003,20 +2592,31 @@
 			mx = mi; 
 		}
 		vDSP_vsdiv(fv+l, 2*channels,&mx,fv+l,2*channels,nwaves);
-	}
-	
+	}*/
+    //scale to be between -1 and 1
+    vDSP_maxv(fv, 1, &mx, fvsize);
+    vDSP_minv(fv, 1, &mi, fvsize);
+    float r = (mx-mi)/2;
+    mi = -mi;
+    vDSP_vsadd(fv, 1, &mi,fv, 1, fvsize);
+    vDSP_vsdiv(fv, 1, &r, fv, 1,fvsize);
+    mi = -1;
+    vDSP_vsadd(fv, 1, &mi,fv, 1, fvsize);
+
 	//we dont need the individual features any more
 	//NSZoneFree([self zone], spwidth);
-	free(spwidth);
+	
+    free(spwidth);
 	NSZoneFree([self zone], sparea);
-	[fw createVertices:[NSData dataWithBytes: fv length: 2*channels*nwaves] withRows:nwaves andColumns:2*channels];
+    free(spfft);
+    free(sppca);
+	[fw createVertices:[NSData dataWithBytes: fv length: fvsize*sizeof(float)] withRows:nwaves andColumns:channels*(2+2*timepoints)];
 	//set the feature Names
 	if( featureNames == NULL )
 	{
 		featureNames = [[NSMutableArray arrayWithCapacity:2*channels] retain];
 	}
 	[featureNames removeAllObjects];
-	int ch = 0;
 	for(ch=0;ch<channels;ch++)
 	{
 		[featureNames addObject: [NSString stringWithFormat:@"Area%d", ch+1]];
@@ -2025,15 +2625,36 @@
 	{
 		[featureNames addObject: [NSString stringWithFormat:@"SpikeWidth%d", ch+1]];
 	}
+    for(ch=0;ch<channels;ch++)
+    {
+        for(l=0;l<timepoints;l++)
+        {
+            [featureNames addObject: [NSString stringWithFormat:@"SpikeFFT%d%d",ch+1,l+1]]; 
+        }
+    }
+    for(ch=0;ch<channels;ch++)
+    {
+        for(l=0;l<timepoints;l++)
+        {
+            [featureNames addObject: [NSString stringWithFormat:@"SpikePCA%d%d",ch+1,l+1]]; 
+        }
+    }
 	
 	[dim1 removeAllItems];
 	[dim1 addItemsWithObjectValues:featureNames];
+    [dim1 selectItemAtIndex:0];
+
 	
 	[dim2 removeAllItems];
 	[dim2 addItemsWithObjectValues:featureNames];
-	
+	[dim2 selectItemAtIndex:1];
+    
 	[dim3 removeAllItems];
 	[dim3 addItemsWithObjectValues:featureNames];
+    [dim3 selectItemAtIndex:2];
+    //make the feature view window visible
+    
+    [[[self fw] window] orderFront:self];
 }
 
 -(void)setSelectedClusters:(NSIndexSet *)indexes
@@ -2050,17 +2671,27 @@
 		//the original array
 		//Cluster *firstCluster = [Clusters objectAtIndex:firstIndex];
 		Cluster *firstCluster = [[clusterController selectedObjects] objectAtIndex:0];
-                
-		[self loadWaveforms: firstCluster];
-		[[wfv window] orderFront: self];
-		//make sure we also update the waveformsImage
-		if([firstCluster waveformsImage] == NULL)
-		{
-			NSImage *img = [[self wfv] image];
-			[firstCluster setWaveformsImage:img];
-		}
+        //TODO: This should be made more general
+        if( ([[firstCluster clusterId] unsignedIntValue] > 0 ) && ([[firstCluster npoints] unsignedIntValue] < [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"]))
+        {
+            [self loadWaveforms: firstCluster];
+            [[wfv window] orderFront: self];
+            //make sure we also update the waveformsImage
+            if([firstCluster waveformsImage] == NULL)
+            {
+                NSImage *img = [[self wfv] image];
+                [firstCluster setWaveformsImage:img];
+            
+            }
+        
+        }
+        if(shouldShowRaster)
+        {
+            [[[self rasterView] window] orderFront:self];
+        }
         if( [[[self rasterView] window] isVisible] )
         {
+            
             if([self stimInfo] == NULL )
             {
                 [rasterView createVertices:[firstCluster getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)] withColor:[firstCluster color]];
@@ -2069,7 +2700,9 @@
             {
                 [rasterView createVertices:[firstCluster getRelevantData:timestamps withElementSize:sizeof(unsigned long long int)] withColor:[firstCluster color] andRepBoundaries:[[self stimInfo] repBoundaries]];
             }
+        
         }
+        
         //load cluster in feature view
         //not the best solution
         //hide the previously selected cluster, only if it is not also active
@@ -2078,9 +2711,7 @@
             [[self fw] hideCluster:selectedCluster];
         }
         [[self fw] showCluster:firstCluster];
-		NSInteger idx = [selectClusterOption indexOfSelectedItem];
-		NSString *selection = [selectClusterOption titleOfSelectedItem];
-		//NSString *new_selection = [selection stringByReplacingOccurrencesOfString:@"Show" withString:@"Hide"];
+        //NSString *new_selection = [selection stringByReplacingOccurrencesOfString:@"Show" withString:@"Hide"];
 		//[selectClusterOption removeItemAtIndex:idx];
 		//[selectClusterOption insertItemWithTitle:new_selection atIndex:idx];
 		//make sure the waveforms view receives notification of highlights

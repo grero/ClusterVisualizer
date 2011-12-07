@@ -13,6 +13,8 @@ static GLuint rVertexBuffer;
 static GLuint rIndexBuffer;
 static GLuint rColorBuffer;
 
+static void drawCircle(GLfloat r, GLuint n);
+
 @interface RasterView : NSView {
 @private
     NSOpenGLContext *_oglContext;
@@ -20,6 +22,8 @@ static GLuint rColorBuffer;
 	GLuint npoints;
     float xmin,xmax,ymin,ymax,zmin,zmax,xscale,yscale;
     NSMutableData *highlightedPoints;
+    BOOL drawHighlightCircle,dataLoaded;
+    NSPoint picked;
 	
 }
 
@@ -41,4 +45,7 @@ static GLuint rColorBuffer;
 -(void) highlightPoints: (NSDictionary*)params;
 
 -(void) receiveNotification: (NSNotification*)notification;
+
+@property (assign,readwrite) BOOL drawHightlightCircle;
+
 @end

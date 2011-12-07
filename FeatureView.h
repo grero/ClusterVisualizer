@@ -46,7 +46,7 @@ static BOOL picked;
 
     NSMutableIndexSet *indexset;
     NSMutableData *highlightedPoints;
-    NSData *highlightedClusterPoints;
+    NSMutableIndexSet *highlightedClusterPoints;
     NSMutableData *rotation;
     @private
     NSOpenGLContext* _oglContext;
@@ -61,7 +61,7 @@ static BOOL picked;
 
 @property (retain,readwrite) NSMutableIndexSet *indexset;
 @property (retain,readwrite) NSMutableData *highlightedPoints;
-@property (retain,readwrite) NSData *highlightedClusterPoints;
+@property (retain,readwrite) NSMutableIndexSet *highlightedClusterPoints;
 @property (assign,readwrite) BOOL showFrame;
 
 +(NSOpenGLPixelFormat*)defaultPixelFormat;
@@ -93,6 +93,7 @@ static BOOL picked;
 -(void) changeZoom;
 -(void) drawLabels;
 -(void) setDrawLabels: (BOOL)_drawLabels;
+-(void) performClusterOption:(id)sender;
 -(NSImage*)image;
 //-(void) drawBox;
 -(NSData*)getVertexData;

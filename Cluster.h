@@ -24,8 +24,8 @@
     NSMutableArray *parents;
     NSColor *textColor;
     NSNumber *shortISIs;
-    NSData *mean,*cov,*covi;
-    NSNumber *lRatio,*isolationDistance;
+    NSData *mean,*cov,*covi, *wfMean, *wfCov;
+    NSNumber *lRatio,*isolationDistance, *isolationInfo;
     NSData *ISIs;
     NSData *isiIdx;
 	NSData *featureRanges;
@@ -33,6 +33,7 @@
     NSImage *waveformsImage;
 	NSInteger featureDims;
 	NSString *description; //a string listing all the parameters of this cluster
+    float det;
 
 }
 
@@ -59,6 +60,9 @@
 @property(retain,readwrite) NSData *featureRanges;
 @property(assign,readwrite) NSInteger featureDims;
 @property(retain,readwrite) NSString *description;
+@property(assign,readwrite) float det;
+@property (retain,readwrite) NSNumber *isolationInfo;
+@property (retain,readwrite) NSData *wfMean, *wfCov;
 
 -(void)createName;
 -(void)makeInactive;
@@ -71,7 +75,9 @@
 -(void)computeFeatureMean:(NSData*)data;
 -(void)computeISIs:(NSData*)timestamps;
 -(void)computeLRatio:(NSData*)data;
+-(void)computeBelonginess:(NSData*)features;
 -(void)computeIsolationDistance:(NSData*)data;
+-(void)computeIsolationInfo:(NSData*)data;
 -(NSDictionary*)computeXCorr:(Cluster*)cluster timepoints:(NSData*)timepts;
 -(void)computeFeatureRanges:(NSData*)data;
 -(void)removePoints:(NSData*)rpoints;
@@ -83,4 +89,6 @@
 -(NSData*)getRelevantData:(NSData*)data withElementSize:(unsigned int)elsize;
 -(void)getSpiketrain: (double**)sptrain fromTimestamps: (NSData*)timestamps
 ;
+-(void)computeWaveformStats:(NSData*)wfData withChannels:(NSUInteger)channels andTimepoints:(NSUInteger)timepoints;
+-(NSData*)computeWaveformProbability:(NSData*)waveforms length:(NSUInteger)nwaves;
 @end
