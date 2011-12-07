@@ -2065,6 +2065,14 @@
         {
             [self setClusters:[NSMutableArray arrayWithObject: newCluster]];
         }
+        //also add this cluster to the list of clusters in the menu
+        if( [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] hasSubmenu] == NO )
+        {
+            NSMenu *subMenu = [[[NSMenu alloc] init] autorelease];
+            [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] setSubmenu:subMenu];
+            
+        }
+        [[[[self clusterMenu] itemWithTitle:@"Add points to cluster"] submenu] addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[newCluster clusterId] unsignedIntValue]] action:@selector(performClusterOption:) keyEquivalent:@""];
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(ClusterStateChanged:)
                                                      name:@"ClusterStateChanged" object:nil];
