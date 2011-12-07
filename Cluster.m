@@ -355,41 +355,38 @@
 	if( _mean == NULL )
 	{
 		[self computeFeatureMean:data];
-		float *_mean = (float*)[[self mean] bytes];
+		_mean = (float*)[[self mean] bytes];
 
 	}
 				
 	
 	unsigned int ndim = (unsigned int)([[self mean] length]/sizeof(float));
 	unsigned int _npoints = (unsigned int)([data length]/(ndim*sizeof(float)));
+    //create an index that contains all the points not in this cluster
+    NSMutableIndexSet *idx = [NSMutableIndexSet indexSetWithIndexesInRange:NSMakeRange(0,_npoints)];
+    [idx removeIndexes:[self indices]];
+    unsigned int N = [idx count];
+
+    NSUInteger *_idx = malloc(N*sizeof(NSUInteger));
+    [idx getIndexes:_idx maxCount:_npoints inIndexRange:nil];
+    
 	float *d = malloc(ndim*sizeof(float));
-		unsigned int N = _npoints-n;
   
 	float *D = malloc(N*sizeof(float));
 	float q;
-	int i,k,found,j;
+	NSUInteger i,k,j;
 	k = 0;
 	j = 0;
-	for(i=0;i<_npoints;i++)
+	for(i=0;i<N;i++)
 	{
-		found = 0;
-		//this works because the indices are sorted
-		if(i==_points[j])
-		{
-			found=1;
-			j+=1;
-		}
-	   
-		if(found==0)
-		{
-			//compute the distance
-			vDSP_vsub(_mean,1,_data+i*ndim,1,d,1,ndim);
-			//sum of squares
-			vDSP_svesq(d,1,&q,ndim);
-			D[k] = sqrt(q);
-			k+=1;
-		}
+        k = _idx[i];
+        //compute the distance
+        vDSP_vsub(_mean,1,_data+k*ndim,1,d,1,ndim);
+        //sum of squares
+        vDSP_svesq(d,1,&q,ndim);
+        D[i] = sqrt(q);
 	}
+    free(_idx);
 	//sort
 	vDSP_vsort(D,N,1);
 	//isolation distance is the distance to the n'th closest point not in this cluster,
