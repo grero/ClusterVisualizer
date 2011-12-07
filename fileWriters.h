@@ -14,3 +14,5 @@
 #include <stdlib.h>
 
 void writeAdjSpikesObject(const char* fname, double *framepts, unsigned int nframes, double *sptrain, unsigned int nspikes, unsigned int nreps);
+
+void writeCutFile(const char* fname, int *cids, uint64_t n);
