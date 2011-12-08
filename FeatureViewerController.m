@@ -493,7 +493,7 @@
                 stimInfoDir = [[waveformsFile stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
                 stimInfoFile = [waveformsFile lastPathComponent];
                 _r = [stimInfoFile rangeOfString:@"g00"];
-                stimInfoFile = [stimInfoDir stringByAppendingPathComponent:[[stimInfoFile substringWithRange:NSMakeRange(0, _r.location)] stringByAppendingString:@"stimInfo.mat"]];
+                stimInfoFile = [stimInfoDir stringByAppendingPathComponent:[[stimInfoFile substringWithRange:NSMakeRange(0, _r.location)] stringByAppendingString:@"_stimInfo.mat"]];
             }
         }
         if( [[NSFileManager defaultManager] fileExistsAtPath:stimInfoFile] == NO)
@@ -507,7 +507,7 @@
             int result = [panel runModal];
             if (result == NSOKButton )
             {
-                stimInfoFile = [panel nameFieldStringValue];
+                stimInfoFile = [panel filename];
             }
         }
         
@@ -575,6 +575,62 @@
     {
         [self setClusters:[NSMutableArray arrayWithObject:firstCluster]];
     }
+}
+
+
+-(void)loadStimInfo
+{
+    NSString *stimInfoFile = NULL;
+    NSString *stimInfoDir;
+    if( waveformsFile != NULL )
+    {
+        //attempt to locate a simtinfo object. This should be located two levels above the waveformfile
+        NSString *stimInfoDir = [waveformsFile stringByDeletingLastPathComponent];
+        stimInfoFile = [waveformsFile lastPathComponent];
+        NSRange _r = [stimInfoFile rangeOfString:@"g00"];
+        stimInfoFile = [stimInfoDir stringByAppendingPathComponent:[[stimInfoFile substringWithRange:NSMakeRange(0, _r.location)] stringByAppendingString:@".ini"]];
+        if( [[NSFileManager defaultManager] fileExistsAtPath:stimInfoFile] == NO)
+        {
+            stimInfoDir = [[waveformsFile stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
+            stimInfoFile = [waveformsFile lastPathComponent];
+            _r = [stimInfoFile rangeOfString:@"g00"];
+            stimInfoFile = [stimInfoDir stringByAppendingPathComponent:[[stimInfoFile substringWithRange:NSMakeRange(0, _r.location)] stringByAppendingString:@"stimInfo.mat"]];
+        }
+    }
+    if( [[NSFileManager defaultManager] fileExistsAtPath:stimInfoFile] == NO)
+    {
+        stimInfoFile=NULL;
+        //ask for the file name
+        NSOpenPanel *panel = [NSOpenPanel openPanel];
+        if( stimInfoDir != nil)
+        {
+            [panel setDirectory:stimInfoDir];
+        }
+        [panel setTitle:@"Open stimulus file"];
+        [panel setAllowedFileTypes: [NSArray arrayWithObjects:@"ini", nil]];
+        int result = [panel runModal];
+        if (result == NSOKButton )
+        {
+            stimInfoFile = [panel nameFieldStringValue];
+        }
+    }
+    
+    
+    if(stimInfoFile != NULL)
+    {
+        //load stimInfo
+        stimInfo = [[[StimInfo alloc] init] retain];
+        [stimInfo readFromFile:stimInfoFile];
+        [stimInfo readMonitorSyncs];
+        [stimInfo readDescriptor];
+        [stimInfo getFramePoints];
+        //[stimInfo getTriggerSignalWithThreshold:1500.0];
+    }
+    else
+    {
+        //pop up a dialog box asking for the necessary values; we can get by creating an approximate raster by getting the duration of each stimulus repetition
+    }
+
 }
 
 - (IBAction) loadClusterIds: (id)sender
@@ -1940,6 +1996,15 @@
             [[NSNotificationCenter defaultCenter] addObserver:[self rasterView] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
             if( [self stimInfo] == NULL )
             {
+                if([[NSUserDefaults standardUserDefaults] boolForKey:@"stimInfo"])
+                {
+                    //attempt to load it
+                    [self loadStimInfo];
+                }
+            }
+            if( [self stimInfo] == NULL )
+            {
+            
                 [rasterView createVertices:ctimes withColor:[NSData dataWithData:[_useCluster color]]];
             }
             else

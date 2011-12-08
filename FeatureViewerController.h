@@ -100,6 +100,7 @@
 -(void) computeFeature:(NSData*)waveforms withNumberOfSpikes: (NSUInteger)nwaves andChannels:(NSUInteger)channels andTimepoints:(NSUInteger)timepoints;
 -(void)addPointsToCluster:(Cluster*)cluster;
 //
+-(void)loadStimInfo;
 - (IBAction) loadFeatureFile: (id)sender;
 - (IBAction) loadClusterIds: (id)sender;
 
