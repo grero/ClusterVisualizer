@@ -112,12 +112,16 @@
     int result = [openPanel runModal];
     if( result == NSOKButton )
     {
+        //if we are loading a new dataset, remove everything about the old
         if(dataloaded == YES)
         {
             [dim1 removeAllItems];
             [dim2 removeAllItems];
             [dim3 removeAllItems];
+            [[NSNotificationCenter defaultCenter] removeObserver:self name:@"ClusterStateChanged" object: nil];
+            [[self fw] hideAllClusters];
             [self removeAllObjectsFromClusters];
+            [[[self wfv]  window] orderOut:self];
             
         }
         NSString *directory = [[openPanel directoryURL] path];
@@ -557,6 +561,8 @@
     free(_ccolor);
     [selectClusterOption addItemWithTitle:@"Create cluster"];
     [selectClusterOption addItemWithTitle:@"Add points to cluster"];
+    [selectClusterOption addItemWithTitle:@"Delete"];
+    [clusterMenu addItemWithTitle:@"Create cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     [clusterMenu addItemWithTitle:@"Add points to cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     [clusterMenu addItemWithTitle:@"Remove points from cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     //before we create the cluster, hide all existing clusters
@@ -2028,54 +2034,58 @@
     {
         //use the currently selected points to create a new cluster
         NSData *clusterPoints = [[self fw] highlightedPoints];
-        unsigned int nclusters = [Clusters count];
-        unsigned int _npoints = [clusterPoints length]/sizeof(unsigned int);
-        Cluster *newCluster = [[Cluster alloc] init];
-        [newCluster setClusterId:[NSNumber numberWithUnsignedInt: nclusters]];
-        //the highlighted points in fw corresponds to global coordinates, so we can use them directly.
-        [newCluster setPoints:[NSMutableData dataWithData:clusterPoints]];
-        [newCluster setNpoints:[NSNumber numberWithUnsignedInt:[clusterPoints length]/sizeof(unsigned int)]];
-        //set up color
-        float *_color = malloc(3*sizeof(float));
-        _color[0] = (float)random()/RAND_MAX;
-        _color[1] = (float)random()/RAND_MAX;
-        _color[2] = (float)random()/RAND_MAX;
-        [newCluster setColor:[NSData dataWithBytes:_color length:3*sizeof(float)]];
-        NSMutableIndexSet *index = [NSMutableIndexSet indexSet];
-        int i;
-        unsigned int* _clusterPoints = (unsigned int*)[clusterPoints bytes];
-        for(i=0;i<_npoints;i++)
+        //only do this if we actually have highlighted some points
+        if( (clusterPoints != nil) && ([clusterPoints length] != 0) )
         {
-            [index addIndex:_clusterPoints[i]];
+            unsigned int nclusters = [Clusters count];
+            unsigned int _npoints = [clusterPoints length]/sizeof(unsigned int);
+            Cluster *newCluster = [[Cluster alloc] init];
+            [newCluster setClusterId:[NSNumber numberWithUnsignedInt: nclusters]];
+            //the highlighted points in fw corresponds to global coordinates, so we can use them directly.
+            [newCluster setPoints:[NSMutableData dataWithData:clusterPoints]];
+            [newCluster setNpoints:[NSNumber numberWithUnsignedInt:[clusterPoints length]/sizeof(unsigned int)]];
+            //set up color
+            float *_color = malloc(3*sizeof(float));
+            _color[0] = (float)random()/RAND_MAX;
+            _color[1] = (float)random()/RAND_MAX;
+            _color[2] = (float)random()/RAND_MAX;
+            [newCluster setColor:[NSData dataWithBytes:_color length:3*sizeof(float)]];
+            NSMutableIndexSet *index = [NSMutableIndexSet indexSet];
+            int i;
+            unsigned int* _clusterPoints = (unsigned int*)[clusterPoints bytes];
+            for(i=0;i<_npoints;i++)
+            {
+                [index addIndex:_clusterPoints[i]];
+            }
+            [newCluster setIndices:index];
+            [newCluster createName];
+            //change colors in fw
+            //first, remove highlights
+            [[self fw] setHighlightedPoints:nil];
+            [[self fw] setClusterColors: _color forIndices:_clusterPoints length:_npoints];
+             free(_color);
+            [newCluster makeValid];
+            //add cluster to the list
+            if([self Clusters] != nil )
+            {
+                [self insertObject:newCluster inClustersAtIndex:nclusters];
+            }
+            else
+            {
+                [self setClusters:[NSMutableArray arrayWithObject: newCluster]];
+            }
+            //also add this cluster to the list of clusters in the menu
+            if( [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] hasSubmenu] == NO )
+            {
+                NSMenu *subMenu = [[[NSMenu alloc] init] autorelease];
+                [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] setSubmenu:subMenu];
+                
+            }
+            [[[[self clusterMenu] itemWithTitle:@"Add points to cluster"] submenu] addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[newCluster clusterId] unsignedIntValue]] action:@selector(performClusterOption:) keyEquivalent:@""];
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(ClusterStateChanged:)
+                                                         name:@"ClusterStateChanged" object:nil];
         }
-        [newCluster setIndices:index];
-        [newCluster createName];
-        //change colors in fw
-        //first, remove highlights
-        [[self fw] setHighlightedPoints:nil];
-        [[self fw] setClusterColors: _color forIndices:_clusterPoints length:_npoints];
-         free(_color);
-        [newCluster makeValid];
-        //add cluster to the list
-        if([self Clusters] != nil )
-        {
-            [self insertObject:newCluster inClustersAtIndex:nclusters];
-        }
-        else
-        {
-            [self setClusters:[NSMutableArray arrayWithObject: newCluster]];
-        }
-        //also add this cluster to the list of clusters in the menu
-        if( [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] hasSubmenu] == NO )
-        {
-            NSMenu *subMenu = [[[NSMenu alloc] init] autorelease];
-            [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] setSubmenu:subMenu];
-            
-        }
-        [[[[self clusterMenu] itemWithTitle:@"Add points to cluster"] submenu] addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[newCluster clusterId] unsignedIntValue]] action:@selector(performClusterOption:) keyEquivalent:@""];
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(ClusterStateChanged:)
-                                                     name:@"ClusterStateChanged" object:nil];
 
         
     }
