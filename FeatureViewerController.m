@@ -562,6 +562,7 @@
     [selectClusterOption addItemWithTitle:@"Create cluster"];
     [selectClusterOption addItemWithTitle:@"Add points to cluster"];
     [selectClusterOption addItemWithTitle:@"Delete"];
+    [selectClusterOption addItemWithTitle:@"Compute ISOmap"];
     [clusterMenu addItemWithTitle:@"Create cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     [clusterMenu addItemWithTitle:@"Add points to cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     [clusterMenu addItemWithTitle:@"Remove points from cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
@@ -971,7 +972,7 @@
         //update the menu
         [addToClustersMenu addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[cluster clusterId] intValue] ] action:@selector(performClusterOption:) keyEquivalent:@""];
         //check that there no more than 5000 points
-		if( ([[cluster clusterId] unsignedIntValue] > 0 ) && ([[cluster npoints] unsignedIntValue] < [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"]) )
+		if( ([[cluster clusterId] unsignedIntValue] > 0 ) && ([[cluster npoints] unsignedIntValue] < [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"]) && ([[cluster npoints] unsignedIntValue] >0))
 		{
 			[self loadWaveforms: cluster];
 			//make sure we also update the waverormsImage
@@ -1384,6 +1385,15 @@
              
         if( [[[self wfv] window] isVisible] )
         {
+            //check if we are adding another set of waveforms from another cluster
+            if([[notification object] isEqual:selectedCluster]==NO)
+            {
+                [[self wfv] setOverlay:YES];
+            }
+            else
+            {
+                [[self wfv] setOverlay:NO];
+            }
             [self loadWaveforms: [notification object]];
         }
         
@@ -2751,6 +2761,7 @@
         //TODO: This should be made more general
         if( ([[firstCluster clusterId] unsignedIntValue] > 0 ) && ([[firstCluster npoints] unsignedIntValue] < [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"]))
         {
+            [[self wfv] setOverlay:NO];
             [self loadWaveforms: firstCluster];
             [[wfv window] orderFront: self];
             //make sure we also update the waveformsImage

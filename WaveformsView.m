@@ -18,6 +18,7 @@
 @synthesize highlightWaves;
 @synthesize highlightedChannels;
 @synthesize shouldDrawLabels;//,drawMean,drawStd;
+@synthesize overlay;
 @synthesize wfMean, wfStd;
 
 -(void)awakeFromNib
@@ -145,15 +146,28 @@
     wavesize = channels*timepoints;
     waveIndexSize = channels*(2*timepoints-2);
 	//+3 to make room for mean waveform and +/- std
-    nWfIndices = nwaves+3;
+    //nWfIndices = nwaves+3;
     /*
     if (drawMean)
         wfIndices+=1;
     if (drawStd)
         wfIndices +=2;
     */
-    nWfIndices *= wavesize;
-    nWfVertices = nWfIndices;
+    unsigned int prevOffset = 0;
+    //nWfIndices *= wavesize;
+    if([self overlay] )
+    {
+        prevOffset = nWfVertices;
+        nWfVertices+=(nwaves+3)*wavesize;
+        
+    }
+    else
+    {
+        nWfVertices = (nwaves+3)*wavesize;
+        //reset min/max only if we are not doing overlay
+        wfMinmax = calloc(6,sizeof(float));
+        chMinMax = NSZoneCalloc([self zone], 2*chs, sizeof(float));
+    }   
     num_spikes = nwaves;
 	orig_num_spikes = nwaves;
     chs = channels;
@@ -176,6 +190,7 @@
     }
     else{
         wfVertices = malloc(nWfVertices*3*sizeof(GLfloat));
+        
     }
     highlightWave = -1;
     float *tmp = (float*)[vertex_data bytes];
@@ -183,8 +198,7 @@
     //int i,j,k;
    
     //3 dimensions X 2
-    wfMinmax = calloc(6,sizeof(float));
-	chMinMax = NSZoneCalloc([self zone], 2*chs, sizeof(float));
+    
     channelHop = 10;
     //copy wfVertices
     //float dz = (100.0-1.0)/num_spikes;
@@ -206,45 +220,45 @@
 			{
 				for(k=0;k<timepoints;k++)
 				{
-					offset = ((i*channels+j)*timepoints + k);
-					moffset = ((nwaves*channels+j)*timepoints + k);
-					stdoffset = (((nwaves+1)*channels+j)*timepoints + k);
+					offset = ((i*channels+j)*timepoints + k)+prevOffset;
+					moffset = ((nwaves*channels+j)*timepoints + k)+prevOffset;
+					stdoffset = (((nwaves+1)*channels+j)*timepoints + k)+prevOffset;
 
 					//x
 					//wfVertices[offset] = tmp[offset];
 					wfVertices[3*offset] = j*(timepoints+channelHop)+k+channelHop;
 					//y
-					wfVertices[3*offset+1] = tmp[offset];
+					wfVertices[3*offset+1] = tmp[offset-prevOffset];
 					//z
 					wfVertices[3*offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
 					//compute the mean, placing it after all the other waves
 					//this line is strictly not necessary
 					wfVertices[3*moffset] = wfVertices[3*offset];
-					wfVertices[3*moffset+1] =(i*(wfVertices[3*moffset+1])+tmp[offset])/(i+1);
+					wfVertices[3*moffset+1] =(i*(wfVertices[3*moffset+1])+tmp[offset-prevOffset])/(i+1);
 					wfVertices[3*moffset+2] = 1.0;
 					
 					//compute x*x and place it as the last waveform
 					wfVertices[3*stdoffset] = wfVertices[3*offset];
-					wfVertices[3*stdoffset+1] =(i*(wfVertices[3*stdoffset+1])+(tmp[offset])*(tmp[offset]))/(i+1);
+					wfVertices[3*stdoffset+1] =(i*(wfVertices[3*stdoffset+1])+(tmp[offset-prevOffset])*(tmp[offset-prevOffset]))/(i+1);
 					wfVertices[3*stdoffset+2] = 1.0;
 					
 					//calculate wfMinmax
-					if (tmp[offset] < wfMinmax[2] )
+					if (tmp[offset-prevOffset] < wfMinmax[2] )
 					{
-						wfMinmax[2] = tmp[offset];
+						wfMinmax[2] = tmp[offset-prevOffset];
 					}
-					if (tmp[offset] > wfMinmax[3] )
+					if (tmp[offset-prevOffset] > wfMinmax[3] )
 					{
-						wfMinmax[3] = tmp[offset];
+						wfMinmax[3] = tmp[offset-prevOffset];
 					}
 					//compute max/min per channel
-					if ( tmp[offset] < chMinMax[2*j] )
+					if ( tmp[offset-prevOffset] < chMinMax[2*j] )
 					{
-						chMinMax[2*j] = tmp[offset];
+						chMinMax[2*j] = tmp[offset-prevOffset];
 					}
-					else if ( tmp[offset] > chMinMax[2*j+1] )
+					else if ( tmp[offset-prevOffset] > chMinMax[2*j+1] )
 					{
-						chMinMax[2*j+1] = tmp[offset];
+						chMinMax[2*j+1] = tmp[offset-prevOffset];
 					}
 				}
 				
@@ -264,16 +278,16 @@
 			{
 				for(k=0;k<timepoints;k++)
 				{
-					offset = ((i*channels+reorder_index[j])*timepoints + k);
+					offset = ((i*channels+reorder_index[j])*timepoints + k) + prevOffset;
 					//don't reorder mean and std
-					moffset = ((nwaves*channels+j)*timepoints + k);
-					stdoffset = (((nwaves+1)*channels+j)*timepoints + k);
+					moffset = ((nwaves*channels+j)*timepoints + k) + prevOffset;
+					stdoffset = (((nwaves+1)*channels+j)*timepoints + k) + prevOffset;
 
 					//x
 					//wfVertices[offset] = tmp[offset];
 					wfVertices[3*offset] = j*(timepoints+channelHop)+k+channelHop;
 					//y
-					wfVertices[3*offset+1] = tmp[offset];
+					wfVertices[3*offset+1] = tmp[offset-prevOffset];
 					//z
 					wfVertices[3*offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
 					
@@ -281,33 +295,33 @@
 					//mean
 					//this line is strictly not necessary
 					wfVertices[3*moffset] = wfVertices[3*offset];
-					wfVertices[3*moffset+1] =(i*(wfVertices[3*moffset+1])+tmp[offset])/(i+1);
+					wfVertices[3*moffset+1] =(i*(wfVertices[3*moffset+1])+tmp[offset-prevOffset])/(i+1);
 					wfVertices[3*moffset+2] = 1.0;
 					
 					//std
 					//compute x*x and place it as the last waveform
 					wfVertices[3*stdoffset] = wfVertices[3*offset];
-					wfVertices[3*stdoffset+1] =(i*(wfVertices[3*stdoffset+1])+(tmp[offset])*(tmp[offset]))/(i+1);
+					wfVertices[3*stdoffset+1] =(i*(wfVertices[3*stdoffset+1])+(tmp[offset-prevOffset])*(tmp[offset-prevOffset]))/(i+1);
 					wfVertices[3*stdoffset+2] = 1.0;
 					
 					
 					//calculate wfMinmax
-					if (tmp[offset] < wfMinmax[2] )
+					if (tmp[offset-prevOffset] < wfMinmax[2] )
 					{
-						wfMinmax[2] = tmp[offset];
+						wfMinmax[2] = tmp[offset-prevOffset];
 					}
-					if (tmp[offset] > wfMinmax[3] )
+					if (tmp[offset-prevOffset] > wfMinmax[3] )
 					{
-						wfMinmax[3] = tmp[offset];
+						wfMinmax[3] = tmp[offset-prevOffset];
 					}
 					//compute max/min per channel
-					if ( tmp[offset] < chMinMax[2*j] )
+					if ( tmp[offset-prevOffset] < chMinMax[2*j] )
 					{
-						chMinMax[2*j] = tmp[offset];
+						chMinMax[2*j] = tmp[offset-prevOffset];
 					}
-					else if ( tmp[offset] > chMinMax[2*j+1] )
+					else if ( tmp[offset-prevOffset] > chMinMax[2*j+1] )
 					{
-						chMinMax[2*j+1] = tmp[offset];
+						chMinMax[2*j+1] = tmp[offset-prevOffset];
 					}
 				}
 				
@@ -325,25 +339,25 @@
         for(j=0;j<timepoints;j++)
         {
             //compute mean
-            m = wfVertices + nwaves*3*channels*timepoints + 3*(i*timepoints+j)+1;
-            vDSP_meanv(wfVertices+3*(i*timepoints+j)+1, 3*channels*timepoints, m, nwaves);
+            m = wfVertices + nwaves*3*channels*timepoints + 3*(i*timepoints+j)+1+prevOffset;
+            vDSP_meanv(wfVertices+3*(i*timepoints+j)+1+prevOffset, 3*channels*timepoints, m, nwaves);
             _mean[i*timepoints+j] = *m;
             //compute mean square
-            msq = wfVertices + (nwaves+2)*3*channels*timepoints + 3*(i*timepoints+j)+1;
-            vDSP_measqv(wfVertices+3*(i*timepoints+j)+1, 3*channels*timepoints, msq, nwaves);
+            msq = wfVertices + (nwaves+2)*3*channels*timepoints + 3*(i*timepoints+j)+1 + prevOffset;
+            vDSP_measqv(wfVertices+3*(i*timepoints+j)+1+prevOffset, 3*channels*timepoints, msq, nwaves);
             //substract the square of the mean
             *msq = *msq-(*m)*(*m);
             //take the square root and add back the mean
             *msq = sqrt(*msq);
             _std[i*timepoints+j] = *msq;
-            wfVertices[3*((nwaves+1)*channels*timepoints+i*timepoints+j)+1] = *m- (*msq)*1.96;
+            wfVertices[3*((nwaves+1)*channels*timepoints+i*timepoints+j)+1+prevOffset] = *m- (*msq)*1.96;
             *msq = *m+(*msq)*1.96;
             
             //also set the x and z-components
-            wfVertices[3*((nwaves+2)*wavesize+i*timepoints+j)] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)];
-            wfVertices[3*((nwaves+2)*wavesize+i*timepoints+j)+2] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)+2];
-            wfVertices[3*((nwaves+1)*wavesize+i*timepoints+j)] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)];
-            wfVertices[3*((nwaves+1)*wavesize+i*timepoints+j)+2] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)+2];
+            wfVertices[3*((nwaves+2)*wavesize+i*timepoints+j)+prevOffset] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)+prevOffset];
+            wfVertices[3*((nwaves+2)*wavesize+i*timepoints+j)+2+prevOffset] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)+2+prevOffset];
+            wfVertices[3*((nwaves+1)*wavesize+i*timepoints+j) + prevOffset] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)+prevOffset];
+            wfVertices[3*((nwaves+1)*wavesize+i*timepoints+j)+2+prevOffset] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)+2+prevOffset];
 
         }
     }
@@ -400,13 +414,23 @@
     unsigned int pointsPerChannel = 2*timepoints-2;
     //unsigned int offset = 0;
 	//+3 to accommodate mean waveform and +/- std
-    nWfIndices = (nwaves+3)*channels*pointsPerChannel;
+    if([self overlay])
+    {
+        prevOffset = nWfIndices;
+        nWfIndices+=(nwaves+3)*channels*pointsPerChannel;
+        
+    }
+    else
+    {
+        nWfIndices = (nwaves+3)*channels*pointsPerChannel;
+    }
     if( (wfDataloaded) && (wfIndices != NULL ))
     {
         wfIndices = realloc(wfIndices, nWfIndices*sizeof(GLuint));
 
     }
-    else {
+    else 
+    {
         wfIndices = malloc(nWfIndices*sizeof(GLuint));
 
     }
@@ -417,7 +441,7 @@
         for(j=0;j<channels;j++)
         {
             //do the first point seperately, since it's not repeated
-            offset = (i*channels + j)*pointsPerChannel;
+            offset = (i*channels + j)*pointsPerChannel + prevOffset;
             wfIndices[offset] = (i*channels+j)*timepoints;
             for(k=1;k<timepoints-1;k++)
             {
@@ -440,7 +464,11 @@
     }*/
     //
 	//prevent leakage
-	if ((wfDataloaded) && (wfColors != NULL)) 
+    if([self overlay] )
+    {
+        prevOffset = 3*(nWfVertices-(nwaves+3)*wavesize);
+    }
+    if ((wfDataloaded) && (wfColors != NULL)) 
 	{
 		wfColors = realloc(wfColors, nWfVertices*3*sizeof(GLfloat));
 	}
@@ -458,7 +486,7 @@
     gcolor[4] = 1.0;*/
     [self setColor: color];
     //[[self getColor] getRed:gcolor green:gcolor+1 blue:gcolor+2 alpha:gcolor+3];
-    wfModifyColors(wfColors,gcolor);
+    wfModifyColors(wfColors + prevOffset,gcolor,nwaves*wavesize);
     //free(gcolor);
     //push everything to the GPU
     wfPushVertices();
@@ -602,10 +630,10 @@ static void wfPushVertices()
     
 }
 
-static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
+static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor, unsigned int n)
 {
     int i;
-    for(i=0;i<nWfVertices;i++)
+    for(i=0;i<n;i++)
     {
         color_data[3*i] = gcolor[0];//use_colors[3*cids[i+1]];
         color_data[3*i+1] = gcolor[1];//use_colors[3*cids[i+1]+1];
@@ -615,17 +643,17 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor)
 	unsigned int offset = 0;
 	for(i=0;i<wavesize;i++)
 	{
-		offset = 3*(nWfVertices-3*wavesize+i);
+		offset = 3*(n-3*wavesize+i);
 		color_data[offset] = 1.0-0.5*gcolor[0];
 		color_data[offset+1] = 1.0-0.5*gcolor[1];
 		color_data[offset+2] = 1.0-0.5*gcolor[2];
 		
-		offset = 3*(nWfVertices-2*wavesize+i);
+		offset = 3*(n-2*wavesize+i);
 		color_data[offset] = 1.0-0.5*gcolor[0];
 		color_data[offset+1] = 1.0-0.5*gcolor[1];
 		color_data[offset+2] = 1.0-0.5*gcolor[2];
 			
-		offset = 3*(nWfVertices-wavesize+i);
+		offset = 3*(n-wavesize+i);
 		color_data[offset] = 1.0-0.5*gcolor[0];
 		color_data[offset+1] = 1.0-0.5*gcolor[1];
 		color_data[offset+2] = 1.0-0.5*gcolor[2];

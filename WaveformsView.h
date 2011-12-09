@@ -34,9 +34,9 @@ static int highlightWave;
 static BOOL wfDataloaded;
 
 static void wfPushVertices();
-static void wfModifyVertices(GLfloat *vertex_data);
-static void wfModifyIndices(GLuint *index_data);
-static void wfModifyColors(GLfloat *color_data, GLfloat *color);
+static void wfModifyVertices(GLfloat *vertex_data, unsigned int n);
+static void wfModifyIndices(GLuint *index_data,unsigned int n);
+static void wfModifyColors(GLfloat *color_data, GLfloat *color,unsigned int n);
 
 @interface WaveformsView : NSView {
 
@@ -51,13 +51,15 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color);
     BOOL shouldDrawLabels, drawMean, drawStd;
     NSUInteger numSpikesAtLeastMean;
     NSMutableData *wfMean, *wfStd;
+    //variable to indicate whehter to overlay
+    BOOL overlay;
     
     
 }
 
 @property (retain,readwrite) NSMutableData *highlightWaves;
 @property (retain,readwrite) NSMutableArray *highlightedChannels;
-@property (assign,readwrite) BOOL shouldDrawLabels, drawMean, drawStd;
+@property (assign,readwrite) BOOL shouldDrawLabels, drawMean, drawStd,overlay;
 @property (readonly) NSMutableData *wfMean, *wfStd;
 
 //OpenGL related functions
