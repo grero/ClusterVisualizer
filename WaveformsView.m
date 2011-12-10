@@ -173,11 +173,7 @@
     chs = channels;
     timepts = timepoints;
 	//create an index that will tell us which waveforms are active
-	NSRange r;
-	r.location = 0;
-	r.length = num_spikes;
-	waveformIndices = [[NSMutableIndexSet indexSetWithIndexesInRange:r] retain];
-	//reset highlights
+		//reset highlights
 
     if([self highlightWaves] != NULL)
     {
@@ -395,6 +391,8 @@
 		
 	}
 	*/
+    //TODO: sort the waveform z-value by using the y-value, the rationale being that we don't want to low amplitude waveforms to be hidden by the large amplitude ones. This is especially important when doing overlay
+    
 	wfMinmax[0] = 0;
     wfMinmax[1] = channels*(timepoints+channelHop);
 	xmin = 0;
@@ -597,7 +595,10 @@ static void wfPushVertices()
 {
     //set up index buffer
     //int k = 0;
-    
+    //delete all buffers first
+    glDeleteBuffers(1, &wfVertexBuffer);
+    glDeleteBuffers(1, &wfColorBuffer);
+    glDeleteBuffers(1, &wfVertexBuffer);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(1.05*xmin-0.05*xmax, 1.05*xmax-0.05*xmin, 1.05*wfMinmax[2]-0.05*wfMinmax[3], 
@@ -1918,6 +1919,19 @@ static void wfDrawAnObject()
 {
     //if the view is hidden, we don't want to receive any highlight modifications
     [[NSNotificationCenter defaultCenter] removeObserver:self name:@"highlight" object:nil];
+    //we can also free up vertex data
+    if([self overlay] == NO )
+    {
+        nWfIndices=0;
+        nWfVertices=0;
+        free(wfVertices);
+        glDeleteBuffers(1, &wfVertexBuffer);
+        free(wfIndices);
+        glDeleteBuffers(1, &wfIndexBuffer);
+        free(wfColors);
+        glDeleteBuffers(1, &wfColorBuffer);
+        
+    }
 }
 
 -(void)viewWillMoveToWindow:(NSWindow*)newWindow
