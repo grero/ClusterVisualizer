@@ -35,17 +35,21 @@
     return 0;
 }*/
 
-nptHeader* getSpikeInfo(char *fname, nptHeader *header)
+nptHeader* getSpikeInfo(const char *fname, nptHeader *header)
 {
-    FILE *f = fopen(fname, "r");
+    FILE *f;
+    int hs,ns;
+    char chs;
+    
+    f = fopen(fname, "r");
     
     if(f==NULL)
     {
         return header;
     }
-    int hs = 0;
-    int ns = 0;
-    char chs = 0;
+    hs = 0;
+    ns = 0;
+    chs = 0;
     
     fread(&hs, sizeof(int), 1, f);
     hs = CFSwapInt32LittleToHost(hs);
@@ -61,21 +65,18 @@ nptHeader* getSpikeInfo(char *fname, nptHeader *header)
     return header;
 }
 
-short int* getWaves(char *fname, nptHeader *header, unsigned int *index, unsigned int index_length, short int *data)
+short int* getWaves(const char *fname, nptHeader *header, unsigned int *index, unsigned int index_length, short int *data)
 {
-    //fprintf(stderr,"Reading from file: %s",fname);
-    FILE *f = fopen(fname, "r");
+    FILE *f;
+    int chs,pts,waveLength,i,j,status;
+    short int buffer;
+    f = fopen(fname, "r");
     if(f==NULL)
         return NULL;
-    int chs = header->channels;
-    int pts = header->timepts;
-    int waveLength = chs*pts;
-    //fprintf(stderr,"waveLength: %d",waveLength); 
-    int i;
-    //
-    //
-    //
-    int status;
+    chs = header->channels;
+    pts = header->timepts;
+    waveLength = chs*pts;
+    
     for(i = 0; i < index_length; i++ )
     //for(i = 0; i < header->num_spikes; i++)
     {
@@ -84,8 +85,7 @@ short int* getWaves(char *fname, nptHeader *header, unsigned int *index, unsigne
         {
             fprintf(stderr,"fseek could not complete");
         }
-        int j;
-        short int buffer = 0;
+        buffer = 0;
         for(j = 0; j < waveLength; j++)
         {
             fread(&buffer, 2, 1, f);
@@ -99,15 +99,18 @@ short int* getWaves(char *fname, nptHeader *header, unsigned int *index, unsigne
     return data;
 }
 
-unsigned long long int* getTimes(char *fname, nptHeader *header, int *index, int index_length, unsigned long long int *data)
+unsigned long long int* getTimes(const char *fname, nptHeader *header, int *index, int index_length, unsigned long long int *data)
 {
-    FILE *f = fopen(fname, "r");
-    
+    FILE *f;
     int i;
+    unsigned long long int buffer;
+
+    f = fopen(fname, "r");
+    
     for(i = 0; i < index_length; i++ )
     {
         fseek(f, header->headersize+2*header->num_spikes*header->channels*header->timepts + index[i]*8, SEEK_SET);
-        unsigned long long int buffer = 0;
+        buffer = 0;
         fread(&buffer, sizeof(buffer),1,f);
         buffer = CFSwapInt64LittleToHost(buffer);
         data[i] = buffer;
