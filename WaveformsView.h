@@ -93,5 +93,5 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color,unsigned int n);
 
 -(void)setDrawStd:(BOOL)_drawStd;
 -(void)setDrawMean:(BOOL)_drawMean;
-
+-(void)correlateWaveforms:(id)sender;
 @end

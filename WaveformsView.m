@@ -141,7 +141,10 @@
 
 -(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints andColor: (NSData*)color andOrder: (NSData*)order;
 {
-	//TODO: modify this should that multiple clusters can be drawn in the same view, with each cluster a different color
+    unsigned int prevOffset;
+    dispatch_queue_t queue;
+    //setup the dispatch queue
+    queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, NULL);
     numSpikesAtLeastMean = nwaves;
     wavesize = channels*timepoints;
     waveIndexSize = channels*(2*timepoints-2);
@@ -153,13 +156,15 @@
     if (drawStd)
         wfIndices +=2;
     */
-    unsigned int prevOffset = 0;
+    prevOffset = 0;
     //nWfIndices *= wavesize;
     if([self overlay] )
     {
         prevOffset = nWfVertices;
         nWfVertices+=(nwaves+3)*wavesize;
-        
+        num_spikes += nwaves;
+        orig_num_spikes += nwaves;
+
     }
     else
     {
@@ -167,14 +172,15 @@
         //reset min/max only if we are not doing overlay
         wfMinmax = calloc(6,sizeof(float));
         chMinMax = NSZoneCalloc([self zone], 2*chs, sizeof(float));
+        num_spikes = nwaves;
+        orig_num_spikes = nwaves;
     }   
-    num_spikes = nwaves;
-	orig_num_spikes = nwaves;
     chs = channels;
     timepts = timepoints;
 	//create an index that will tell us which waveforms are active
+    waveformIndices = [[NSMutableIndexSet indexSetWithIndexesInRange:NSMakeRange(0, num_spikes)] retain];
 		//reset highlights
-
+    
     if([self highlightWaves] != NULL)
     {
         [[self highlightWaves] setLength:0];
@@ -204,8 +210,7 @@
 	{
 		
 		//for(i=0;i<nwaves;i++)
-        //TODO: by using disptach queue instead of for loop, we need to change the way the mean and standard deviation is computed
-		dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, NULL);
+		
 		dispatch_apply(nwaves, queue, ^(size_t i){
 			int j,k;
             unsigned int offset = 0;
@@ -238,16 +243,7 @@
 					wfVertices[3*stdoffset+1] =(i*(wfVertices[3*stdoffset+1])+(tmp[offset-prevOffset])*(tmp[offset-prevOffset]))/(i+1);
 					wfVertices[3*stdoffset+2] = 1.0;
 					
-					//calculate wfMinmax
-					if (tmp[offset-prevOffset] < wfMinmax[2] )
-					{
-						wfMinmax[2] = tmp[offset-prevOffset];
-					}
-					if (tmp[offset-prevOffset] > wfMinmax[3] )
-					{
-						wfMinmax[3] = tmp[offset-prevOffset];
-					}
-					//compute max/min per channel
+                    //compute max/min per channel
 					if ( tmp[offset-prevOffset] < chMinMax[2*j] )
 					{
 						chMinMax[2*j] = tmp[offset-prevOffset];
@@ -301,16 +297,7 @@
 					wfVertices[3*stdoffset+2] = 1.0;
 					
 					
-					//calculate wfMinmax
-					if (tmp[offset-prevOffset] < wfMinmax[2] )
-					{
-						wfMinmax[2] = tmp[offset-prevOffset];
-					}
-					if (tmp[offset-prevOffset] > wfMinmax[3] )
-					{
-						wfMinmax[3] = tmp[offset-prevOffset];
-					}
-					//compute max/min per channel
+                    //compute max/min per channel
 					if ( tmp[offset-prevOffset] < chMinMax[2*j] )
 					{
 						chMinMax[2*j] = tmp[offset-prevOffset];
@@ -375,25 +362,29 @@
     }
     free(_mean);
     free(_std);
-	//finalize computation of standrd devation
-    /*
-	float w1,w2,s;
-	for(i=0;i<wavesize;i++)
-	{
-		w1 = wfVertices[3*(nwaves*wavesize+i)+1];
-		w2 = wfVertices[3*((nwaves+1)*wavesize+i)+1];
-		s = sqrt(w2-w1*w1);
-		wfVertices[3*((nwaves+1)*wavesize+i)+1] = w1+1.96*s;
-		wfVertices[3*((nwaves+2)*wavesize+i)+1] = w1-1.96*s;
-		//also set the x and z-components
-		wfVertices[3*((nwaves+2)*wavesize+i)] = wfVertices[3*(nwaves*wavesize+i)];
-		wfVertices[3*((nwaves+2)*wavesize+i)+2] = wfVertices[3*(nwaves*wavesize+i)+2];
-		
-	}
-	*/
-    //TODO: sort the waveform z-value by using the y-value, the rationale being that we don't want to low amplitude waveforms to be hidden by the large amplitude ones. This is especially important when doing overlay
+    //determine max/min
+    float *tmp_ymax = malloc(num_spikes*sizeof(float));
+    float *tmp_ymin = malloc(num_spikes*sizeof(float));
+    float ymaxmin,yminmax,yminrange;
     
-	wfMinmax[0] = 0;
+    //dispatch_apply(num_spikes, queue, ^(size_t i) 
+    //int i;
+    for(i=0;i<num_spikes;i++)
+       {
+           //compute maximum and minimum y for each wave
+           vDSP_maxv(wfVertices+i*3*wavesize+1, 3, tmp_ymax+i, wavesize);
+           vDSP_minv(wfVertices+i*3*wavesize+1, 3, tmp_ymin+i, wavesize);
+       }//);
+    //determine overall maximum
+    vDSP_maxv(tmp_ymax, 1, wfMinmax+3, num_spikes);
+    vDSP_minv(tmp_ymin, 1, wfMinmax+2, num_spikes);
+    
+    vDSP_maxv(tmp_ymin, 1, &yminmax, num_spikes);
+    vDSP_minv(tmp_ymax, 1, &ymaxmin, num_spikes);
+    
+    yminrange = (ymaxmin-yminmax);
+    
+    wfMinmax[0] = 0;
     wfMinmax[1] = channels*(timepoints+channelHop);
 	xmin = 0;
 	xmax = wfMinmax[1];
@@ -401,8 +392,18 @@
     wfMinmax[5] = 1.0;//100;//nwaves+2;
 	ymin = wfMinmax[2];
 	ymax = wfMinmax[3];
-    //create indices
+    //sort the waveform z-value by using the y-value, the rationale being that we don't want to low amplitude waveforms to be hidden by the large amplitude ones. This is especially important when doing overlay
     
+    //dispatch_apply(num_spikes, queue, ^(size_t i) 
+    for(i=0;i<num_spikes;i++)
+        {
+            float z;
+            z = -2*((tmp_ymax[i]-tmp_ymin[i])-yminrange)/((ymax-ymin)-yminrange)+1.0;
+            vDSP_vfill(&z, wfVertices+i*3*wavesize+2, 3, wavesize);
+        }//);
+    free(tmp_ymax);
+    free(tmp_ymin);
+    //create indices
     //here we have to be a bit clever; if we want to draw as lines, every vertex will be connected
     //However, since we are drawing waveforms across channels, we need to separate waveforms on each
     //channel. We do this by modifying the indices. We will use GL_LINE_STRIP, which will connect every other index
@@ -432,10 +433,13 @@
         wfIndices = malloc(nWfIndices*sizeof(GLuint));
 
     }
-    int k;
-    unsigned offset;
-    for(i=0;i<nwaves+3;i++)
+    
+    //for(i=0;i<nwaves+3;i++)
+    dispatch_apply(nwaves+3, queue, ^(size_t i) 
     {
+        int k,j;
+        unsigned offset;
+    
         for(j=0;j<channels;j++)
         {
             //do the first point seperately, since it's not repeated
@@ -449,19 +453,8 @@
             }
             wfIndices[offset+2*timepoints-3] = (i*channels+j)*timepoints + timepoints-1;
         }
-    }
-    //
-    //test - PASS
-    /*
-    float a;
-    for(i=0;i<nWfIndices;i++)
-    {
-        a = wfVertices[3*indices[i]];
-        a = wfVertices[3*indices[i]+1];
-        a = wfVertices[3*indices[i]+2];
-    }*/
-    //
-	//prevent leakage
+    });
+    //prevent leakage
     if([self overlay] )
     {
         prevOffset = 3*(nWfVertices-(nwaves+3)*wavesize);
@@ -484,7 +477,7 @@
     gcolor[4] = 1.0;*/
     [self setColor: color];
     //[[self getColor] getRed:gcolor green:gcolor+1 blue:gcolor+2 alpha:gcolor+3];
-    wfModifyColors(wfColors + prevOffset,gcolor,nwaves*wavesize);
+    wfModifyColors(wfColors + prevOffset,gcolor,(nwaves+3)*wavesize);
     //free(gcolor);
     //push everything to the GPU
     wfPushVertices();
@@ -706,7 +699,8 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor, unsigned int n)
             if( _hpoints[i] < num_spikes )
             {
                 idx = _indexes[_hpoints[i]];
-                zvalue = -1.0;
+                //zvalue = -1.0;
+                zvalue = wfVertices[idx*timepts*chs*3+2];
                 vDSP_vfill(&zvalue,_data+(idx*timepts*chs*3)+2,3,timepts*chs);
         
             }
@@ -729,8 +723,9 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor, unsigned int n)
     glUnmapBuffer(GL_ARRAY_BUFFER);
     
     glBindBuffer(GL_ARRAY_BUFFER, wfColorBuffer);
-    GLfloat *_colors = (GLfloat*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-    GLfloat *dcolor = (float*)[drawingColor bytes];
+    GLfloat *_colors = (GLfloat*)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
+    GLfloat dcolor;
+    
     if( highlightWaves != NULL )
     {
         //unsigned int* _hpoints = (unsigned int*)[NSData bytes];
@@ -739,26 +734,34 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor, unsigned int n)
         {
             //idx = _hpoints[i];
             idx = _indexes[_hpoints[i]];
-			vDSP_vfill(dcolor,_colors+(idx*wavesize*3),3,wavesize);
-            vDSP_vfill(dcolor+1,_colors+(idx*wavesize*3)+1,3,wavesize);
-            vDSP_vfill(dcolor+2,_colors+(idx*wavesize*3)+2,3,wavesize);
+            dcolor = 1-_colors[idx*wavesize*3];
+            vDSP_vfill(&dcolor,_colors+(idx*wavesize*3),3,wavesize);
+            dcolor = 1-_colors[idx*wavesize*3+1];
+            vDSP_vfill(&dcolor,_colors+(idx*wavesize*3)+1,3,wavesize);
+            dcolor = 1-_colors[idx*wavesize*3+2];
+            vDSP_vfill(&dcolor,_colors+(idx*wavesize*3)+2,3,wavesize);
         }
         
     }
     //find the complement
+    /*
     GLfloat *hcolor = malloc(4*sizeof(GLfloat));
     hcolor[0] = 1.0-dcolor[0];
     hcolor[1] = 1.0-dcolor[1];
     hcolor[2] = 1.0-dcolor[2];
+     */
     for(i=0;i<_npoints;i++)
     {
         //idx = _points[i];
 		idx = _indexes[_points[i]];
 		if (idx < orig_num_spikes )
 		{
-			vDSP_vfill(hcolor,_colors+(idx*wavesize*3),3,wavesize);
-			vDSP_vfill(hcolor+1,_colors+(idx*wavesize*3)+1,3,wavesize);
-			vDSP_vfill(hcolor+2,_colors+(idx*wavesize*3)+2,3,wavesize);
+            dcolor = 1-_colors[idx*wavesize*3];
+			vDSP_vfill(&dcolor,_colors+(idx*wavesize*3),3,wavesize);
+            dcolor = 1-_colors[idx*wavesize*3+1];
+			vDSP_vfill(&dcolor,_colors+(idx*wavesize*3)+1,3,wavesize);
+            dcolor = 1-_colors[idx*wavesize*3+2];
+			vDSP_vfill(&dcolor,_colors+(idx*wavesize*3)+2,3,wavesize);
 		}
     }
     if(highlightWaves != NULL)
@@ -770,7 +773,6 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor, unsigned int n)
         [self setHighlightWaves:[NSMutableData dataWithData:wfidx]];
     }
 
-    free(hcolor);
 	free(_indexes);
     glUnmapBuffer(GL_ARRAY_BUFFER);
     [self setNeedsDisplay:YES];
@@ -1699,7 +1701,7 @@ static void wfDrawAnObject()
 	}
 }
 
--(IBAction)moveRight:(id)sender
+-(IBAction)moveLeft:(id)sender
 {
 	//shift highlighted waveform downwards
 	NSMutableData *hdata;
@@ -1743,7 +1745,7 @@ static void wfDrawAnObject()
 													@"selected",nil]];
 }
 
--(IBAction)moveLeft:(id)sender
+-(IBAction)moveRight:(id)sender
 {
 	//shift highlighted waveform downwards
 	NSMutableData *hdata;
@@ -1944,6 +1946,10 @@ static void wfDrawAnObject()
 
 }
 
+-(void)correlateWaveforms:(id)sender
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"performClusterOption" object:self userInfo:[NSDictionary dictionaryWithObjectsAndKeys:@"Find correlated waverforms", @"option",nil]];
+}
 
 -(void)dealloc
 {
