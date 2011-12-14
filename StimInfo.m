@@ -49,11 +49,11 @@
                 NSArray *keysAndObjects = [line componentsSeparatedByString: @"="];
                 if([keysAndObjects count] > 1 )
                 {
-                    [currentDict setObject: [keysAndObjects objectAtIndex:1] forKey: [keysAndObjects objectAtIndex:0]]; 
+                    [currentDict setObject: [[keysAndObjects objectAtIndex:1] lowercaseString] forKey: [[keysAndObjects objectAtIndex:0] lowercaseString]]; 
                 }
                 else if ([keysAndObjects count] ==1 )
                 {
-                    NSString *keyName = [keysAndObjects objectAtIndex:0];
+                    NSString *keyName = [[keysAndObjects objectAtIndex:0] lowercaseString];
                     NSRange _r1 = [keyName rangeOfString: @"["];
                     NSRange _r2 = [keyName rangeOfString: @"]"];
                     keyName = [[keyName substringWithRange: NSMakeRange(_r1.location+1,_r2.location-_r1.location-1)] capitalizedString];
@@ -120,14 +120,25 @@
     NSMutableArray *grNr = [NSMutableArray arrayWithCapacity: 100];
     NSMutableArray *status = [NSMutableArray arrayWithCapacity:100];
     NSMutableArray *type = [NSMutableArray arrayWithCapacity:100];
+    int ch, gr;
+    NSString *_type,*_status;
     while( line )
     {
-        NSArray *parts = [line componentsSeparatedByString:@ " "];
-        int nparts = [parts count];
-        [chNr addObject: [NSNumber numberWithInt:[[parts objectAtIndex:0] intValue]]];
-        [grNr addObject: [NSNumber numberWithInt: [[parts objectAtIndex: nparts-2] intValue]]];
-        [type addObject: [parts objectAtIndex:1]];
-        [status addObject: [NSNumber numberWithBool: [[[parts lastObject] stringByTrimmingCharactersInSet: [NSCharacterSet whitespaceCharacterSet]] isEqualToString: @"Active"]]];
+        NSScanner *scanner = [NSScanner scannerWithString:line];
+        //get the channel number
+        [scanner scanInt:&ch];
+        //get the type
+        [scanner scanUpToCharactersFromSet:[NSCharacterSet whitespaceCharacterSet] intoString:&_type];
+        //get the group number
+        [scanner scanInt:&gr];
+        //get the status
+        [scanner scanUpToCharactersFromSet:[NSCharacterSet whitespaceCharacterSet] intoString:&_status];
+        //NSArray *parts = [line componentsSeparatedByString:@ " "];
+        //int nparts = [parts count];
+        [chNr addObject: [NSNumber numberWithInt:ch]];
+        [grNr addObject: [NSNumber numberWithInt: gr]];
+        [type addObject: _type];
+        [status addObject: [NSNumber numberWithBool: [_status isEqualToString: @"Active"]]];
         line = [linesEnumerator nextObject];
 
          
@@ -148,7 +159,7 @@
         [self readMonitorSyncs];
     }
     //compute the frame points by finding the number of syncs per frame
-    int syncs_per_frame = [[[data objectForKey:@"Treversecorrguiform"] objectForKey:@"Refreshes Per Frame"] intValue];
+    int syncs_per_frame = [[[data objectForKey:@"Treversecorrguiform"] objectForKey:@"refreshes per frame"] intValue];
     double sr = [[[self descriptor] objectForKey:@"samplingRate"] doubleValue];
     uint32_t *_syncs = (uint32_t*)[syncs bytes];
     unsigned int _nsyncs = [syncs length]/sizeof(uint32_t);
@@ -162,7 +173,15 @@
         _framepts[j] = (double)_syncs[i]/sr*1000.0;
         j+=1;
     }
-    [self setNreps: [[[data objectForKey: @"Treversecorrguiform"] objectForKey:@"Number Of Repeats"] intValue]] ;
+    //check the type of stimulus
+    if([[[data objectForKey: @"Treversecorrguiform"] objectForKey:@"object type"] hasPrefix:@"grating"] )
+    {
+        [self setNreps: [[[data objectForKey: @"Treversecorrguiform"] objectForKey:@"number of blocks"] intValue]] ;
+    }
+    else
+    {
+        [self setNreps: [[[data objectForKey: @"Treversecorrguiform"] objectForKey:@"number Of repeats"] intValue]] ;
+    }
     int _nreps = [self nreps];
     int _framesPerRep = _nframes/_nreps;
     double *_repBoundaries = malloc(_nreps*sizeof(double));
@@ -180,6 +199,7 @@
     [self setFramepts:[NSData dataWithBytes:_framepts length:_nframes*sizeof(double)]];
     [self setNframes:_nframes];
     [self setRepBoundaries:[NSData dataWithBytes:_repBoundaries length:_nreps*sizeof(double)]];
+    
     //since the bytes have been copied, we can free the original location
     free(_framepts);
     free(_repBoundaries);
