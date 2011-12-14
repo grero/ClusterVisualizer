@@ -325,7 +325,10 @@
 {
     currentCluster = cluster;
     float *_color = (float*)[[cluster color] bytes];
-    [selectedClusters addObject: cluster];
+    if([selectedClusters containsObject:cluster] == NO)
+    {
+        [selectedClusters addObject: cluster];
+    }
 	unsigned int new_size = [[cluster npoints] intValue];
     /*
     if( nindices + new_size > rows )
@@ -545,6 +548,7 @@
 
 -(void) hideAllClusters
 {
+    [selectedClusters removeAllObjects];
     nindices = 0;
 	[indexset removeAllIndexes];
     [self setNeedsDisplay:YES];
@@ -591,6 +595,7 @@
 	NSData *color;
 	unsigned int* _clusterPoints;
     unsigned int _nclusterPoints = 0;
+    unsigned int offset = 0;
 	if( cluster != nil )
 	{
 		color = [cluster color];
@@ -598,6 +603,16 @@
 		_nclusterPoints = [[cluster npoints] unsignedIntValue];
         if(_nclusterPoints == 0)
             _clusterPoints = NULL;
+        //we have to determine the offset of the wfidx by finding the index of the cluster in the array of currently selected clusters
+        
+        NSEnumerator *_clusterEnumerator = [selectedClusters objectEnumerator];
+        Cluster *_clu = [_clusterEnumerator nextObject];
+        while( (_clu) && ([_clu isEqualTo:cluster]==NO))
+        {
+            offset+=[[_clu npoints] unsignedIntValue];
+            _clu = [_clusterEnumerator nextObject];
+        }
+        
 	}
 	else 
 	{
@@ -613,7 +628,7 @@
 		for(i=0;i<_npoints;i++)
 		{
 			//idx[i] = tmp_idx[_clusterPoints[_points[i]]];
-			idx[i] = _clusterPoints[_points[i]];
+			idx[i] = _clusterPoints[_points[i]-offset];
 			//idx[i] = _points[i];
 		}
 	}
@@ -1347,10 +1362,6 @@ static void drawAnObject()
         double objXNear,objXFar,objYNear,objYFar,objZNear,objZFar;
 		//get the position of the points in the original data space
 		//note that since window coordinates are using lower left as (0,0), openGL uses upper left
-		NSRect r = [self bounds];
-		//float height = r.size.height;
-		float height = view[3];
-		//TODO: this doesn't work
 		GLfloat depth[2];
 		//get the z-component
 		glReadPixels(currentPoint.x, /*height-*/currentPoint.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, depth);
@@ -1434,13 +1445,14 @@ static void drawAnObject()
         else if ([selectedClusters count]>1) 
         {
             
-        
+            //TODO: if multiple clusters are selected, it is possible that we are also showing multiple clusters in the waveformview. In that case, the selected point should refer to the aggregate of the points in the two clusters, not one cluster on its own. Note also that order matters; assume we the order is preserved
             //now figure out which cluster the select point was in
             NSUInteger q = 0;
             useCluster = [selectedClusters objectAtIndex:q];
+            unsigned int offset = 0;
             while( [[useCluster indices] containsIndex:cidx] == NO)
             {
-                //offset+=[[useCluster npoints] unsignedIntValue];
+                offset+=[[useCluster npoints] unsignedIntValue];
                 
                 q+=1;
                 useCluster = [selectedClusters objectAtIndex:q];
@@ -1453,13 +1465,8 @@ static void drawAnObject()
             while( (_points[l] != cidx ) && (l < _npoints ) )
                 l++;
             wfidx = l;
-            //OK, this doesn't work
-                    
+            wfidx+=offset;            
         }
-		//NSLog(@"depth: (%f,%f)", depth[0],depth[1]);
-		//NSLog(@"x: %f, y: %f, z_near: %f, z_far: %f", objXNear,objYNear,objZNear,objZFar);
-		//NSLog(@"ray: (%f, %f, %f)", ray[0],ray[1],ray[2]);
-		//NSLog(@"maxpoint: %d, smallest distance: %f, selected point: %d", nindices,dmin,wfidx);
 
         //make sure we actually found a point first
 		if(wfidx < nindices)
@@ -1500,7 +1507,7 @@ static void drawAnObject()
 			
 			NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:wfidxData,[NSData dataWithBytes: color+3*wfidx length:3*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
 			glUnmapBuffer(GL_ARRAY_BUFFER);
-            //TODO: What if we want to select points from mutiple clustrers?
+            //TODO: What if we want to select points from mutiple clusters?
 			[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:useCluster userInfo: params];
 			//[self highlightPoints:params];
 		}
