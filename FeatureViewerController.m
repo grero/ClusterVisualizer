@@ -28,7 +28,7 @@
 @synthesize releasenotes;
 @synthesize rasterView;
 @synthesize stimInfo;
-@synthesize clusterMenu;
+@synthesize clusterMenu,waveformsMenu;
 
 -(void)awakeFromNib
 {
@@ -90,6 +90,10 @@
     shouldShowWaveforms = NO;
     autoLoadWaveforms = YES;
     [selectClusterOption removeAllItems];
+    //create the waveforms menu
+    waveformsMenu = [[[NSMenu alloc] init] autorelease];
+    [waveformsMenu addItemWithTitle:@"Find correlated waveforms" action:@selector(correlateWaveforms:) keyEquivalent:@""];
+    [[self wfv] setMenu:waveformsMenu];
 }
 
 -(BOOL) acceptsFirstResponder
@@ -944,7 +948,7 @@
     
     
     //[selectClusterOption removeAllItems];
-    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",nil];
+    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Find correlated waverforms",nil];
     
     //test
     //clusterOptionsMenu  = [[[NSMenu alloc] initWithTitle:@"Options"] autorelease];
@@ -1189,6 +1193,7 @@
     autoLoadWaveforms = [[NSUserDefaults standardUserDefaults] boolForKey:@"autoLoadWaveforms"];
     if ( (waveformsFile == NULL) && ( autoLoadWaveforms))
     {
+        int result;
         NSOpenPanel *openPanel = [NSOpenPanel openPanel];
         //set a delegate for openPanel so that we can control which files can be opened
         [openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
@@ -1196,7 +1201,7 @@
         //set the basePath to the current basepath so that only cluster files compatible with the currently loaded feature files are allowed
         [[openPanel delegate] setBasePath: currentBaseName];
         [[openPanel delegate] setExtensions: [NSArray arrayWithObjects: @"bin",nil]];
-        int result = [openPanel runModal];
+        result = [openPanel runModal];
         if( result == NSOKButton )
         {
             //test
@@ -1212,15 +1217,22 @@
     if (waveformsFile != NULL)
     {
 		//TODO: Look for reorder file in the same directory
+        const char *path;
+        unsigned int npoints,wfSize,i;
+        short int *waveforms;
+        NSUInteger *idx;
+        unsigned int *_idx;
+        float *fwaveforms;
+        
 		NSString *reorderPath = [[[self waveformsFile] stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"reorder.txt"];
 		NSMutableData *reorder_index = NULL;
 		if ([[NSFileManager defaultManager] fileExistsAtPath:reorderPath ] )
 		{
+            unsigned int count,T;
 			NSArray *reorder = [[NSString stringWithContentsOfFile:reorderPath] componentsSeparatedByString:@" "];
-			int count = [reorder count];
+			count = [reorder count];
 			reorder_index = [NSMutableData dataWithCapacity:count*sizeof(unsigned int)];
-			int i;
-			unsigned int T = 0;
+			T = 0;
 			for(i=0;i<count;i++)
 			{
 				T = [[reorder objectAtIndex:i] integerValue]-1;
@@ -1228,8 +1240,8 @@
 			}
 		}
 		
-        char *path = [[self waveformsFile] cStringUsingEncoding:NSASCIIStringEncoding];         
-        unsigned int npoints = [[cluster npoints] unsignedIntValue];
+        path = [[self waveformsFile] cStringUsingEncoding:NSASCIIStringEncoding];         
+        npoints = [[cluster npoints] unsignedIntValue];
         //TODO: check to avoid memory trouble; if there are too many points, load a subset
         /*if(npoints > 5000)
         {
@@ -1237,14 +1249,13 @@
         }*/
         nptHeader spikeHeader;
         spikeHeader = *getSpikeInfo(path,&spikeHeader);
-        unsigned int wfSize = npoints*spikeHeader.channels*spikeHeader.timepts;
-        short int *waveforms = malloc(wfSize*sizeof(short int));
+        wfSize = npoints*spikeHeader.channels*spikeHeader.timepts;
+        waveforms = malloc(wfSize*sizeof(short int));
         
-        NSUInteger *idx = malloc(npoints*sizeof(NSUInteger));
+        idx = malloc(npoints*sizeof(NSUInteger));
         [[cluster indices] getIndexes:idx maxCount:npoints inIndexRange:nil];
         //convert to unsigned int
-        unsigned int *_idx = malloc(wfSize*sizeof(unsigned int));
-        int i;
+        _idx = malloc(npoints*sizeof(unsigned int));
         for(i=0;i<npoints;i++)
         {
             _idx[i] = (unsigned int)idx[i];
@@ -1252,9 +1263,10 @@
         free(idx);
 
         waveforms = getWaves(path, &spikeHeader, _idx, npoints, waveforms);
+        free(_idx);
         
         //convert to float
-        float *fwaveforms = malloc(wfSize*sizeof(float));
+        fwaveforms = malloc(wfSize*sizeof(float));
         vDSP_vflt16(waveforms, 1, fwaveforms, 1, wfSize);
 		free(waveforms);
 		
@@ -1272,7 +1284,7 @@
             //load time stamps if not already loaded
             unsigned long long int *times = malloc(spikeHeader.num_spikes*sizeof(unsigned long long int));
             unsigned int *times_indices = malloc(spikeHeader.num_spikes*sizeof(unsigned int));
-            int i;
+        
             for(i=0;i<spikeHeader.num_spikes;i++)
             {
                 times_indices[i] = i;
@@ -1422,6 +1434,8 @@
 
             if( [[[self wfv] window] isVisible] )
             {
+                //TODO: this could be modified to show the waveforms of all selected clusters
+                [[self wfv] setOverlay:NO];
                 [self loadWaveforms: candidate];
             }
         }
@@ -1628,7 +1642,25 @@
 			//no cluster selected
             if([[[self fw] window] isVisible] )
             {
-                [[self fw] highlightPoints:[notification userInfo] inCluster:[self selectedCluster]];
+                //check if more than one cluster is selected
+                NSArray *candidates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"active==YES"]];
+                if([candidates count]>0)
+                {
+                    BOOL found = [candidates containsObject:[self selectedCluster]];
+                    if( ([candidates count] >1) || (([candidates count]==1) && (found==NO)))
+                    {
+                        //if we have atleast one candidate in addition to the selected cluster
+                        [[self fw] highlightPoints:[notification userInfo] inCluster:nil];
+                    }
+                   else
+                   {
+                       [[self fw] highlightPoints:[notification userInfo] inCluster:[self selectedCluster]];
+                   }
+                }
+                else
+                {
+                    [[self fw] highlightPoints:[notification userInfo] inCluster:[self selectedCluster]];
+                }
             }
 		}	
     }
@@ -2184,7 +2216,7 @@
         }
     }
     
-    else if( [selection isEqualToString:@"Assign to cluster"] )
+    else if ([selection isEqualToString:@"Assign to cluster"] ) 
     {
         //loop through each cluster and compute the probability for each waveform to belong to the given cluster
         NSEnumerator *clusterEnumerator = [[self Clusters] objectEnumerator];
@@ -2219,12 +2251,12 @@
                 vDSP_vflt16(data, 1, fwaveforms, 1, nwaves*wavesize);
                 free(data);
                 NSData *prob = [selectedCluster computeWaveformProbability: [NSData dataWithBytes:fwaveforms length:nwaves*wavesize*sizeof(float)] length: nwaves];
-                free(fwaveforms);
-                //add indexes to cluster
-                double *_prob = (double*)[prob bytes];
-                [[selectedCluster indices] addIndexes:[[clu indices] indexesPassingTest:^BOOL(NSUInteger idx, BOOL *stop) {
-                    return _prob[idx] >= 0.9;
-                }]];
+                    free(fwaveforms);
+                    //add indexes to cluster
+                    double *_prob = (double*)[prob bytes];
+                    [[selectedCluster indices] addIndexes:[[clu indices] indexesPassingTest:^BOOL(NSUInteger idx, BOOL *stop) {
+                        return _prob[idx] >= 0.9;
+                    }]];
             }
             clu = [clusterEnumerator nextObject];
             
@@ -2249,6 +2281,91 @@
         [self loadWaveforms:selectedCluster];
                 
     }
+    else if ([selection isEqualToString:@"Find correlated waverforms"])
+    {
+        //load waveforms data for selected cluster
+        NSData *waveforms;
+        float *fwaveforms;
+        float *sim;
+        float norm,m;
+        dispatch_queue_t _queue;
+        Cluster *_newCluster;
+        unsigned nclusters,nidx;
+        unsigned int *idx;
+        
+        idx = (unsigned int*)[[[self wfv] highlightWaves] bytes];
+        if(idx==NULL)
+        {
+            return;
+        }
+        nidx = [[[self wfv] highlightWaves] length]/(sizeof(unsigned int));
+        if(wavesize==0)
+        {
+            nptHeader spikeHeader;
+            getSpikeInfo([[self waveformsFile] cStringUsingEncoding:NSASCIIStringEncoding], &spikeHeader);
+            wavesize = (spikeHeader.channels)*(spikeHeader.timepts);
+        }
+        _queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+        waveforms = [selectedCluster readWaveformsFromFile:[self waveformsFile]];
+        //get the currently selected waveform
+        
+        float *waveform = malloc(wavesize*sizeof(float));
+        [waveforms getBytes:waveform range:NSMakeRange(idx[0]*wavesize*sizeof(float), wavesize*sizeof(float))];
+        //compute the norm
+        //compute mean
+        //vDSP_meanv(waveform, 1, &m, wavesize);
+        //m = -m;
+        //substract mean
+        //vDSP_vsadd(waveform, 1, &m, waveform, 1, wavesize);
+        //compute centralized norm
+        vDSP_dotpr(waveform, 1, waveform, 1, &norm, wavesize);
+        norm = sqrtf(norm);
+        //now, loop through each cluster and find the waves that are correlated with this wave
+        NSMutableIndexSet *correlatedIdx = [NSMutableIndexSet indexSet];
+        NSEnumerator *clusterEn = [Clusters objectEnumerator];
+        Cluster *clu;
+        //[waveforms release];
+        while(clu = [clusterEn nextObject] )
+        {
+            nidx = [[clu npoints] unsignedIntValue];
+            waveforms = [clu readWaveformsFromFile:[self waveformsFile]];
+            fwaveforms = (float*)[waveforms bytes];
+            sim = malloc(nidx*sizeof(float));
+            //compute the cosine between each waveform
+            dispatch_apply(nidx, _queue, ^(size_t i) {
+                //compute dot product
+                float d,_m,_n;
+                //vDSP_meanv(fwaveforms+i*wavesize, 1, &_m, wavesize);
+                //_m = -_m;
+                //vDSP_vsadd(fwaveforms+i*wavesize, 1, &_m, fwaveforms+i*wavesize, 1, wavesize);
+                vDSP_dotpr(waveform, 1, fwaveforms+i*wavesize, 1, &d, wavesize);
+                vDSP_dotpr(fwaveforms+i*wavesize,1,fwaveforms+i*wavesize,1,&_n,wavesize);
+                sim[i] = d/(norm*sqrt(_n));  
+            });
+            [correlatedIdx addIndexes:[[clu indices] indexesPassingTest:^BOOL(NSUInteger idx, BOOL *stop) {
+                return sim[idx] >= 0.95;
+            }]];
+             free(sim);
+
+        }
+        //now we have a bunch of indices from which we can create a new cluster
+        _newCluster = [[Cluster alloc] init];
+                
+        nclusters = [[self Clusters] count];
+        [_newCluster setClusterId:[NSNumber numberWithUnsignedInt: nclusters]];
+        [_newCluster addIndices:correlatedIdx];
+        GLfloat *_color = malloc(3*sizeof(GLfloat));
+        _color[0] = ((float)random())/RAND_MAX;
+        _color[1] = ((float)random())/RAND_MAX;
+        _color[2] = ((float)random())/RAND_MAX;
+        [_newCluster setColor:[NSData dataWithBytes:_color length:3*sizeof(GLfloat)]];
+        free(_color);
+        [_newCluster makeValid];
+        
+        [self insertObject:_newCluster inClustersAtIndex:nclusters];
+        [_newCluster makeActive];
+    }
+
 
         
                                                                                  

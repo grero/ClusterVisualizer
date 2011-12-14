@@ -49,6 +49,9 @@
 	NSString *selectedWaveform;
 	NSAttributedString *releaseNotes;
     StimInfo *stimInfo;
+    
+    NSMenu *waveformsMenu;
+    
     IBOutlet FeatureView *fw;
     IBOutlet WaveformsView *wfv;
     IBOutlet NSComboBox *dim1;
@@ -143,4 +146,5 @@
 @property (retain,readwrite) NSNumber *featureCycleInterval;
 @property (retain,readwrite) NSAttributedString *releasenotes;
 @property (retain,readwrite) StimInfo *stimInfo;
+@property (retain,readwrite) NSMenu *waveformsMenu;
 @end
