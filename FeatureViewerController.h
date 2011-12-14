@@ -68,6 +68,7 @@
 	IBOutlet NSArrayController *clusterController;
 	IBOutlet NSPredicateEditor *filterPredicates;
     IBOutlet NSMenu *clusterMenu;
+    IBOutlet NSPanel *clusterNotesPanel;
     
     
     
@@ -132,6 +133,7 @@
 @property (assign) IBOutlet HistogramView *histView;
 @property (assign) IBOutlet RasterView *rasterView;
 @property (assign) IBOutlet NSMenu *clusterMenu;
+@property (assign) IBOutlet NSPanel *clusterNotesPanel;
 
 @property (retain,readwrite) NSMutableArray *Clusters;
 @property (retain,readwrite) NSMutableArray *ClusterOptions;

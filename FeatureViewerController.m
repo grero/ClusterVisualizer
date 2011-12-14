@@ -28,7 +28,7 @@
 @synthesize releasenotes;
 @synthesize rasterView;
 @synthesize stimInfo;
-@synthesize clusterMenu,waveformsMenu;
+@synthesize clusterMenu,waveformsMenu,clusterNotesPanel;
 
 -(void)awakeFromNib
 {
@@ -948,7 +948,7 @@
     
     
     //[selectClusterOption removeAllItems];
-    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Find correlated waverforms",nil];
+    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Find correlated waverforms",@"Show cluster notes",nil];
     
     //test
     //clusterOptionsMenu  = [[[NSMenu alloc] initWithTitle:@"Options"] autorelease];
@@ -2364,6 +2364,10 @@
         
         [self insertObject:_newCluster inClustersAtIndex:nclusters];
         [_newCluster makeActive];
+    }
+    else if( [selection isEqualToString:@"Show cluster notes"] )
+    {
+        [[self clusterNotesPanel] orderFront:self];
     }
 
 

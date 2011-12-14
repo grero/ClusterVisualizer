@@ -35,7 +35,7 @@
 @synthesize mask;
 @synthesize waveformsImage;
 @synthesize featureDims,det;
-@synthesize description;
+@synthesize description,notes;
 @synthesize isolationInfo;
 @synthesize wfMean, wfCov;
 
@@ -643,6 +643,7 @@
     [coder encodeObject: ISIs forKey: @"ClusterISIs"];
     [coder encodeObject: isiIdx forKey:@"ClusterIsiIdx"];
     [coder encodeObject: parents forKey:@"ClusterParents"];
+    [coder encodeObject:notes forKey:@"notes"];
 }
 
 -(id)initWithCoder:(NSCoder*)coder
@@ -663,7 +664,7 @@
     ISIs = [[coder decodeObjectForKey:@"ClusterISIs"] retain];
     isiIdx = [[coder decodeObjectForKey:@"ClusterIsiIdx"] retain];
     parents = [[coder decodeObjectForKey:@"ClusterParents"] retain];
-    
+    notes = [[coder decodeObjectForKey:@"notes"] retain];
     return self;
             
              

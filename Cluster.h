@@ -34,6 +34,7 @@
     NSImage *waveformsImage;
 	NSInteger featureDims;
 	NSString *description; //a string listing all the parameters of this cluster
+    NSAttributedString *notes; //a string containing general sorting notes related to the cluster
     float det;
 
 }
@@ -61,6 +62,7 @@
 @property(retain,readwrite) NSData *featureRanges;
 @property(assign,readwrite) NSInteger featureDims;
 @property(retain,readwrite) NSString *description;
+@property(retain,readwrite) NSAttributedString *notes;
 @property(assign,readwrite) float det;
 @property (retain,readwrite) NSNumber *isolationInfo;
 @property (retain,readwrite) NSData *wfMean, *wfCov;
