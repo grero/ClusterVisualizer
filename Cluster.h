@@ -9,6 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import <Accelerate/Accelerate.h>
 #import "utils.h"
+#import "nptLoadingEngine.h"
 
 @interface Cluster : NSObject {
     
@@ -82,13 +83,16 @@
 -(void)computeFeatureRanges:(NSData*)data;
 -(void)removePoints:(NSData*)rpoints;
 -(void)addPoints:(NSData*)rpoints;
+-(void)addIndices:(NSIndexSet*)_indices;
 -(void)updateDescription;
 //encoding
 -(void)encodeWithCoder:(NSCoder*)coder;
 -(id)initWithCoder:(NSCoder*)coder;
+-(NSData*)readWaveformsFromFile:(NSString*)filename;
 -(NSData*)getRelevantData:(NSData*)data withElementSize:(unsigned int)elsize;
 -(void)getSpiketrain: (double**)sptrain fromTimestamps: (NSData*)timestamps
 ;
 -(void)computeWaveformStats:(NSData*)wfData withChannels:(NSUInteger)channels andTimepoints:(NSUInteger)timepoints;
 -(NSData*)computeWaveformProbability:(NSData*)waveforms length:(NSUInteger)nwaves;
+
 @end

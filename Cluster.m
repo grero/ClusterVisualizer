@@ -573,6 +573,10 @@
     
 
     int i;
+    if([self indices] == nil)
+    {
+        [self setIndices:[NSMutableIndexSet indexSet]];
+    }
     for(i=0;i<_nrpoints;i++)
     {
         [[self indices] addIndex:_rpoints[i]];
@@ -592,6 +596,37 @@
 
     [self createName];
     
+}
+
+-(void)addIndices:(NSIndexSet*)_indices
+{
+    if([self indices] == nil)
+    {
+        [self setIndices:[NSMutableIndexSet indexSet]];
+    }
+    [[self indices] addIndexes:_indices];
+    unsigned int _npoints = [[self indices] count];
+    [self setNpoints:[NSNumber numberWithUnsignedInt:_npoints]];
+    NSUInteger *rpoints = malloc(_npoints*sizeof(NSUInteger));
+    [[self indices] getIndexes:rpoints maxCount:_npoints inIndexRange:nil];
+    NSMutableData *_points = [NSMutableData data];
+    int i;
+    unsigned int p;
+    for(i=0;i<_npoints;i++)
+    {
+        p = (unsigned int)rpoints[i];
+        [_points appendBytes:&p length:sizeof(unsigned int)];
+    }
+    free(rpoints);
+    if([self points] == nil)
+    {
+        [self setPoints:_points];
+    }
+    else
+    {
+        [[self points] setData:_points];
+    }
+    [self createName];
 }
 
 -(void)encodeWithCoder:(NSCoder*)coder
@@ -706,7 +741,44 @@
     free(_mean);
     free(_std);
     
+}
+
+-(NSData*)readWaveformsFromFile:(NSString*)filename
+{
+    NSUInteger nwaves,i;
+    NSUInteger *idx;
+    short *data;
+    const char *fname;
+    nptHeader spikeHeader;
+    NSUInteger wavesize;
+    NSData *waveformsData = nil;
     
+    fname = [filename cStringUsingEncoding:NSASCIIStringEncoding];
+    getSpikeInfo(fname, &spikeHeader);
+    wavesize = (spikeHeader.timepts)*(spikeHeader.channels);
+    nwaves = [[self indices] count];
+    if(nwaves>0)
+    {
+        
+        idx = malloc(nwaves*sizeof(NSUInteger));
+        [[self indices] getIndexes:idx maxCount:nwaves inIndexRange:nil];
+        //convert to unsigned int
+        unsigned int *_idx = malloc(nwaves*sizeof(unsigned int));
+        for(i=0;i<nwaves;i++)
+        {
+            _idx[i] = (unsigned int)idx[i];
+        }
+        free(idx);
+        //get the waveforms
+        data = malloc(nwaves*wavesize*sizeof(short int));
+        getWaves(fname, &spikeHeader, _idx, nwaves, data);
+        //convert to float
+        float *fwaveforms = malloc(nwaves*wavesize*sizeof(float));
+        vDSP_vflt16(data, 1, fwaveforms, 1, nwaves*wavesize);
+        free(data);
+        waveformsData = [NSData dataWithBytes:fwaveforms length:nwaves*wavesize*sizeof(float)];
+    }
+    return waveformsData;
 }
 
 -(void) dealloc

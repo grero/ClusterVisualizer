@@ -54,6 +54,7 @@
 		DBA2EE68146A805700D798CD /* libmatio.2.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBA2EE67146A805700D798CD /* libmatio.2.dylib */; };
 		DBCB7212144E86F70016ACAC /* libmpi.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = DBCB7211144E86F70016ACAC /* libmpi.0.dylib */; };
 		DBD41D251489E863005FEB4E /* ClusterView.m in Sources */ = {isa = PBXBuildFile; fileRef = DBD41D241489E863005FEB4E /* ClusterView.m */; };
+		DBF5B4981490DA1200C3E1E0 /* isomap.c in Sources */ = {isa = PBXBuildFile; fileRef = DBF5B4971490DA1200C3E1E0 /* isomap.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -146,6 +147,8 @@
 		DBCB7211144E86F70016ACAC /* libmpi.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libmpi.0.dylib; sourceTree = "<group>"; };
 		DBD41D231489E863005FEB4E /* ClusterView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ClusterView.h; sourceTree = "<group>"; };
 		DBD41D241489E863005FEB4E /* ClusterView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ClusterView.m; sourceTree = "<group>"; };
+		DBF5B4971490DA1200C3E1E0 /* isomap.c */ = {isa = PBXFileReference; fileEncoding = 4; path = isomap.c; sourceTree = "<group>"; };
+		DBF5B4991490DA3A00C3E1E0 /* isomap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = isomap.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -220,6 +223,8 @@
 		29B97314FDCFA39411CA2CEA /* FeatureViewer */ = {
 			isa = PBXGroup;
 			children = (
+				DBF5B4971490DA1200C3E1E0 /* isomap.c */,
+				DBF5B4991490DA3A00C3E1E0 /* isomap.h */,
 				DBA2EE67146A805700D798CD /* libmatio.2.dylib */,
 				DB34A520144FAF79005E7E66 /* libopen-pal.0.dylib */,
 				DB34A521144FAF79005E7E66 /* libopen-rte.0.dylib */,
@@ -423,6 +428,7 @@
 				DB4F63C0146FA65500AD54B3 /* StimInfo.m in Sources */,
 				DB9415A214726507008C1663 /* fileWriters.c in Sources */,
 				DBD41D251489E863005FEB4E /* ClusterView.m in Sources */,
+				DBF5B4981490DA1200C3E1E0 /* isomap.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
