@@ -7,6 +7,8 @@
 
 #import <Cocoa/Cocoa.h>
 #import <Accelerate/Accelerate.h>
+#import <AGL/agl.h>
+
 #import "FeatureView.h"
 #import "WaveformsView.h"
 #import "Cluster.h"
