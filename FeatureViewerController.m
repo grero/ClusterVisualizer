@@ -148,6 +148,11 @@
 	BOOL anyLoaded = NO;
 	NSMutableArray *feature_names = [NSMutableArray arrayWithCapacity:16];
 	NSString *filebase;
+    //get the group; format: gXXXX
+    //NSError *xerror = NULL;
+    //NSString *group = [[NSRegularExpression regularExpressionWithPattern:@"(g[0-9]*)" options: NSRegularExpressionCaseInsensitive: error &xerror] firstMatchInString: path option: 0 range:NSMakeRange(0,[path length])];
+    NSRange grange = [path rangeOfString:@"waveforms"];
+    NSString *group = [path substringWithRange:NSMakeRange(grange.location-5, 5)];
 	if( [[path pathExtension] isEqualToString:@"fd"])
 	{
 		NSArray *dir_contents = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath: directory error: nil] pathsMatchingExtensions:[NSArray arrayWithObjects:@"fd",nil]];
@@ -1031,13 +1036,14 @@
     int i;
     Cluster *cluster = [[Cluster alloc] init];
     //create an index
-    [cluster setIndices:[NSMutableIndexSet indexSet]];
+    NSMutableIndexSet *_index = [NSMutableIndexSet indexSet];
+    //[cluster setIndices:[NSMutableIndexSet indexSet]];
     if( _npoints < spikeHeader.num_spikes)
     {
         for(i=0;i<_npoints;i++)
         {
             _points[i] = (unsigned int)((((float)rand())/RAND_MAX)*(spikeHeader.num_spikes));
-            [[cluster indices] addIndex:_points[i]];
+            [_index addIndex:_points[i]];
         }
     }
     else
@@ -1045,14 +1051,15 @@
         for(i=0;i<_npoints;i++)
         {
             _points[i] = i;
-            [[cluster indices] addIndex:_points[i]];
+            [_index addIndex:_points[i]];
         }
     }
-    
+    [cluster addIndices:_index];
+    /*
     [cluster createName];
     [cluster setPoints:[NSMutableData dataWithBytes:_points length:_npoints*sizeof(unsigned int)]];
     [cluster setNpoints:[NSNumber numberWithUnsignedInt: _npoints]];
-    
+    */
     float color[3];
     color[0] = ((float)rand())/RAND_MAX;
     color[1] = ((float)rand())/RAND_MAX;
@@ -1242,6 +1249,11 @@
 		
         path = [[self waveformsFile] cStringUsingEncoding:NSASCIIStringEncoding];         
         npoints = [[cluster npoints] unsignedIntValue];
+        //TODO: This should be made more general; for now it will just load waveforms up to the limit
+        if(npoints > [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"] )
+        {
+            npoints = [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"];
+        }
         //TODO: check to avoid memory trouble; if there are too many points, load a subset
         /*if(npoints > 5000)
         {
@@ -1276,6 +1288,15 @@
         [cluster setWfMean:[[self wfv] wfMean]];
         [cluster setWfCov: [[self wfv] wfStd]];
         free(fwaveforms);
+        //remove this
+        //we only want to update the image if we are not using overlay
+        /*if([[self wfv] overlay] == NO )
+        {
+            aglSwapBuffers(aglGetCurrentContext());
+            //[[self wfv] display];
+            [cluster setWaveformsImage:[[self wfv] image]];
+        }*/
+        //
 		nchannels = spikeHeader.channels;
 		//setup self to recieve notification on feature computation
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:@"computeSpikeWidth" object:nil];
@@ -1296,7 +1317,6 @@
             //add the ISI options to cluster options
             [selectClusterOption addItemWithTitle:@"Shortest ISI"];
 			
-
         }
 		//[rasterView createVertices:timestamps];
 		//[[rasterView window] orderFront:self];
@@ -1704,11 +1724,12 @@
 {
     
     NSData *hpoints = [NSData dataWithData: [[self fw] highlightedPoints]];
+    NSUInteger nhpoints = [hpoints length]/sizeof(unsigned int);
     [[self fw] hideCluster:selectedCluster];
     
     [selectedCluster removePoints:hpoints];
     [cluster addPoints:hpoints];
-    [[self fw] setClusterColors:(GLfloat*)[[cluster color] bytes] forIndices:(unsigned int*)[[cluster points] bytes] length:[[cluster npoints] unsignedIntValue]];
+    [[self fw] setClusterColors:(GLfloat*)[[cluster color] bytes] forIndices:(unsigned int*)[[cluster points] bytes] length:nhpoints];
     [[[self fw] highlightedPoints] setLength:0];
     [[self fw] setHighlightedPoints:nil];
     
@@ -2398,13 +2419,13 @@
                 cluster_indices[clusteridx[i]+1] = (unsigned int)[[cluster clusterId] unsignedIntValue];
             }
         }
-        		NSSavePanel *savePanel = [NSSavePanel savePanel];
+        NSSavePanel *savePanel = [NSSavePanel savePanel];
 		[savePanel setNameFieldStringValue:[NSString stringWithFormat: @"%@.cut",currentBaseName]];
 		
 		NSInteger result = [savePanel runModal];
 		if(result == NSFileHandlingPanelOKButton )
 		{
-            const char* fname = [[savePanel nameFieldStringValue] cStringUsingEncoding:NSASCIIStringEncoding];
+            const char* fname = [[savePanel filename] cStringUsingEncoding:NSASCIIStringEncoding];
             //check the extensions
             NSString *ext = [[savePanel nameFieldStringValue] pathExtension];
 			if([ext isEqualToString:@"cut"])
@@ -2413,7 +2434,7 @@
             }
             else
             {
-                NSRange r = [[savePanel nameFieldStringValue] rangeOfString:@"clu"];
+                NSRange r = [[savePanel filename] rangeOfString:@"clu"];
                 if(r.location != NSNotFound )
                 {
                     writeCutFile(fname, cluster_indices, params.rows+1);
@@ -2439,7 +2460,7 @@
 		 {
 			 if(result == NSFileHandlingPanelOKButton )
 			 {
-				 [templateIdStr writeToFile:[[[savePanel directoryURL] path] stringByAppendingPathComponent: [savePanel nameFieldStringValue]] atomically:YES];
+				 [templateIdStr writeToFile:[[[savePanel directoryURL] path] stringByAppendingPathComponent: [savePanel filename]] atomically:YES];
 			 }
 		 }];
         //[templateIdStr writeToFile:[NSString stringWithFormat:@"%@.scu",currentBaseName] atomically:YES];
@@ -2490,7 +2511,7 @@
 	[savePanel beginSheetModalForWindow: [fw window] completionHandler: ^(NSInteger result){
 		if (result == NSFileHandlingPanelOKButton) {
 			NSData *image = [[fw image] TIFFRepresentation];
-			[image writeToFile:[savePanel nameFieldStringValue] atomically:YES];
+			[image writeToFile:[savePanel filename] atomically:YES];
 		}
 	}];
 		
@@ -2880,8 +2901,8 @@
 		//Cluster *firstCluster = [Clusters objectAtIndex:firstIndex];
 		Cluster *firstCluster = [[clusterController selectedObjects] objectAtIndex:0];
         //TODO: This should be made more general
-        if( ([[firstCluster clusterId] unsignedIntValue] > 0 ) && ([[firstCluster npoints] unsignedIntValue] < [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"]))
-        {
+        /*if( ([[firstCluster clusterId] unsignedIntValue] > 0 ) && ([[firstCluster npoints] unsignedIntValue] < [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"]))
+        {*/
             [[self wfv] setOverlay:NO];
             [self loadWaveforms: firstCluster];
             [[wfv window] orderFront: self];
@@ -2893,7 +2914,7 @@
             
             }
         
-        }
+        //}
         if(shouldShowRaster)
         {
             [[[self rasterView] window] orderFront:self];
