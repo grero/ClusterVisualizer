@@ -1031,49 +1031,8 @@ static void drawAnObject()
 	if(dataloaded)
     {
 		
-		//glMatrixMode(GL_PROJECTION);
-
-		//glLoadIdentity();
-		//glRotatef(rotatey,0, 1, 0);
-		//glRotatef(rotatez, 0, 0,1);
-		//glOrtho(scale*1.1*minmax[2*draw_dims[0]], scale*1.1*minmax[2*draw_dims[0]+1], scale*1.1*minmax[2*draw_dims[1]], 
-		//		scale*1.1*minmax[2*draw_dims[1]+1], scale*1.1*minmax[2*draw_dims[2]], scale*1.1*minmax[2*draw_dims[2]+1]);
-		
-		//TODO: Don't do this; use gluLookAt
-		//gluLookAt(100, 100, 100, 0, 0, 0, 0, 1, 0);
-		//glScalef(scale, scale,scale);
-		//glMatrixMode(GL_PROJECTION);
-		//glLoadIdentity();
-		//glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 
-		//		1.1*minmax[2*draw_dims[1]+1], minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
-		//glFrustum(1.5*minmax[2*draw_dims[0]], 1.5*minmax[2*draw_dims[0]+1], 1.5*minmax[2*draw_dims[1]], 
-		//		   1.5*minmax[2*draw_dims[1]+1], 1.5*minmax[2*draw_dims[2]], 1.5*minmax[2*draw_dims[2]+1]);
-		//glFrustum(-2, 2, -2,2, 2, 6);
-        
-
-		/*
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		//glRotatef(rotatey,0, 1, 0);
-		//glRotatef(rotatez, 0, 0,1);
-		glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 
-				1.1*minmax[2*draw_dims[1]+1], minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();*/
-		//glMatrixMode(GL_MODELVIEW);
-		//glLoadIdentity();
-		//glTranslatef(originx/2, originy/2, originz/2);
-		//glTranslatef(0, 0, -2.0);
-		//glTranslatef(originx, originy, originz);
-
-
-		
-
-		//glScalef(scale, scale, scale);
-
 		drawAnObject();
 
-        //drawFrame();
     }
     glFlush();
     [[self openGLContext] flushBuffer];
@@ -1149,10 +1108,8 @@ static void drawAnObject()
 
     [context flushBuffer];
     //[self update];
-    
-    
-       
 }
+
 - (void) reshape
 {
     //reshape the view
@@ -1337,38 +1294,37 @@ static void drawAnObject()
 
 -(void)mouseUp:(NSEvent *)theEvent
 {
+    NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
+    GLint view[4];
+    GLdouble p[16];
+    GLdouble m[16];
+    [[self openGLContext] makeCurrentContext];
+    glGetDoublev (GL_MODELVIEW_MATRIX, m);
+    glGetDoublev (GL_PROJECTION_MATRIX,p);
+    glGetIntegerv( GL_VIEWPORT, view );
+    double objXNear,objXFar,objYNear,objYFar,objZNear,objZFar;
+    //get the position of the points in the original data space
+    //note that since window coordinates are using lower left as (0,0), openGL uses upper left
+    GLfloat depth[2];
+    //get the z-component
+    glReadPixels(currentPoint.x, /*height-*/currentPoint.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, depth);
+    //get a ray
+    gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[1], m, p, view, &objXNear, &objYNear, &objZNear);
+    gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[0], m, p, view, &objXFar, &objYFar, &objZFar);
+
     if([theEvent modifierFlags] & NSCommandKeyMask)
     {
         //only select points if Command key is pressed
         //if we are also pressing the shift button, append highlights
         //get current point in view coordinates
-        NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
         //now we will have to figure out which waveform(s) contains this point
         //scale to data coorindates
-        NSPoint dataPoint;
-        NSRect viewBounds = [self bounds];
         //scale to data coordinates
         //take into account rotation
         //compute appropriate 2-D projection; initial projection is the x-y plane
        
-        GLint view[4];
-        GLdouble p[16];
-        GLdouble m[16];
-        GLdouble z;
-        [[self openGLContext] makeCurrentContext];
-        glGetDoublev (GL_MODELVIEW_MATRIX, m);
-        glGetDoublev (GL_PROJECTION_MATRIX,p);
-        glGetIntegerv( GL_VIEWPORT, view );
-        double objXNear,objXFar,objYNear,objYFar,objZNear,objZFar;
-		//get the position of the points in the original data space
-		//note that since window coordinates are using lower left as (0,0), openGL uses upper left
-		GLfloat depth[2];
-		//get the z-component
-		glReadPixels(currentPoint.x, /*height-*/currentPoint.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, depth);
-		//get a ray
-		gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[1], m, p, view, &objXNear, &objYNear, &objZNear);
-		gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[0], m, p, view, &objXFar, &objYFar, &objZFar);
-		GLdouble ray[3];
+        
+        GLdouble ray[3];
 		ray[0] = -objXNear+objXFar;
 		ray[1] = -objYNear+objYFar;
 		ray[2] = -objZNear+objZFar;
@@ -1512,6 +1468,12 @@ static void drawAnObject()
 			//[self highlightPoints:params];
 		}
     }
+    /*
+    else if( [[theEvent characters] isEqualToString:@"c"] )
+    {
+        
+    }
+     */
 }
 
 -(void)scrollWheel:(NSEvent *)theEvent
