@@ -35,3 +35,8 @@ uint64_t *readOverlapFile(char *fname, uint64_t* data,uint64_t len)
 	
 }
 
+uint64_t *readMatOverlapFile(char *fname, uint64_t *data, uint64_t len)
+{
+    
+}
+
