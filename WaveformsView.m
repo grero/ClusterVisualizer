@@ -142,12 +142,39 @@
 -(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints andColor: (NSData*)color andOrder: (NSData*)order;
 {
     unsigned int prevOffset;
+    unsigned int _timepts,_timestep;
+    _timepts = timepoints;
+    _timestep = 1;
     dispatch_queue_t queue;
     //setup the dispatch queue
-    queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, NULL);
+    queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     numSpikesAtLeastMean = nwaves;
-    wavesize = channels*timepoints;
-    waveIndexSize = channels*(2*timepoints-2);
+    //define blocks to handle down-sampled data
+    //average
+    void *avg = ^(float *input, size_t n,float *output){
+        int i;
+        for(i=0;i<n;i++)
+        {
+            *output+=input[i];
+        }
+        *output/=n;
+    };
+    //peak
+    void *peak = ^(float *input,size_t n, float *output){
+        int i;
+        float mx,mi;
+        mx = -INFINITY;
+        mi = INFINITY;
+        for(i=0;i<n;i++)
+        {
+            mx = MAX(mx,output[i]);
+            mi = MIN(mi,output[i]);
+        }
+        output[0] = mi;
+        output[1] = mx;
+    };
+    wavesize = channels*_timepts;
+    waveIndexSize = channels*(2*_timepts-2);
 	//+3 to make room for mean waveform and +/- std
     //nWfIndices = nwaves+3;
     /*
@@ -176,7 +203,7 @@
         orig_num_spikes = nwaves;
     }   
     chs = channels;
-    timepts = timepoints;
+    timepts = _timepts;
 	//create an index that will tell us which waveforms are active
     waveformIndices = [[NSMutableIndexSet indexSetWithIndexesInRange:NSMakeRange(0, num_spikes)] retain];
 		//reset highlights
@@ -213,28 +240,31 @@
 		
 		dispatch_apply(nwaves, queue, ^(size_t i){
 			int j,k;
-            unsigned int offset = 0;
-            unsigned int moffset = 0;
-            unsigned int stdoffset = 0;
+            unsigned int in_offset,out_offset = 0;
+            //unsigned int moffset = 0;
+            //unsigned int stdoffset = 0;
 		//{
 			for(j=0;j<channels;j++)
 			{
-				for(k=0;k<timepoints;k++)
+				for(k=0;k<_timepts;k++)
 				{
-					offset = ((i*channels+j)*timepoints + k)+prevOffset;
-					moffset = ((nwaves*channels+j)*timepoints + k)+prevOffset;
-					stdoffset = (((nwaves+1)*channels+j)*timepoints + k)+prevOffset;
+					in_offset = ((i*channels+j)*timepoints + k*_timestep);
+                    out_offset = ((i*channels+j)*_timepts + k)+prevOffset;
+
+					//moffset = ((nwaves*channels+j)*_timepts + k)+prevOffset;
+					//stdoffset = (((nwaves+1)*channels+j)*_timepts + k)+prevOffset;
 
 					//x
 					//wfVertices[offset] = tmp[offset];
-					wfVertices[3*offset] = j*(timepoints+channelHop)+k+channelHop;
+					wfVertices[3*out_offset] = j*(_timepts+channelHop)+k+channelHop;
 					//y
-					wfVertices[3*offset+1] = tmp[offset-prevOffset];
+					wfVertices[3*out_offset+1] = tmp[in_offset];
 					//z
-					wfVertices[3*offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
+					wfVertices[3*out_offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
 					//compute the mean, placing it after all the other waves
 					//this line is strictly not necessary
-					wfVertices[3*moffset] = wfVertices[3*offset];
+					/*
+                    wfVertices[3*moffset] = wfVertices[3*offset];
 					wfVertices[3*moffset+1] =(i*(wfVertices[3*moffset+1])+tmp[offset-prevOffset])/(i+1);
 					wfVertices[3*moffset+2] = 1.0;
 					
@@ -242,15 +272,15 @@
 					wfVertices[3*stdoffset] = wfVertices[3*offset];
 					wfVertices[3*stdoffset+1] =(i*(wfVertices[3*stdoffset+1])+(tmp[offset-prevOffset])*(tmp[offset-prevOffset]))/(i+1);
 					wfVertices[3*stdoffset+2] = 1.0;
-					
+					*/
                     //compute max/min per channel
-					if ( tmp[offset-prevOffset] < chMinMax[2*j] )
+					if ( tmp[in_offset] < chMinMax[2*j] )
 					{
-						chMinMax[2*j] = tmp[offset-prevOffset];
+						chMinMax[2*j] = tmp[in_offset];
 					}
-					else if ( tmp[offset-prevOffset] > chMinMax[2*j+1] )
+					else if ( tmp[in_offset] > chMinMax[2*j+1] )
 					{
-						chMinMax[2*j+1] = tmp[offset-prevOffset];
+						chMinMax[2*j+1] = tmp[in_offset];
 					}
 				}
 				
@@ -260,28 +290,30 @@
 	else 
 	{
 		unsigned int* reorder_index  = (unsigned int*)[order bytes];
-		int i,j,k;
-        unsigned int offset = 0;
-        unsigned int moffset = 0;
-        unsigned int stdoffset = 0;
-		for(i=0;i<nwaves;i++)
-		{
+        dispatch_apply(nwaves, queue, ^(size_t i) {
+            int j,k;
+            unsigned int in_offset,out_offset = 0;
+           // unsigned int moffset = 0;
+            //unsigned int stdoffset = 0;
+            //for(i=0;i<nwaves;i++)
+            //{
 			for(j=0;j<channels;j++)
 			{
-				for(k=0;k<timepoints;k++)
+				for(k=0;k<_timepts;k++)
 				{
-					offset = ((i*channels+reorder_index[j])*timepoints + k) + prevOffset;
+                    in_offset = ((i*channels+reorder_index[j])*timepoints + k*_timestep);
+					out_offset = ((i*channels+reorder_index[j])*_timepts + k) + prevOffset;
 					//don't reorder mean and std
-					moffset = ((nwaves*channels+j)*timepoints + k) + prevOffset;
-					stdoffset = (((nwaves+1)*channels+j)*timepoints + k) + prevOffset;
+					//moffset = ((nwaves*channels+j)*_timepts + k) + prevOffset;
+					//stdoffset = (((nwaves+1)*channels+j)*_timepts + k) + prevOffset;
 
 					//x
 					//wfVertices[offset] = tmp[offset];
-					wfVertices[3*offset] = j*(timepoints+channelHop)+k+channelHop;
+					wfVertices[3*out_offset] = j*(_timepts+channelHop)+k+channelHop;
 					//y
-					wfVertices[3*offset+1] = tmp[offset-prevOffset];
+					wfVertices[3*out_offset+1] = tmp[in_offset];
 					//z
-					wfVertices[3*offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
+					wfVertices[3*out_offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
 					
                     
 					//mean
@@ -298,20 +330,19 @@
 					
 					
                     //compute max/min per channel
-					if ( tmp[offset-prevOffset] < chMinMax[2*j] )
+					if ( tmp[in_offset] < chMinMax[2*j] )
 					{
-						chMinMax[2*j] = tmp[offset-prevOffset];
+						chMinMax[2*j] = tmp[in_offset];
 					}
-					else if ( tmp[offset-prevOffset] > chMinMax[2*j+1] )
+					else if ( tmp[in_offset] > chMinMax[2*j+1] )
 					{
-						chMinMax[2*j+1] = tmp[offset-prevOffset];
+						chMinMax[2*j+1] = tmp[in_offset];
 					}
 				}
 				
 			}
-		}
-		
-	}
+        });
+	}	
     //compute mean and standard deviation separately;
     float *_mean = malloc(wavesize*sizeof(float));
     float *_std = malloc(wavesize*sizeof(float));
@@ -319,28 +350,28 @@
     float *m,*msq;
     for(i=0;i<channels;i++)
     {
-        for(j=0;j<timepoints;j++)
+        for(j=0;j<_timepts;j++)
         {
             //compute mean
-            m = wfVertices + nwaves*3*channels*timepoints + 3*(i*timepoints+j)+1+prevOffset;
-            vDSP_meanv(wfVertices+3*(i*timepoints+j)+1+prevOffset, 3*channels*timepoints, m, nwaves);
-            _mean[i*timepoints+j] = *m;
+            m = wfVertices + nwaves*3*channels*_timepts + 3*(i*_timepts+j)+1+prevOffset;
+            vDSP_meanv(wfVertices+3*(i*_timepts+j)+1+prevOffset, 3*channels*_timepts, m, nwaves);
+            _mean[i*_timepts+j] = *m;
             //compute mean square
-            msq = wfVertices + (nwaves+2)*3*channels*timepoints + 3*(i*timepoints+j)+1 + prevOffset;
-            vDSP_measqv(wfVertices+3*(i*timepoints+j)+1+prevOffset, 3*channels*timepoints, msq, nwaves);
+            msq = wfVertices + (nwaves+2)*3*channels*_timepts + 3*(i*_timepts+j)+1 + prevOffset;
+            vDSP_measqv(wfVertices+3*(i*_timepts+j)+1+prevOffset, 3*channels*_timepts, msq, nwaves);
             //substract the square of the mean
             *msq = *msq-(*m)*(*m);
             //take the square root and add back the mean
             *msq = sqrt(*msq);
-            _std[i*timepoints+j] = *msq;
-            wfVertices[3*((nwaves+1)*channels*timepoints+i*timepoints+j)+1+prevOffset] = *m- (*msq)*1.96;
+            _std[i*_timepts+j] = *msq;
+            wfVertices[3*((nwaves+1)*channels*_timepts+i*_timepts+j)+1+prevOffset] = *m- (*msq)*1.96;
             *msq = *m+(*msq)*1.96;
             
             //also set the x and z-components
-            wfVertices[3*((nwaves+2)*wavesize+i*timepoints+j)+prevOffset] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)+prevOffset];
-            wfVertices[3*((nwaves+2)*wavesize+i*timepoints+j)+2+prevOffset] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)+2+prevOffset];
-            wfVertices[3*((nwaves+1)*wavesize+i*timepoints+j) + prevOffset] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)+prevOffset];
-            wfVertices[3*((nwaves+1)*wavesize+i*timepoints+j)+2+prevOffset] = wfVertices[3*(nwaves*wavesize+i*timepoints+j)+2+prevOffset];
+            wfVertices[3*((nwaves+2)*wavesize+i*_timepts+j)+prevOffset] = wfVertices[3*(nwaves*wavesize+i*_timepts+j)+prevOffset];
+            wfVertices[3*((nwaves+2)*wavesize+i*_timepts+j)+2+prevOffset] = wfVertices[3*(nwaves*wavesize+i*_timepts+j)+2+prevOffset];
+            wfVertices[3*((nwaves+1)*wavesize+i*_timepts+j) + prevOffset] = wfVertices[3*(nwaves*wavesize+i*_timepts+j)+prevOffset];
+            wfVertices[3*((nwaves+1)*wavesize+i*_timepts+j)+2+prevOffset] = wfVertices[3*(nwaves*wavesize+i*_timepts+j)+2+prevOffset];
 
         }
     }
@@ -385,7 +416,7 @@
     yminrange = (ymaxmin-yminmax);
     
     wfMinmax[0] = 0;
-    wfMinmax[1] = channels*(timepoints+channelHop);
+    wfMinmax[1] = channels*(_timepts+channelHop);
 	xmin = 0;
 	xmax = wfMinmax[1];
     wfMinmax[4] = -1.0;//0.1;
@@ -410,7 +441,7 @@
     //i.e. 1-2, 3-4,5-6,etc..
     //for this we need to know how many channels, as well as how many points per channel
     //each channel will have 2*pointsPerChannel-2 points
-    unsigned int pointsPerChannel = 2*timepoints-2;
+    unsigned int pointsPerChannel = 2*_timepts-2;
     //unsigned int offset = 0;
 	//+3 to accommodate mean waveform and +/- std
     if([self overlay])
@@ -444,14 +475,14 @@
         {
             //do the first point seperately, since it's not repeated
             offset = (i*channels + j)*pointsPerChannel + prevOffset;
-            wfIndices[offset] = (i*channels+j)*timepoints;
-            for(k=1;k<timepoints-1;k++)
+            wfIndices[offset] = (i*channels+j)*_timepts;
+            for(k=1;k<_timepts-1;k++)
             {
-                wfIndices[offset+2*k-1] = (i*channels+j)*timepoints+k;
+                wfIndices[offset+2*k-1] = (i*channels+j)*_timepts+k;
                 //replicate the previous index
                 wfIndices[offset+2*k] = wfIndices[offset+2*k-1];
             }
-            wfIndices[offset+2*timepoints-3] = (i*channels+j)*timepoints + timepoints-1;
+            wfIndices[offset+2*_timepts-3] = (i*channels+j)*_timepts + _timepts-1;
         }
     });
     //prevent leakage
@@ -487,7 +518,7 @@
 	//free(wfIndices);
     //draw
     //[self highlightWaveform:0];
-    //wavesize = (2*timepoints-2)*channels;
+    //wavesize = (2*_timepts-2)*channels;
     //check if we are to draw mean and standard deviation;default is yes for both
     if( drawStd == NO )
     {
