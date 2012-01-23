@@ -286,15 +286,15 @@
                     
 					//mean
 					//this line is strictly not necessary
-					wfVertices[3*moffset] = wfVertices[3*offset];
-					wfVertices[3*moffset+1] =(i*(wfVertices[3*moffset+1])+tmp[offset-prevOffset])/(i+1);
-					wfVertices[3*moffset+2] = 1.0;
+					//wfVertices[3*moffset] = wfVertices[3*offset];
+					//wfVertices[3*moffset+1] =(i*(wfVertices[3*moffset+1])+tmp[offset-prevOffset])/(i+1);
+					//wfVertices[3*moffset+2] = 1.0;
 					
 					//std
 					//compute x*x and place it as the last waveform
-					wfVertices[3*stdoffset] = wfVertices[3*offset];
-					wfVertices[3*stdoffset+1] =(i*(wfVertices[3*stdoffset+1])+(tmp[offset-prevOffset])*(tmp[offset-prevOffset]))/(i+1);
-					wfVertices[3*stdoffset+2] = 1.0;
+					//wfVertices[3*stdoffset] = wfVertices[3*offset];
+					//wfVertices[3*stdoffset+1] =(i*(wfVertices[3*stdoffset+1])+(tmp[offset-prevOffset])*(tmp[offset-prevOffset]))/(i+1);
+					//wfVertices[3*stdoffset+2] = 1.0;
 					
 					
                     //compute max/min per channel
@@ -613,6 +613,11 @@ static void wfPushVertices()
     glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
     //push data to the current buffer
     glBufferData(GL_ARRAY_BUFFER, nWfVertices*3*sizeof(GLfloat), wfVertices, GL_DYNAMIC_DRAW);
+    GLenum glerror = glGetError();
+    if(glerror != GL_NO_ERROR)
+    {
+        NSLog(@"GL error code %d", glerror);
+    }
     //wfVertices now exist on the GPU so we can free it up
     //free(wfVertices);
     //wfVertices = NULL;
@@ -696,7 +701,7 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor, unsigned int n)
             //need to reset z-value of previously highlighted waveform
             //idx = _hpoints[i];
             //TODO: we should be able to do without this check
-            if( _hpoints[i] < num_spikes )
+            if( _hpoints[i] < orig_num_spikes )
             {
                 idx = _indexes[_hpoints[i]];
                 //zvalue = -1.0;
@@ -733,6 +738,8 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor, unsigned int n)
         for(i=0;i<_nhpoints;i++)
         {
             //idx = _hpoints[i];
+            if(_hpoints[i] >= orig_num_spikes)
+                continue;
             idx = _indexes[_hpoints[i]];
             dcolor = 1-_colors[idx*wavesize*3];
             vDSP_vfill(&dcolor,_colors+(idx*wavesize*3),3,wavesize);
@@ -753,6 +760,8 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor, unsigned int n)
     for(i=0;i<_npoints;i++)
     {
         //idx = _points[i];
+        if(_points[i]>= orig_num_spikes)
+            continue;
 		idx = _indexes[_points[i]];
 		if (idx < orig_num_spikes )
 		{
@@ -1549,11 +1558,6 @@ static void wfDrawAnObject()
     int width = viewSize.width;
     int height = viewSize.height;
     
-    //[self lockFocus];
-    //[self lockFocusIfCanDraw];
-    //[self drawRect:[self bounds]];
-    //[self unlockFocus];
-    [self display];
     imageRep = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes: NULL 
                                                         pixelsWide: width 
                                                         pixelsHigh: height 
@@ -1564,11 +1568,13 @@ static void wfDrawAnObject()
                                                     colorSpaceName: NSDeviceRGBColorSpace 
                                                        bytesPerRow: width*4     
                                                        bitsPerPixel:32] autorelease];
-    
+    [self display];
     [[self openGLContext] makeCurrentContext];
+    
     //bind the vertex buffer as an pixel buffer
     //glBindBuffer(GL_PIXEL_PACK_BUFFER, wfVertexBuffer);
     glReadPixels(0,0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, [imageRep bitmapData]);
+    //glFinish();
     image = [[[NSImage alloc] initWithSize:NSMakeSize(width, height)] autorelease];
     [image addRepresentation:imageRep];
     [image lockFocusFlipped:YES];
