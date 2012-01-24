@@ -23,10 +23,11 @@
 @synthesize waveformsFile;
 @synthesize activeCluster,selectedCluster;
 //@synthesize selectedClusters;
-@synthesize selectedWaveform;
+//@synthesize selectedWaveform;
 @synthesize featureCycleInterval;
 @synthesize releasenotes;
 @synthesize rasterView;
+@synthesize histView;
 @synthesize stimInfo;
 @synthesize clusterMenu,waveformsMenu,clusterNotesPanel;
 
@@ -128,7 +129,6 @@
             [[[self wfv]  window] orderOut:self];
             
         }
-        NSString *directory = [[openPanel directoryURL] path];
         NSString *path = [[openPanel URL] path];
         [self openFeatureFile: path];
 		
@@ -191,7 +191,7 @@
 					//skip
 					continue;
 				}
-				char *filename = [[NSString pathWithComponents: [NSArray arrayWithObjects: directory,file,nil]] cStringUsingEncoding:NSASCIIStringEncoding];
+				const char *filename = [[NSString pathWithComponents: [NSArray arrayWithObjects: directory,file,nil]] cStringUsingEncoding:NSASCIIStringEncoding];
 				H = *readFeatureHeader(filename, &H);
 				
 				tmp_data = NSZoneMalloc([self zone], H.rows*H.cols*sizeof(float));
@@ -417,12 +417,12 @@
             NSDictionary *info = [NSDictionary dictionaryWithContentsOfFile:xmlFile];
             //now check for the presence of spk file
             NSString *spkFile = [path stringByReplacingOccurrencesOfString:@"fet" withString:@"spk"];
-            NSUInteger group = [[path pathExtension] unsignedIntValue];
+            NSUInteger group = [[path pathExtension] intValue];
             if( [[NSFileManager defaultManager] fileExistsAtPath:spkFile] )
             {
                 //we only need to know the number of bits and the number of channels
-                NSNumber *nbits = [[info objectForKey:@"acquisitionSystem"] objectForKey:@"nBits"];
-                NSNumber *nchannels = [[[[info objectForKey: @"anatomicalDescription"] objectForKey:@"channelGroups"] objectAtIndex:group] count];
+                //NSNumber *nbits = [[info objectForKey:@"acquisitionSystem"] objectForKey:@"nBits"];
+                //NSNumber *nchannels = [[[[info objectForKey: @"anatomicalDescription"] objectForKey:@"channelGroups"] objectAtIndex:group] count];
                 //now read the info from the file
                 //NSData *spikeData = [NSData dataWithContentsOfFile:spkFile];
                 
@@ -436,7 +436,7 @@
 		if( [waveformfiles count] == 1 )
 		{
             [self setWaveformsFile: [[directory stringByDeletingLastPathComponent] stringByAppendingPathComponent: [waveformfiles objectAtIndex:0]]];
-			char *waveformsPath = [waveformsFile cStringUsingEncoding: NSASCIIStringEncoding];
+			const char *waveformsPath = [waveformsFile cStringUsingEncoding: NSASCIIStringEncoding];
 			nptHeader spikeHeader;
 			spikeHeader = *getSpikeInfo(waveformsPath, &spikeHeader);
 			unsigned long long int *times = malloc(rows*sizeof(unsigned long long int));
@@ -862,7 +862,7 @@
 		}
 		else if ([extension isEqualToString:@"overlap"])
 		{
-			char *fname = [path cStringUsingEncoding:NSASCIIStringEncoding];
+			const char *fname = [path cStringUsingEncoding:NSASCIIStringEncoding];
 			uint64_t nelm = getFileSize(fname)/sizeof(uint64_t);
 			unsigned ncols = nelm/2;
 			uint64_t *overlaps = NSZoneMalloc([self zone], nelm*sizeof(uint64_t));
@@ -870,7 +870,7 @@
 			//since the overlaps are assumed to ordered according to clusters, with cluster ids in the first column, we can easily get
 			//the maximum numbers of clusters
 			unsigned int maxCluster = overlaps[ncols-2]+1;
-			unsigned i,j;
+			unsigned i;
 				
 			cluster_colors = NSZoneMalloc([self zone], 3*ncols*sizeof(float));
 			tempArray = [NSMutableArray arrayWithCapacity:maxCluster];
@@ -1023,7 +1023,7 @@
     //we also dont' want the FeatureView to receive any notifications
     [[NSNotificationCenter defaultCenter] removeObserver: fw];
     [self setWaveformsFile:path];
-    char *fpath = [[self waveformsFile] cStringUsingEncoding:NSASCIIStringEncoding];
+    const char *fpath = [[self waveformsFile] cStringUsingEncoding:NSASCIIStringEncoding];
     nptHeader spikeHeader;
     spikeHeader = *getSpikeInfo(fpath,&spikeHeader);
     int _npoints = 1000;
@@ -1134,7 +1134,7 @@
                 NSLog(@"Computing features...");
                 _points = malloc(spikeHeader.num_spikes*sizeof(unsigned int));
                 //create an index to load everything
-                char *cpath = [path cStringUsingEncoding:NSASCIIStringEncoding]; 
+                const char *cpath = [path cStringUsingEncoding:NSASCIIStringEncoding]; 
                 for(i=0;i<spikeHeader.num_spikes;i++)
                 {
                     _points[i] = i;
@@ -1744,7 +1744,7 @@
 -(void) setAvailableFeatures:(NSArray*)channels
 {
 	//sets the features based on the channels
-	unsigned nfeatures = cols;
+	//unsigned nfeatures = cols;
 	[dim1 removeAllItems];
 	[dim2 removeAllItems];
 	[dim3 removeAllItems];
@@ -1971,7 +1971,7 @@
             //[[self activeCluster] setActive:0];
             //Cluster *_selectedCluster = [[clusterController selectedObjects] objectAtIndex:0];
 			
-            BOOL toggleActive = NO;
+            //BOOL toggleActive = NO;
 			
 			//if( [selectedCluster active] == 1 )
 			//{
@@ -1991,8 +1991,8 @@
             //add this point to the noise cluster
             [[Clusters objectAtIndex:0] addPoints:[NSData dataWithBytes: selected length: nselected*sizeof(unsigned int)]];
             GLfloat *_color = (GLfloat*)[[[Clusters objectAtIndex:0] color] bytes];
-            GLuint *_points = (GLuint*)selected;
-            GLuint _length = nselected/sizeof(unsigned int);
+            //GLuint *_points = (GLuint*)selected;
+            //GLuint _length = nselected/sizeof(unsigned int);
             [[fw highlightedPoints] setLength:0];
 			[fw setHighlightedPoints:NULL];
             [fw showCluster:selectedCluster];
@@ -2244,7 +2244,7 @@
         Cluster *clu = [clusterEnumerator nextObject];
         int i;
         nptHeader spikeHeader;
-        char *fname = [[self waveformsFile] cStringUsingEncoding: NSASCIIStringEncoding];
+        const char *fname = [[self waveformsFile] cStringUsingEncoding: NSASCIIStringEncoding];
         getSpikeInfo(fname, &spikeHeader);
         wavesize = (spikeHeader.timepts)*(spikeHeader.channels);
         [[self fw] hideCluster:selectedCluster];
@@ -2308,7 +2308,7 @@
         NSData *waveforms;
         float *fwaveforms;
         float *sim;
-        float norm,m;
+        float norm;
         dispatch_queue_t _queue;
         Cluster *_newCluster;
         unsigned nclusters,nidx;
@@ -2355,7 +2355,7 @@
             //compute the cosine between each waveform
             dispatch_apply(nidx, _queue, ^(size_t i) {
                 //compute dot product
-                float d,_m,_n;
+                float d,_n;
                 //vDSP_meanv(fwaveforms+i*wavesize, 1, &_m, wavesize);
                 //_m = -_m;
                 //vDSP_vsadd(fwaveforms+i*wavesize, 1, &_m, fwaveforms+i*wavesize, 1, wavesize);
@@ -2554,7 +2554,7 @@
 	if( dataloaded == YES)
 	{
 		//only do this if data has been loaded; should probably try to make this a bit more general
-		[fw setClusterColors:[[new_cluster color] bytes] forIndices:[[new_cluster points] bytes] length:[[new_cluster npoints] unsignedIntValue]];
+		[fw setClusterColors:(GLfloat*)[[new_cluster color] bytes] forIndices:(unsigned int*)[[new_cluster points] bytes] length:[[new_cluster npoints] unsignedIntValue]];
 	}
     new_cluster.active = 1;
     //make sure we also updated the waveforms image
@@ -2604,7 +2604,7 @@
 	else if ([[theEvent characters] isEqualToString: @"p"])
 	{
 		//setup a timer that will cycle through the different feature dimensions
-		NSTimer *_timer = [NSTimer scheduledTimerWithTimeInterval:1 target: fw selector:@selector(selectDimensions:) userInfo: nil repeats:YES];
+		//NSTimer *_timer = [NSTimer scheduledTimerWithTimeInterval:1 target: fw selector:@selector(selectDimensions:) userInfo: nil repeats:YES];
 	}
 	/*
 	else if ([NSNumberFormatter numberFromString: [theEvent characters]] != nil )
@@ -2746,7 +2746,7 @@
 	//allocate array for features
 	NSUInteger s = [waveforms length];
     //stride is applicable if we are loading x,y,z values
-    NSUInteger stride = s/(nwaves*channels*timepoints*sizeof(float));
+    //NSUInteger stride = s/(nwaves*channels*timepoints*sizeof(float));
 	
 	float *wfdata = (float*)[waveforms bytes];
 	float *sparea = NSZoneMalloc([self zone], nwaves*channels*sizeof(float));
@@ -2768,7 +2768,7 @@
 	    
 	unsigned int fvsize = 2*nwaves*channels+2*nwaves*channels*timepoints;
 	float *fv = NSZoneCalloc([self zone], fvsize,sizeof(float));
-	dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, NULL);
+	//dispatch_queue_t q = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, NULL);
 	//feature vector needs to have form [x,y,z,x,y,z,...]
     //dispatch_apply(nwaves, q, ^(size_t i)
     size_t i;

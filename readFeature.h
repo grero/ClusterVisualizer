@@ -16,12 +16,12 @@ typedef struct {
     int cols;
 } header;
 
-header *readFeatureHeader(char *fname, header *H);
-header *readMatlabFeatureHeader(char *fname, header *H);
-float *readFeatureFile(char *fname,float *data);
-float *readFeatureData(char *fname,float *data);
-float *readMatlabFeatureData(char *fname, float*data);
-char *readFeatureNames(char *fname, char *data);
+header *readFeatureHeader(const char *fname, header *H);
+header *readMatlabFeatureHeader(const char *fname, header *H);
+float *readFeatureFile(const char *fname,float *data);
+float *readFeatureData(const char *fname,float *data);
+float *readMatlabFeatureData(const char *fname, float*data);
+char *readFeatureNames(const char *fname, char *data);
 float *getMinMax(float *minmax,float *data, int nrows,int ncols);
-int *readClusterIds(char *fname,  int *cids);
+int *readClusterIds(const char *fname,  int *cids);
 

@@ -15,6 +15,6 @@ typedef struct{
 
 nptHeader* getSpikeInfo(const char *fname, nptHeader *header);
 short int* getWaves(const char *fname, nptHeader *header, unsigned int *index, unsigned int index_length, short int *data);
-unsigned long long int* getTimes(const char *fname, nptHeader *header, int *index, int index_length, unsigned long long int *data);
+unsigned long long int* getTimes(const char *fname, nptHeader *header, unsigned int *index, unsigned int index_length, unsigned long long int *data);
 
 //void fillArray(int *array, int start, int end, int step);

@@ -99,7 +99,7 @@ short int* getWaves(const char *fname, nptHeader *header, unsigned int *index, u
     return data;
 }
 
-unsigned long long int* getTimes(const char *fname, nptHeader *header, int *index, int index_length, unsigned long long int *data)
+unsigned long long int* getTimes(const char *fname, nptHeader *header, unsigned int *index, unsigned int index_length, unsigned long long int *data)
 {
     FILE *f;
     int i;

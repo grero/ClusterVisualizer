@@ -9,7 +9,7 @@
 
 #include "fileReaders.h"
 
-size_t getFileSize(char *fname)
+size_t getFileSize(const char *fname)
 {
 	//just a simple convenience function go get the size of a file
 	FILE *fid;
@@ -21,7 +21,7 @@ size_t getFileSize(char *fname)
 	return nbytes;
 }
 
-uint64_t *readOverlapFile(char *fname, uint64_t* data,uint64_t len)
+uint64_t *readOverlapFile(const char *fname, uint64_t* data,uint64_t len)
 {
 	//the overlap files is assumed to be purely binary, and contain the column and row indices, of the non-zero entries in the overlap matrix
 	//the data is assumed to be sorted wrt cluster indices
@@ -35,7 +35,7 @@ uint64_t *readOverlapFile(char *fname, uint64_t* data,uint64_t len)
 	
 }
 
-uint64_t *readMatOverlapFile(char *fname, uint64_t *data, uint64_t len)
+uint64_t *readMatOverlapFile(const char *fname, uint64_t *data, uint64_t len)
 {
     
 }

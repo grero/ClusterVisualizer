@@ -10,14 +10,12 @@
 #include "readFeature.h"
 
 
-header *readFeatureHeader(char *fname, header *H)
+header *readFeatureHeader(const char *fname, header *H)
 {
     hsize_t dims[2];
     hsize_t nsets;
     hid_t file_id;
     herr_t status;
-    char dset_name[100];
-    size_t name_size;
     file_id = H5Fopen (fname, H5F_ACC_RDONLY, H5P_DEFAULT);
 	if( file_id < 0 )
 	{
@@ -46,7 +44,7 @@ header *readFeatureHeader(char *fname, header *H)
     return H;
 }
 
-header *readMatlabFeatureHeader(char *fname, header *H)
+header *readMatlabFeatureHeader(const char *fname, header *H)
 {
 	matvar_t *matvar;
 	mat_t *mat;
@@ -69,12 +67,12 @@ header *readMatlabFeatureHeader(char *fname, header *H)
 	return H;
 }
 
-float *readFeatureFile(char *fname,float *data)
+float *readFeatureFile(const char *fname,float *data)
 {
     hid_t file_id;
     herr_t status;
-    hsize_t nsets;
-    hsize_t dims[2] = {0,0};
+    //hsize_t nsets;
+    //hsize_t dims[2] = {0,0};
     file_id = H5Fopen (fname, H5F_ACC_RDONLY, H5P_DEFAULT);
     status = H5LTread_dataset_float(file_id,"/data",data);
     /*
@@ -90,12 +88,12 @@ float *readFeatureFile(char *fname,float *data)
     return data;
 }
 
-float *readFeatureData(char *fname,float *data)
+float *readFeatureData(const char *fname,float *data)
 {
     hid_t file_id;
     herr_t status;
-    hsize_t nsets;
-    hsize_t dims[2] = {0,0};
+    //hsize_t nsets;
+    //hsize_t dims[2] = {0,0};
     file_id = H5Fopen (fname, H5F_ACC_RDONLY, H5P_DEFAULT);
 	if (file_id < 0 )
 	{
@@ -109,7 +107,7 @@ float *readFeatureData(char *fname,float *data)
     
 }
 
-float *readMatlabFeatureData(char *fname,float *data)
+float *readMatlabFeatureData(const char *fname,float *data)
 {
 	matvar_t *matvar;
 	mat_t *mat;
@@ -117,8 +115,8 @@ float *readMatlabFeatureData(char *fname,float *data)
 	//open file
 	mat = Mat_Open(fname,MAT_ACC_RDONLY);
 	matvar = Mat_VarReadInfo(mat,"FeatureData");
-	int err = Mat_VarReadDataAll(mat,matvar);
-	int nel = (matvar->nbytes)/(matvar->data_size);
+	//int err = Mat_VarReadDataAll(mat,matvar);
+	//int nel = (matvar->nbytes)/(matvar->data_size);
 	double *_data = matvar->data;
 	int i,j;
 	int rows,cols;
@@ -139,12 +137,12 @@ float *readMatlabFeatureData(char *fname,float *data)
 	return data;
 }
 
-char *readFeatureNames(char *fname, char *data)
+char *readFeatureNames(const char *fname, char *data)
 {
     hid_t file_id;
     herr_t status;
-    hsize_t nsets;
-    hsize_t dims[2] = {0,0};
+    //hsize_t nsets;
+    //hsize_t dims[2] = {0,0};
     file_id = H5Fopen (fname, H5F_ACC_RDONLY, H5P_DEFAULT);
     status = H5LTread_dataset_float(file_id,"/FeatureNames",data);
     return data;
@@ -174,7 +172,7 @@ float *getMinMax(float *minmax, float *data, int nrows,int ncols)
     return minmax;
 }
 
- int *readClusterIds(char *fname,  int *cids)
+ int *readClusterIds(const char *fname,  int *cids)
 {
     FILE *fid;
     int buffer;

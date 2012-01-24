@@ -2152,7 +2152,7 @@
 				<int key="NSWindowStyleMask">31</int>
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{140, 251}, {362, 207}}</string>
-				<int key="NSWTFlags">-461897728</int>
+				<int key="NSWTFlags">-461896704</int>
 				<string key="NSWindowTitle">Cluster waveforms</string>
 				<string key="NSWindowClass">WaveformsPanel</string>
 				<nil key="NSViewClass"/>
@@ -4489,7 +4489,7 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 													<string>public.url</string>
 												</object>
 											</object>
-											<string key="NSFrameSize">{238, 336}</string>
+											<string key="NSFrame">{{0, 203}, {238, 133}}</string>
 											<reference key="NSSuperview" ref="1031626652"/>
 											<reference key="NSWindow"/>
 											<reference key="NSNextKeyView" ref="1031782933"/>
@@ -4553,7 +4553,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 											</object>
 											<int key="NSTVFlags">6</int>
 											<string key="NSMaxSize">{463, 10000000}</string>
-											<string key="NSMinize">{238, 133}</string>
 											<nil key="NSDelegate"/>
 										</object>
 									</object>
