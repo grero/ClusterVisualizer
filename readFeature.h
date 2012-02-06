@@ -24,4 +24,4 @@ float *readMatlabFeatureData(const char *fname, float*data);
 char *readFeatureNames(const char *fname, char *data);
 float *getMinMax(float *minmax,float *data, int nrows,int ncols);
 int *readClusterIds(const char *fname,  int *cids);
-
+void readMClustClusters(const char *fname, unsigned int *cids);

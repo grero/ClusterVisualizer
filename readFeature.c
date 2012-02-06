@@ -118,6 +118,11 @@ float *readMatlabFeatureData(const char *fname,float *data)
 	//int err = Mat_VarReadDataAll(mat,matvar);
 	//int nel = (matvar->nbytes)/(matvar->data_size);
 	double *_data = matvar->data;
+    if(_data == NULL)
+    {
+        data = NULL;
+        return data;
+    }
 	int i,j;
 	int rows,cols;
 	rows = matvar->dims[0];
@@ -135,6 +140,20 @@ float *readMatlabFeatureData(const char *fname,float *data)
 	Mat_VarFree(matvar);
 	Mat_Close(mat);
 	return data;
+}
+
+void readMClustClusters(const char *fname, unsigned int *cids)
+{
+    matvar_t *matvar,**cells;
+	mat_t *mat;
+    int bytesread;
+    
+    mat = Mat_Open(fname,MAT_ACC_RDONLY);
+    matvar = Mat_VarReadInfo(mat,"MClust_Clusters");
+    //do something else
+    
+    Mat_VarFree(matvar);
+	Mat_Close(mat);
 }
 
 char *readFeatureNames(const char *fname, char *data)
