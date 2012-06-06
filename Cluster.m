@@ -37,7 +37,7 @@
 @synthesize featureDims,det;
 @synthesize description,notes;
 @synthesize isolationInfo;
-@synthesize wfMean, wfCov;
+@synthesize wfMean, wfCov,channels;
 
 -(void)setActive:(NSInteger)value
 {
@@ -750,13 +750,15 @@
     NSUInteger *idx;
     short *data;
     const char *fname;
+	unsigned int *_channels,_nchs;
     nptHeader spikeHeader;
     NSUInteger wavesize;
     NSData *waveformsData = nil;
-    
+   	_channels = (unsigned int*)[[self channels] bytes];
+	_nchs = [[self channels] length]/sizeof(unsigned int);
     fname = [filename cStringUsingEncoding:NSASCIIStringEncoding];
     getSpikeInfo(fname, &spikeHeader);
-    wavesize = (spikeHeader.timepts)*(spikeHeader.channels);
+    wavesize = (spikeHeader.timepts)*(_nchs);
     nwaves = [[self indices] count];
     if(nwaves>0)
     {
@@ -772,7 +774,14 @@
         free(idx);
         //get the waveforms
         data = malloc(nwaves*wavesize*sizeof(short int));
-        getWaves(fname, &spikeHeader, _idx, nwaves, data);
+		if(_nchs == spikeHeader.channels)
+		{
+			getWaves(fname, &spikeHeader, _idx, nwaves, data);
+		}
+		else
+		{
+			getWavesForChannels(fname,&spikeHeader,_idx,nwaves,_channels,_nchs,data);
+		}
         //convert to float
         float *fwaveforms = malloc(nwaves*wavesize*sizeof(float));
         vDSP_vflt16(data, 1, fwaveforms, 1, nwaves*wavesize);

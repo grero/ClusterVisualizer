@@ -23,10 +23,22 @@ header *readFeatureHeader(const char *fname, header *H)
 		return H;
 	}
     status = H5LTget_dataset_info(file_id,"/FeatureData",dims,NULL,NULL);
+	if(status< 0)
+	{
+		return NULL;
+	}
     status = H5Gget_num_objs(file_id,&nsets);
+	if(status < 0)
+	{
+		return NULL;
+	}
     H->rows = dims[0];
     H->cols = dims[1];
     H->ndim = 2;
+	//also get channel validity to see how many channels there are in total
+    status = H5LTget_dataset_info(file_id,"/ChannelValidity",dims,NULL,NULL);
+    status = H5Gget_num_objs(file_id,&nsets);
+	H->numChannels = dims[0];
     /*
     int i;
     H->rows = 0;
@@ -88,7 +100,7 @@ float *readFeatureFile(const char *fname,float *data)
     return data;
 }
 
-float *readFeatureData(const char *fname,float *data)
+float *readFeatureData(const char *fname,float *data, float *channelValidity)
 {
     hid_t file_id;
     herr_t status;
@@ -100,6 +112,8 @@ float *readFeatureData(const char *fname,float *data)
 		data = readMatlabFeatureData(fname, data);
 		return data;
 	}
+	//check for channelValidity
+  	status = H5LTread_dataset_float(file_id,"/ChannelValidity",channelValidity);
     status = H5LTread_dataset_float(file_id,"/FeatureData",data);
     if (status == -1)
         data = NULL;

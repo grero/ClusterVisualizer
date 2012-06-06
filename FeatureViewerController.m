@@ -198,7 +198,18 @@
 				
 				tmp_data = NSZoneMalloc([self zone], H.rows*H.cols*sizeof(float));
 				tmp_data2 = NSZoneMalloc([self zone], H.rows*H.cols*sizeof(float));
-				tmp_data = readFeatureData(filename, tmp_data);
+				//the feature file will in general have a channelValidity file; this tells me which channels were used
+				float *_channelValidity = NSZoneMalloc([self zone],H.numChannels*sizeof(float));
+				channelValidity = NSZoneMalloc([self zone],H.numChannels*sizeof(uint8_t));
+				tmp_data = readFeatureData(filename, tmp_data,_channelValidity);
+				//copy to the global channelValidity variable
+				for(i=0;i<H.numChannels;i++)
+				{
+					channelValidity[i] = (uint8_t)_channelValidity[i];
+				}
+				nchannels = H.numChannels;
+				nvalidChannels = H.rows;
+				NSZoneFree([self zone],_channelValidity);
 				if(tmp_data == NULL)
 				{
 					//create an alert
@@ -245,9 +256,13 @@
 				//feature names
 				//get basename
 				NSString *fn = [[[[file lastPathComponent] componentsSeparatedByString:@"_"] lastObject] stringByDeletingPathExtension]; 
-				for(j=0;j<H.rows;j++)
+				for(j=0;j<H.numChannels;j++)
 				{
-					[feature_names addObject: [fn stringByAppendingFormat:@"%d",j+1]];
+					if(channelValidity[j]==1)
+					{
+						[feature_names addObject: [fn stringByAppendingFormat:@"%d",j+1]];
+					}
+
 				}
 				//notify that we have indeed loaded something
 				anyLoaded = YES;
@@ -667,6 +682,8 @@
 
 - (void)openClusterFile:(NSString*)path;
 {
+	NSAutoreleasePool *_pool = [[NSAutoreleasePool alloc] init];
+	unsigned int i,j;
     [[NSNotificationCenter defaultCenter] removeObserver: self name: @"ClusterStateChanged" object: nil];
     //remove all the all clusters
     //[self removeAllObjectsFromClusters];
@@ -720,6 +737,17 @@
 		
         
     }
+	//create a data object to hold the channels
+	unsigned int *_chs = malloc(nvalidChannels*sizeof(unsigned int));
+	j = 0;
+	for(i=0;i<nchannels;i++)
+	{
+		if(channelValidity[i]==1)
+		{
+			_chs[j] = i;
+			j+=1;
+		}
+	}
     if( [extension isEqualToString:@"fv"] )
     {
         tempArray = [NSKeyedUnarchiver unarchiveObjectWithFile:path];
@@ -728,7 +756,6 @@
         cluster_colors = NSZoneMalloc([self zone], params.rows*3*sizeof(float));
         id _cluster;
         NSEnumerator *_clustersEnumerator = [tempArray objectEnumerator];
-        int i;
         while( _cluster = [_clustersEnumerator nextObject] )
         {
             unsigned int *_points = (unsigned int*)[[_cluster points] bytes];
@@ -808,6 +835,7 @@
 					npoints[cids[i+offset]]+=1;
 				}
 			}
+
 			for(i=0;i<maxCluster;i++)
 			{
 				Cluster *cluster = [[Cluster alloc] init];
@@ -820,6 +848,7 @@
 				[cluster createName];
 				cluster.indices = [NSMutableIndexSet indexSet];
 				cluster.valid = 1;
+				[cluster setChannels: [NSData dataWithBytes: _chs length:nvalidChannels*sizeof(unsigned int)]];
 				//set color
 				float color[3];
 				color[0] = ((float)rand())/RAND_MAX;
@@ -944,6 +973,7 @@
         }
         
     }
+	free(_chs);
 	//turn off the first cluster, since it's usually the noise cluster
 	[[tempArray objectAtIndex:0] makeInactive];
 	if( dataloaded == YES )
@@ -1022,6 +1052,7 @@
     [selectClusterOption addItemsWithTitles:options];
     //once we have loaded the clusters, start up a timer that will ensure that data gets arhived automatically every 5 minutes
     archiveTimer = [NSTimer scheduledTimerWithTimeInterval:300 target:self selector:@selector(archiveClusters) userInfo:nil repeats: YES];
+	[_pool drain];
 }
 
 -(void) openWaveformsFile: (NSString*)path
@@ -1270,7 +1301,7 @@
         }*/
         nptHeader spikeHeader;
         spikeHeader = *getSpikeInfo(path,&spikeHeader);
-        wfSize = npoints*spikeHeader.channels*spikeHeader.timepts;
+        wfSize = npoints*nvalidChannels*spikeHeader.timepts;
         waveforms = malloc(wfSize*sizeof(short int));
         
         idx = malloc(npoints*sizeof(NSUInteger));
@@ -1282,8 +1313,27 @@
             _idx[i] = (unsigned int)idx[i];
         }
         free(idx);
-
-        waveforms = getWaves(path, &spikeHeader, _idx, npoints, waveforms);
+		
+		if(nchannels == nvalidChannels )
+		{
+			waveforms = getWaves(path, &spikeHeader, _idx, npoints, waveforms);
+		}
+		else if (channelValidity != NULL)
+		{
+			unsigned int *_channels,k ;
+			_channels = malloc(nvalidChannels*sizeof(unsigned int));
+			k = 0;
+			for(i=0;i<nchannels;i++)
+			{
+				if(channelValidity[i]==1)
+				{
+					_channels[k] = i;
+					k+=1;
+				}
+			}
+			waveforms = getWavesForChannels(path, &spikeHeader, _idx,npoints,_channels,nvalidChannels,waveforms);
+			free(_channels);
+		}
         free(_idx);
         
         //convert to float
@@ -1292,7 +1342,7 @@
 		free(waveforms);
 		
         [[wfv window] orderFront: self];
-        [wfv createVertices:[NSData dataWithBytes:fwaveforms length:wfSize*sizeof(float)] withNumberOfWaves: npoints channels: (NSUInteger)spikeHeader.channels andTimePoints: (NSUInteger)spikeHeader.timepts 
+        [wfv createVertices:[NSData dataWithBytes:fwaveforms length:wfSize*sizeof(float)] withNumberOfWaves: npoints channels: (NSUInteger)nvalidChannels andTimePoints: (NSUInteger)spikeHeader.timepts 
                    andColor:[cluster color] andOrder:reorder_index];
         [cluster setWfMean:[[self wfv] wfMean]];
         [cluster setWfCov: [[self wfv] wfStd]];
@@ -2281,12 +2331,12 @@
                 vDSP_vflt16(data, 1, fwaveforms, 1, nwaves*wavesize);
                 free(data);
                 NSData *prob = [selectedCluster computeWaveformProbability: [NSData dataWithBytes:fwaveforms length:nwaves*wavesize*sizeof(float)] length: nwaves];
-                    free(fwaveforms);
-                    //add indexes to cluster
-                    double *_prob = (double*)[prob bytes];
-                    [[selectedCluster indices] addIndexes:[[clu indices] indexesPassingTest:^BOOL(NSUInteger idx, BOOL *stop) {
-                        return _prob[idx] >= 0.9;
-                    }]];
+				free(fwaveforms);
+				//add indexes to cluster
+				double *_prob = (double*)[prob bytes];
+				[[selectedCluster indices] addIndexes:[[clu indices] indexesPassingTest:^BOOL(NSUInteger idx, BOOL *stop) {
+					return _prob[idx] >= 0.9;
+				}]];
             }
             clu = [clusterEnumerator nextObject];
             
@@ -2333,7 +2383,7 @@
         {
             nptHeader spikeHeader;
             getSpikeInfo([[self waveformsFile] cStringUsingEncoding:NSASCIIStringEncoding], &spikeHeader);
-            wavesize = (spikeHeader.channels)*(spikeHeader.timepts);
+            wavesize = nvalidChannels*(spikeHeader.timepts);
         }
         _queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
         waveforms = [selectedCluster readWaveformsFromFile:[self waveformsFile]];
@@ -2987,6 +3037,7 @@
     [timestamps release];
     [queue release];
 	[selectedClusters release];
+	NSZoneFree([self zone],channelValidity);
     [super dealloc];
     
 }

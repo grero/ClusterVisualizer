@@ -17,7 +17,7 @@
     NSNumber *clusterId;
     NSMutableData *points;
     NSNumber *npoints;
-    NSInteger active;
+    NSInteger active,nchannels;
     NSInteger isTemplate;
     NSData *color;
     NSMutableIndexSet *indices;
@@ -35,6 +35,7 @@
 	NSInteger featureDims;
 	NSString *description; //a string listing all the parameters of this cluster
     NSAttributedString *notes; //a string containing general sorting notes related to the cluster
+	NSData *channels;
     float det;
 
 }
@@ -65,7 +66,7 @@
 @property(retain,readwrite) NSAttributedString *notes;
 @property(assign,readwrite) float det;
 @property (retain,readwrite) NSNumber *isolationInfo;
-@property (retain,readwrite) NSData *wfMean, *wfCov;
+@property (retain,readwrite) NSData *wfMean, *wfCov,*channels;
 
 -(void)createName;
 -(void)makeInactive;

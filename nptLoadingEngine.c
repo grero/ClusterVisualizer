@@ -99,6 +99,42 @@ short int* getWaves(const char *fname, nptHeader *header, unsigned int *index, u
     return data;
 }
 
+short int* getWavesForChannels(const char *fname, nptHeader *header, unsigned int *index, unsigned int index_length, unsigned int *channels, unsigned int nchannels,short int *data)
+{
+    FILE *f;
+    int chs,pts,waveLength,i,j,status,offset,readSize;
+    short int buffer;
+    f = fopen(fname, "r");
+    if(f==NULL)
+        return NULL;
+    chs = header->channels;
+    pts = header->timepts;
+    waveLength = chs*pts;
+	//offset to where we should start reading
+    offset = channels[0]*pts;
+	readSize = (channels[nchannels-1] - channels[0])*pts;
+    for(i = 0; i < index_length; i++ )
+    //for(i = 0; i < header->num_spikes; i++)
+    {
+        status = fseeko(f, header->headersize+index[i]*2*waveLength + offset*2, SEEK_SET);
+        if(status!=0)
+        {
+            fprintf(stderr,"fseek could not complete");
+        }
+        buffer = 0;
+        for(j = 0; j < readSize; j++)
+        {
+            fread(&buffer, 2, 1, f);
+            buffer = (short int)CFSwapInt16LittleToHost((unsigned short int)buffer);
+            //if( (i==111) & (j>=17*32) & (j<18*32) )
+            //    fprintf(stderr,"%d : %d : %d \n",index[i],ftello(f),buffer);
+            data[i*readSize + j] = buffer;
+        }
+    }
+    fclose(f);
+    return data;
+}
+
 unsigned long long int* getTimes(const char *fname, nptHeader *header, unsigned int *index, unsigned int index_length, unsigned long long int *data)
 {
     FILE *f;

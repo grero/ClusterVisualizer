@@ -39,9 +39,10 @@
     NSData *vertex_data;
     NSData *timestamps;
 	NSMutableArray *featureNames;
+	uint8_t *channelValidity;
     header params;
     BOOL dataloaded,autoLoadWaveforms, shouldShowRaster, shouldShowWaveforms;
-	NSInteger nchannels;
+	NSInteger nchannels,nvalidChannels;
     //name of current cluster set
     NSString *currentBaseName;
     NSString *waveformsFile;
