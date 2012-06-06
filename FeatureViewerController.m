@@ -138,6 +138,8 @@
         
 -(void) openFeatureFile:(NSString*)path
 {
+	NSAutoreleasePool *_pool;
+	_pool = [[NSAutoreleasePool alloc] init];
 	//data object to hold the feature data
 	NSString *directory = [path stringByDeletingLastPathComponent];
 	NSMutableData *data = [NSMutableData dataWithCapacity:100000*sizeof(float)];
@@ -585,6 +587,7 @@
     {
         [self setClusters:[NSMutableArray arrayWithObject:firstCluster]];
     }
+	[_pool drain];
 }
 
 
