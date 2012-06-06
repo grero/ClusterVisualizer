@@ -1418,7 +1418,7 @@ static void wfDrawAnObject()
         free(D);
         wfidx = sIdx[s];
     }
-	else if ([ theEvent modifierFlags] & NSControlKeyMask )
+	else if ([ theEvent modifierFlags] & NSCommandKeyMask )
 	{
 		//control was pressed; highlight channels
 		if( highlightedChannels == NULL )
