@@ -150,29 +150,49 @@
     queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     numSpikesAtLeastMean = nwaves;
     //define blocks to handle down-sampled data
-    //average
-    void *avg = ^(float *input, size_t n,float *output){
-        int i;
-        for(i=0;i<n;i++)
-        {
-            *output+=input[i];
-        }
-        *output/=n;
-    };
-    //peak
-    void *peak = ^(float *input,size_t n, float *output){
-        int i;
-        float mx,mi;
-        mx = -INFINITY;
-        mi = INFINITY;
-        for(i=0;i<n;i++)
-        {
-            mx = MAX(mx,output[i]);
-            mi = MIN(mi,output[i]);
-        }
-        output[0] = mi;
-        output[1] = mx;
-    };
+    void (^warp)(float *input,size_t n, float *output);
+    if( nwaves*channels*timepoints > 10000000 )
+    {
+        _timestep = 4;
+        _timepts = _timepts/_timestep;
+        
+        //average
+        
+        warp = ^(float *input, size_t n,float *output){
+            int i;
+            for(i=0;i<n;i++)
+            {
+                *output+=input[i];
+            }
+            *output/=n;
+        };
+        /*
+        //peak
+        warp = ^(float *input,size_t n, float *output){
+            int i;
+            float mx,mi;
+            mx = -INFINITY;
+            mi = INFINITY;
+            for(i=0;i<n;i++)
+            {
+                mx = MAX(mx,output[i]);
+                mi = MIN(mi,output[i]);
+            }
+            output[0] = mi;
+            output[1] = mx;
+        };*/
+
+    }
+    else
+    {
+        warp = ^(float *input, size_t n, float *output){
+            int i;
+            for(i=0;i<n;i++)
+            {
+                output[i] = input[i];
+            }
+        };
+    }
     wavesize = channels*_timepts;
     waveIndexSize = channels*(2*_timepts-2);
 	//+3 to make room for mean waveform and +/- std
@@ -229,10 +249,6 @@
     //3 dimensions X 2
     
     channelHop = 10;
-    //copy wfVertices
-    //float dz = (100.0-1.0)/num_spikes;
-	//allow for rearranging channels here
-	//TODO: use dispatch here
 	if( order == NULL )
 	{
 		
@@ -255,10 +271,10 @@
 					//stdoffset = (((nwaves+1)*channels+j)*_timepts + k)+prevOffset;
 
 					//x
-					//wfVertices[offset] = tmp[offset];
 					wfVertices[3*out_offset] = j*(_timepts+channelHop)+k+channelHop;
 					//y
-					wfVertices[3*out_offset+1] = tmp[in_offset];
+					//wfVertices[3*out_offset+1] = tmp[in_offset];
+                    warp(tmp+in_offset,_timestep,wfVertices+3*out_offset+1);
 					//z
 					wfVertices[3*out_offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
 					//compute the mean, placing it after all the other waves
@@ -308,7 +324,7 @@
 					//stdoffset = (((nwaves+1)*channels+j)*_timepts + k) + prevOffset;
 
 					//x
-					//wfVertices[offset] = tmp[offset];
+                    //TODO: For peak to work here, I need to replicate the x-value to both min/max
 					wfVertices[3*out_offset] = j*(_timepts+channelHop)+k+channelHop;
 					//y
 					wfVertices[3*out_offset+1] = tmp[in_offset];
@@ -1029,7 +1045,7 @@ static void wfDrawAnObject()
     float *_color = (float*)[color bytes];
     //[color getBytes:_color];
     //compute HSV
-    CGFloat hue,sat,val,alpha,mi,mx;
+    CGFloat hue,sat,val,alpha;
     NSColor *tmp_color = [NSColor colorWithDeviceRed:_color[0] green:_color[1] blue:_color[2] alpha:1.0];
     [tmp_color getHue:&hue saturation:&sat brightness:&val alpha:&alpha];
     /*
@@ -1098,7 +1114,7 @@ static void wfDrawAnObject()
 			return found;
 		}];
 	
-		unsigned int* _points = malloc(([hide count])*sizeof(unsigned int));
+		NSUInteger* _points = malloc(([hide count])*sizeof(NSUInteger));
 		[hide getIndexes: _points maxCount: [hide count] inIndexRange: nil];
 		[self hideWaveforms:[NSData dataWithBytes:_points length:[hide count]]];
 		free(_points);
@@ -1234,19 +1250,28 @@ static void wfDrawAnObject()
     //}
     
     glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-    num_spikes-=_npoints;
-    if(num_spikes<0)
-        num_spikes=0;
     
+    if((NSInteger)num_spikes-_npoints<0)
+    {
+        num_spikes=0;
+    }
+    else
+    {
+        num_spikes-=_npoints;   
+    }
     /*
 	nWfVertices-=_npoints*wavesize;
     if(nWfVertices<0)
         nWfVertices=0;
     */
-    nWfIndices-=_npoints*waveIndexSize;
-    
-    if(nWfIndices<0)
+    if( (NSInteger)nWfIndices-_npoints*waveIndexSize < 0)
+    {
         nWfIndices = 0;
+    }
+    else
+    {
+        nWfIndices-=_npoints*waveIndexSize;
+    }
     //push the indices again
     //glGenBuffers(1,&wfVertexBuffer);
     //glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
@@ -1750,7 +1775,7 @@ static void wfDrawAnObject()
 		//get the indices and increment by one
 		unsigned int *idx = (unsigned int*)([hdata bytes]);
 		unsigned int len = [hdata length]/sizeof(unsigned int);
-		NSUInteger k;
+		//NSUInteger k;
 		int i;
 		for(i=0;i<len;i++)
 		{
@@ -1954,6 +1979,16 @@ static void wfDrawAnObject()
     }
 }
 
+-(BOOL)drawStd
+{
+    return drawStd;
+}
+
+-(BOOL)drawMean
+{
+    return drawMean;
+}
+
 - (void)viewDidHide
 {
     //if the view is hidden, we don't want to receive any highlight modifications
@@ -2002,6 +2037,7 @@ static void wfDrawAnObject()
     [drawingColor release];
     [highlightColor release];
 	[waveformIndices release];
+    NSZoneFree([self zone],chMinMax);
     [super dealloc];
 }
 

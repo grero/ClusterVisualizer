@@ -36,6 +36,7 @@
 		C7D281CA1257906F007D19EA /* WaveformsView.m in Sources */ = {isa = PBXBuildFile; fileRef = C7D281C91257906F007D19EA /* WaveformsView.m */; };
 		C7D281F31257A52B007D19EA /* nptLoadingEngine.c in Sources */ = {isa = PBXBuildFile; fileRef = C7D281F11257A52B007D19EA /* nptLoadingEngine.c */; };
 		C7D282241257B34A007D19EA /* WaveformsPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = C7D282231257B34A007D19EA /* WaveformsPanel.m */; };
+		DB0F14CC14A114D600AEA80D /* AGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB0F14CB14A114D600AEA80D /* AGL.framework */; };
 		DB19959C138817F6003A6D89 /* RasterWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = DB19959B138817F6003A6D89 /* RasterWindow.xib */; };
 		DB1995A013881966003A6D89 /* RasterView.m in Sources */ = {isa = PBXBuildFile; fileRef = DB19959F13881966003A6D89 /* RasterView.m */; };
 		DB262A8813C833D900A6DEC7 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = DB262A8713C833D900A6DEC7 /* Credits.rtf */; };
@@ -125,6 +126,7 @@
 		C7D281F21257A52B007D19EA /* nptLoadingEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nptLoadingEngine.h; sourceTree = "<group>"; };
 		C7D282221257B34A007D19EA /* WaveformsPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WaveformsPanel.h; sourceTree = "<group>"; };
 		C7D282231257B34A007D19EA /* WaveformsPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WaveformsPanel.m; sourceTree = "<group>"; };
+		DB0F14CB14A114D600AEA80D /* AGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = AGL.framework; sourceTree = "<group>"; };
 		DB19959B138817F6003A6D89 /* RasterWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = RasterWindow.xib; sourceTree = "<group>"; };
 		DB19959E13881966003A6D89 /* RasterView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RasterView.h; sourceTree = "<group>"; };
 		DB19959F13881966003A6D89 /* RasterView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RasterView.m; sourceTree = "<group>"; };
@@ -147,7 +149,7 @@
 		DBCB7211144E86F70016ACAC /* libmpi.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libmpi.0.dylib; sourceTree = "<group>"; };
 		DBD41D231489E863005FEB4E /* ClusterView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ClusterView.h; sourceTree = "<group>"; };
 		DBD41D241489E863005FEB4E /* ClusterView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ClusterView.m; sourceTree = "<group>"; };
-		DBF5B4971490DA1200C3E1E0 /* isomap.c */ = {isa = PBXFileReference; fileEncoding = 4; path = isomap.c; sourceTree = "<group>"; };
+		DBF5B4971490DA1200C3E1E0 /* isomap.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = isomap.c; sourceTree = "<group>"; };
 		DBF5B4991490DA3A00C3E1E0 /* isomap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = isomap.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -166,6 +168,7 @@
 				C7AEFDAA125B5BA1007F5D43 /* Accelerate.framework in Frameworks */,
 				DBA05985136A42A1008639C2 /* libhdf5_hl.6.dylib in Frameworks */,
 				DBA05987136A42A1008639C2 /* libhdf5.6.dylib in Frameworks */,
+				DB0F14CC14A114D600AEA80D /* AGL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -297,6 +300,7 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				DB0F14CB14A114D600AEA80D /* AGL.framework */,
 				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
 				C7AEFDA9125B5BA1007F5D43 /* Accelerate.framework */,
@@ -459,6 +463,10 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -480,6 +488,10 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+				);
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = FeatureViewer_Prefix.pch;

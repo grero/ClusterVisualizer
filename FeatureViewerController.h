@@ -120,7 +120,7 @@
 -(IBAction)saveTemplates:(id)sender;
 - (IBAction) cycleDims: (id)sender;
 - (IBAction) clusterThumbClicked: (id)sender;
-- (IBAction) chooseWaveforms: (id)sender;
+//- (IBAction) chooseWaveforms: (id)sender;
 - (IBAction) changeCycleInterval: (id)sender;
 - (IBAction)saveFeatureSpace:(id)sender;
 -(void)cycleDimensionsUsingTimer:(NSTimer*)timer;

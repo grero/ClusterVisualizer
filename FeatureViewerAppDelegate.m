@@ -74,6 +74,13 @@
     }
 }
 
+
+-(void)applicationWillTerminate:(NSNotification *)notification
+{
+    //ask featureview controller to archive the clusters first
+    [controller archiveClusters];
+}
+
 -(id)init
 {
     //set up user defaults

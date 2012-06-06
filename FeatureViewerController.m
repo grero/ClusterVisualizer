@@ -200,7 +200,7 @@
 				if(tmp_data == NULL)
 				{
 					//create an alert
-					NSAlert *alert = [NSAlert alertWithMessageText:@"Feature file could not be loaded" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@""];
+				NSAlert *alert = [NSAlert alertWithMessageText:@"Feature file could not be loaded" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@""];
 					[alert runModal];
 					NSZoneFree([self zone], tmp_data);
 					NSZoneFree([self zone], tmp_data2);
@@ -652,7 +652,7 @@
     //set the basePath to the current basepath so that only cluster files compatible with the currently loaded feature files are allowed
     
 	[[openPanel delegate] setBasePath: currentBaseName];
-    [[openPanel delegate] setExtensions: [NSArray arrayWithObjects: @"clu",@"fv",@"overlap",@"cut",nil]];
+    [[openPanel delegate] setExtensions: [NSArray arrayWithObjects: @"clu",@"fv",@"overlap",@"cut",@"clusters",nil]];
     int result = [openPanel runModal];
     if( result == NSOKButton )
     {
@@ -874,7 +874,7 @@
 				
 			cluster_colors = NSZoneMalloc([self zone], 3*ncols*sizeof(float));
 			tempArray = [NSMutableArray arrayWithCapacity:maxCluster];
-
+            //NSLog(@"maxCluster: %d", maxCluster);
 			for(i=0;i<maxCluster;i++)
 			{
 				Cluster *cluster = [[Cluster alloc] init];
@@ -900,7 +900,8 @@
 				//[cluster computeISIs:timestamps];
 				[cluster setIsTemplate:0];
 				[cluster setActive: 1];
-				[cluster updateDescription];
+                //TODO: for some reason, the update doesn't work properly so I had to disable it
+				//[cluster updateDescription];
 				[tempArray addObject:cluster];
 			}
 			//now loop through the overlap matrix, adding points to the clusters as we go along
@@ -933,6 +934,11 @@
 			[tempArray makeObjectsPerformSelector:@selector(createName)];	
 			
 		}
+        else if ([extension isEqualToString:@"clusters"])
+        {
+            unsigned int* cids;
+            readMClustClusters([path cStringUsingEncoding:NSASCIIStringEncoding], cids);
+        }
         
     }
 	//turn off the first cluster, since it's usually the noise cluster
