@@ -47,7 +47,7 @@
         NSOpenGLPFADepthSize, 16,
         0
     };
-    NSOpenGLPixelFormat *pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
+    NSOpenGLPixelFormat *pixelFormat = [[[NSOpenGLPixelFormat alloc] initWithAttributes:attrs] autorelease];
     return pixelFormat;
 }
 
@@ -65,7 +65,7 @@
     if( self != nil)
     {
         _pixelFormat = [format retain];
-        [self setOpenGLContext: [[NSOpenGLContext alloc] initWithFormat:format shareContext:nil]];
+        [self setOpenGLContext: [[[NSOpenGLContext alloc] initWithFormat:format shareContext:nil] autorelease]];
         [[self openGLContext] makeCurrentContext];
         [[NSNotificationCenter defaultCenter] addObserver: self
                                                  selector:@selector(_surfaceNeedsUpdate:)
@@ -111,8 +111,9 @@
 
 -(void)clearGLContext
 {
-    [[self openGLContext] clearCurrentContext];
-    [[self openGLContext] release];
+    [[self openGLContext] makeCurrentContext];
+    [NSOpenGLContext clearCurrentContext];
+    //[[self openGLContext] release];
 }
 
 -(void)setPixelFormat:(NSOpenGLPixelFormat *)pixelFormat
@@ -953,7 +954,7 @@ static void wfDrawAnObject()
 		label = [[[NSAttributedString alloc] initWithString:[NSString stringWithFormat: @"%.1f",label_titles[i]]  attributes:normal9Attribs] autorelease];
 
         GLString *glabel;
-        glabel = [[GLString alloc] initWithAttributedString:label withTextColor:[NSColor colorWithDeviceRed:1.0f green:1.0f blue:1.0f alpha:1.0f] withBoxColor:[NSColor colorWithDeviceRed:0.4f green:0.4f blue:0.0f alpha:1.0f] withBorderColor:[NSColor colorWithDeviceRed:0.8f green:0.8f blue:0.0f alpha:1.0f]];
+        glabel = [[[GLString alloc] initWithAttributedString:label withTextColor:[NSColor colorWithDeviceRed:1.0f green:1.0f blue:1.0f alpha:1.0f] withBoxColor:[NSColor colorWithDeviceRed:0.4f green:0.4f blue:0.0f alpha:1.0f] withBorderColor:[NSColor colorWithDeviceRed:0.8f green:0.8f blue:0.0f alpha:1.0f]] autorelease];
 		//y = i*(dy-[glabel frameSize].height);
 		//[glabel drawAtPoint:NSMakePoint (-0.5*width+xmargin,0.5*height-ymargin-[glabel frameSize].height - y)];
 		[glabel drawAtPoint:NSMakePoint (-0.5*width,label_positions[i] - 0.5*[glabel frameSize].height)];
@@ -1400,6 +1401,7 @@ static void wfDrawAnObject()
         unsigned int i,s;
         float d_o;
         d_o = INFINITY;
+        s = 0;
         for(i=0;i<n;i++)
         {
             vDSP_vsadd(wfVertices+3*sIdx[i]*wfLength,3,p,D,2,wfLength);
@@ -1457,6 +1459,7 @@ static void wfDrawAnObject()
         int i,j;
 		float q;
 		fmin = INFINITY;
+        imin = 0;
 		//only search among the shown waveforms
 		for(i=0;i<num_spikes;i++)
 		{
@@ -1567,9 +1570,9 @@ static void wfDrawAnObject()
 {
     NSRect bounds = [self bounds];
     //allocate an image and intialize with the size of the view
-    NSImage *image = [[NSImage alloc] initWithSize: bounds.size];
+    NSImage *image = [[[NSImage alloc] initWithSize: bounds.size] autorelease];
     //add an EPS representation
-    NSEPSImageRep *imageRep = [[NSEPSImageRep alloc] init];
+    NSEPSImageRep *imageRep = [[[NSEPSImageRep alloc] init] autorelease];
     [image addRepresentation: imageRep];
     
     [image lockFocus];
@@ -1647,7 +1650,7 @@ static void wfDrawAnObject()
 
 - (void)keyDown:(NSEvent *)theEvent
 {
-	NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+	NSNumberFormatter *formatter = [[[NSNumberFormatter alloc] init] autorelease];
     if ([theEvent modifierFlags] & NSNumericPadKeyMask) {
         [self interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
     } else {
@@ -1739,7 +1742,6 @@ static void wfDrawAnObject()
 
         //[self keyDown:theEvent];
     }
-	[formatter release];
 }
 
 -(void) deleteBackward:(id)sender

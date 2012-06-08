@@ -40,7 +40,7 @@
         
         NSEnumerator *linesEnumerator = [lines objectEnumerator];
         NSString *line = [linesEnumerator nextObject];
-        NSMutableDictionary *currentDict;
+        NSMutableDictionary *currentDict = [NSMutableDictionary dictionary];
         
         while( line )
         {

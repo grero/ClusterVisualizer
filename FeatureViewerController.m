@@ -63,7 +63,7 @@
 	[self setFeatureCycleInterval:[NSNumber numberWithFloat:0.5]];
 	//load the releasenotes
 	NSString *rn = [[NSBundle mainBundle] pathForResource:@"release_notes" ofType: @"rtf"];
-	NSAttributedString *reln = [[NSAttributedString alloc] initWithPath:rn documentAttributes:NULL];
+	NSAttributedString *reln = [[[NSAttributedString alloc] initWithPath:rn documentAttributes:NULL] autorelease];
 	[self setReleasenotes: reln];
 	
 	//set up predicates for filter
@@ -109,7 +109,7 @@
            each feature file to get both the data and the feature names
      */
      NSOpenPanel *openPanel = [NSOpenPanel openPanel];
-	[openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
+	[openPanel setDelegate:[[[OpenPanelDelegate alloc] init]autorelease]];
 	[openPanel setTitle:@"Choose feature file to load"];
 	[[openPanel delegate] setExtensions: [NSArray arrayWithObjects:@"fd",@"fet",nil]];
     [openPanel setAllowsMultipleSelection:NO];
@@ -565,7 +565,7 @@
         [[[self fw] window] orderFront:self];
     }
     //create a noise cluster with all points
-    Cluster *firstCluster = [[Cluster alloc] init];
+    Cluster *firstCluster = [[[Cluster alloc] init] autorelease];
     [firstCluster setClusterId:[NSNumber numberWithInt:0]];
     [firstCluster setIndices:[NSMutableIndexSet indexSetWithIndexesInRange:NSMakeRange(0, rows)]];
     [firstCluster setNpoints:[NSNumber numberWithUnsignedInt: rows]];
@@ -666,7 +666,7 @@
      
     NSOpenPanel *openPanel = [NSOpenPanel openPanel];
     //set a delegate for openPanel so that we can control which files can be opened
-    [openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
+    [openPanel setDelegate:[[[OpenPanelDelegate alloc] init] autorelease]];
     //set the basePath to the current basepath so that only cluster files compatible with the currently loaded feature files are allowed
     
 	[[openPanel delegate] setBasePath: currentBaseName];
@@ -838,7 +838,7 @@
 
 			for(i=0;i<maxCluster;i++)
 			{
-				Cluster *cluster = [[Cluster alloc] init];
+				Cluster *cluster = [[[Cluster alloc] init] autorelease];
 				cluster.clusterId = [NSNumber numberWithUnsignedInt:i];
 				//cluster.name = [NSString stringWithFormat: @"%d",i];
 				
@@ -909,7 +909,7 @@
             //NSLog(@"maxCluster: %d", maxCluster);
 			for(i=0;i<maxCluster;i++)
 			{
-				Cluster *cluster = [[Cluster alloc] init];
+				Cluster *cluster = [[[Cluster alloc] init] autorelease];
 				cluster.clusterId = [NSNumber numberWithUnsignedInt:i];
 				//cluster.name = [NSString stringWithFormat: @"%d",i];
 				
@@ -975,7 +975,10 @@
     }
 	free(_chs);
 	//turn off the first cluster, since it's usually the noise cluster
-	[[tempArray objectAtIndex:0] makeInactive];
+    if(tempArray != nil )
+    {
+        [[tempArray objectAtIndex:0] makeInactive];
+    }
 	if( dataloaded == YES )
 	{
 		//only do this if data has been loaded
@@ -1074,7 +1077,7 @@
     }
     unsigned int *_points = NSZoneMalloc([self zone], _npoints*sizeof(unsigned int));
     int i;
-    Cluster *cluster = [[Cluster alloc] init];
+    Cluster *cluster = [[[Cluster alloc] init] autorelease];
     //create an index
     NSMutableIndexSet *_index = [NSMutableIndexSet indexSet];
     //[cluster setIndices:[NSMutableIndexSet indexSet]];
@@ -1243,7 +1246,7 @@
         int result;
         NSOpenPanel *openPanel = [NSOpenPanel openPanel];
         //set a delegate for openPanel so that we can control which files can be opened
-        [openPanel setDelegate:[[OpenPanelDelegate alloc] init]];
+        [openPanel setDelegate:[[[OpenPanelDelegate alloc] init] autorelease]];
 		[openPanel setTitle:@"Choose waveforms to load"];
         //set the basePath to the current basepath so that only cluster files compatible with the currently loaded feature files are allowed
         [[openPanel delegate] setBasePath: currentBaseName];
@@ -2166,7 +2169,7 @@
         
         BOOL replaceAll = NO;
         //create an NSAlert instance to handle the possible file overwrites
-        NSAlert *alert = [[NSAlert alloc] init];
+        NSAlert *alert = [[[NSAlert alloc] init] autorelease];
         [alert addButtonWithTitle:@"Replace"];
         [alert addButtonWithTitle:@"Replace all"];
         [alert addButtonWithTitle:@"Skip"];
@@ -2226,7 +2229,7 @@
         {
             unsigned int nclusters = [Clusters count];
             unsigned int _npoints = [clusterPoints length]/sizeof(unsigned int);
-            Cluster *newCluster = [[Cluster alloc] init];
+            Cluster *newCluster = [[[Cluster alloc] init] autorelease];
             [newCluster setClusterId:[NSNumber numberWithUnsignedInt: nclusters]];
             //the highlighted points in fw corresponds to global coordinates, so we can use them directly.
             [newCluster setPoints:[NSMutableData dataWithData:clusterPoints]];
@@ -2429,7 +2432,7 @@
 
         }
         //now we have a bunch of indices from which we can create a new cluster
-        _newCluster = [[Cluster alloc] init];
+        _newCluster = [[[Cluster alloc] init] autorelease];
                 
         nclusters = [[self Clusters] count];
         [_newCluster setClusterId:[NSNumber numberWithUnsignedInt: nclusters]];
@@ -2578,7 +2581,7 @@
 
 -(void)mergeCluster: (Cluster *)cluster1 withCluster: (Cluster*)cluster2
 {
-    Cluster *new_cluster = [[Cluster alloc] init];
+    Cluster *new_cluster = [[[Cluster alloc] init] autorelease];
     //new_cluster.name = [[cluster1.name stringByAppendingString: @"+"] stringByAppendingString:cluster2.name];
     //set the new cluster id to the previous number of clusters
     new_cluster.clusterId = [NSNumber numberWithUnsignedInt:[Clusters count]];
@@ -2589,7 +2592,7 @@
     [points appendData:cluster1.points];
     [points appendData:cluster2.points];
     new_cluster.points = points;
-    [new_cluster setIndices:[[NSMutableIndexSet alloc] initWithIndexSet:[cluster1 indices]]];
+    [new_cluster setIndices:[[[NSMutableIndexSet alloc] initWithIndexSet:[cluster1 indices]]autorelease]];
     [[new_cluster indices] addIndexes:[cluster2 indices]];
     //set the new cluster color to that of the first cluster
     NSData *new_color = [cluster1 color];
@@ -2760,10 +2763,10 @@
 #else
     NSBlockOperation *allFinished = [NSBlockOperation blockOperationWithBlock:^{
         //add operation to add "Sort L-ratio" to the list of available cluster options 
-        NSInvocationOperation *op = [[NSInvocationOperation alloc] initWithTarget: self selector:@selector(addClusterOption:) object: 
-                           [operationTitle stringByReplacingOccurrencesOfString:@"Compute" withString:@"Sort"]];
+        NSInvocationOperation *op = [[[NSInvocationOperation alloc] initWithTarget: self selector:@selector(addClusterOption:) object: 
+                           [operationTitle stringByReplacingOccurrencesOfString:@"Compute" withString:@"Sort"]] autorelease];
         //add operation to stop the progress animation
-        NSInvocationOperation *op2 = [[NSInvocationOperation alloc] initWithTarget:progressPanel selector:@selector(stopProgressIndicator) object:nil];
+        NSInvocationOperation *op2 = [[[NSInvocationOperation alloc] initWithTarget:progressPanel selector:@selector(stopProgressIndicator) object:nil] autorelease];
         [[NSOperationQueue mainQueue] addOperation:op];
         [[NSOperationQueue mainQueue] addOperation:op2];
     }];
@@ -2777,7 +2780,7 @@
     for(i=0;i<nclusters;i++)
     {
         //Use NSInvocationOperation here
-        NSInvocationOperation *operation = [[NSInvocationOperation alloc] initWithTarget:[Clusters objectAtIndex:i] selector:operationSelector object:[fw getVertexData]];
+        NSInvocationOperation *operation = [[[NSInvocationOperation alloc] initWithTarget:[Clusters objectAtIndex:i] selector:operationSelector object:[fw getVertexData]] autorelease];
         [allFinished addDependency:operation];
         [queue addOperation:operation];
         /*[queue addOperationWithBlock:^{

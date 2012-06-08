@@ -64,7 +64,7 @@ static void drawCircle(GLfloat r, GLuint n)
         NSOpenGLPFADepthSize, 16,
         0
     };
-    NSOpenGLPixelFormat *pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
+    NSOpenGLPixelFormat *pixelFormat = [[[NSOpenGLPixelFormat alloc] initWithAttributes:attrs] autorelease];
     return pixelFormat;
 }
 
@@ -82,7 +82,7 @@ static void drawCircle(GLfloat r, GLuint n)
     if( self != nil)
     {
         _pixelFormat = [format retain];
-        [self setOpenGLContext: [[NSOpenGLContext alloc] initWithFormat:format shareContext:nil]];
+        [self setOpenGLContext: [[[NSOpenGLContext alloc] initWithFormat:format shareContext:nil] autorelease]];
         [[self openGLContext] makeCurrentContext];
         [[NSNotificationCenter defaultCenter] addObserver: self
                                                  selector:@selector(_surfaceNeedsUpdate:)
@@ -125,8 +125,9 @@ static void drawCircle(GLfloat r, GLuint n)
 
 -(void)clearGLContext
 {
-    [[self openGLContext] clearCurrentContext];
-    [[self openGLContext] release];
+    [[self openGLContext] makeCurrentContext];
+    [NSOpenGLContext clearCurrentContext];
+    //[[self openGLContext] release];
 }
 
 -(void)setPixelFormat:(NSOpenGLPixelFormat *)pixelFormat

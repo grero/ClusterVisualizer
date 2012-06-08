@@ -31,7 +31,7 @@
     {
         //next compare the second last path component to see if its a cluster
         //if ([[fileComps objectAtIndex:1 /*[fileComps count]-2]*/] isEqualToString:extension]) 
-        if( [extensions containsObject: [fileComps objectAtIndex:1]] )
+		if( ([extensions containsObject: [fileComps objectAtIndex:1]] ) || ([extensions containsObject: [fileComps lastObject]]))
         {
             return YES;
         }
