@@ -47,7 +47,7 @@
         NSOpenGLPFADepthSize, 16,
         0
     };
-    NSOpenGLPixelFormat *pixelFormat = [[[NSOpenGLPixelFormat alloc] initWithAttributes:attrs] autorelease];
+    NSOpenGLPixelFormat *pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
     return pixelFormat;
 }
 
@@ -65,7 +65,7 @@
     if( self != nil)
     {
         _pixelFormat = [format retain];
-        [self setOpenGLContext: [[[NSOpenGLContext alloc] initWithFormat:format shareContext:nil] autorelease]];
+        [self setOpenGLContext: [[NSOpenGLContext alloc] initWithFormat:format shareContext:nil]];
         [[self openGLContext] makeCurrentContext];
         [[NSNotificationCenter defaultCenter] addObserver: self
                                                  selector:@selector(_surfaceNeedsUpdate:)

@@ -306,9 +306,8 @@
 
 -(void)computeFeatureMean:(NSData*)data
 {
-	uint64_t datasize = [data length];
+	//uint64_t datasize = [data length];
 	int cols = featureDims;
-	uint64_t rows = datasize/(cols*sizeof(float));
 	float *_mean = calloc(cols,sizeof(float));
 	float *_data = (float*)[data bytes];
     float *v;

@@ -21,7 +21,7 @@
 @synthesize clustersSortDescriptor;
 @synthesize clustersSortDescriptors;
 @synthesize waveformsFile;
-@synthesize activeCluster,selectedCluster;
+@synthesize activeCluster,selectedCluster,selectedClusters,selectedWaveform;
 //@synthesize selectedClusters;
 //@synthesize selectedWaveform;
 @synthesize featureCycleInterval;
@@ -30,6 +30,7 @@
 @synthesize histView;
 @synthesize stimInfo;
 @synthesize clusterMenu,waveformsMenu,clusterNotesPanel;
+@synthesize filterClustersPredicate;
 
 -(void)awakeFromNib
 {
@@ -92,7 +93,7 @@
     autoLoadWaveforms = YES;
     [selectClusterOption removeAllItems];
     //create the waveforms menu
-    waveformsMenu = [[[NSMenu alloc] init] autorelease];
+    waveformsMenu = [[NSMenu alloc] init];
     [waveformsMenu addItemWithTitle:@"Find correlated waveforms" action:@selector(correlateWaveforms:) keyEquivalent:@""];
     [[self wfv] setMenu:waveformsMenu];
 }
@@ -431,10 +432,10 @@
         xmlFile = [directory stringByAppendingPathComponent: [xmlFile stringByAppendingPathExtension:@"xml"]];
         if( [[NSFileManager defaultManager] fileExistsAtPath:xmlFile] )
         {
-            NSDictionary *info = [NSDictionary dictionaryWithContentsOfFile:xmlFile];
+            //NSDictionary *info = [NSDictionary dictionaryWithContentsOfFile:xmlFile];
             //now check for the presence of spk file
             NSString *spkFile = [path stringByReplacingOccurrencesOfString:@"fet" withString:@"spk"];
-            NSUInteger group = [[path pathExtension] intValue];
+            //NSUInteger group = [[path pathExtension] intValue];
             if( [[NSFileManager defaultManager] fileExistsAtPath:spkFile] )
             {
                 //we only need to know the number of bits and the number of channels
@@ -565,7 +566,7 @@
         [[[self fw] window] orderFront:self];
     }
     //create a noise cluster with all points
-    Cluster *firstCluster = [[[Cluster alloc] init] autorelease];
+    Cluster *firstCluster = [[Cluster alloc] init];
     [firstCluster setClusterId:[NSNumber numberWithInt:0]];
     [firstCluster setIndices:[NSMutableIndexSet indexSetWithIndexesInRange:NSMakeRange(0, rows)]];
     [firstCluster setNpoints:[NSNumber numberWithUnsignedInt: rows]];
@@ -688,8 +689,10 @@
     //remove all the all clusters
     //[self removeAllObjectsFromClusters];
     //NSString *filename = [[openPanel URL] path];
-    
-    NSString *extension = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:1];
+    //get the components of the filename; sometimes we are interested int he last extension, sometimes the second last
+    NSArray *fileComps = [[path lastPathComponent] componentsSeparatedByString:@"."]; 
+    NSUInteger nFileComps = [fileComps count];
+    NSString *extension = [fileComps objectAtIndex:1];
     float *cluster_colors;
     NSMutableArray *tempArray;
     //check if data is loaded
@@ -748,7 +751,7 @@
 			j+=1;
 		}
 	}
-    if( [extension isEqualToString:@"fv"] )
+    if( [[fileComps lastObject] isEqualToString:@"fv"] )
     {
         tempArray = [NSKeyedUnarchiver unarchiveObjectWithFile:path];
         //get cluster colors
@@ -773,10 +776,10 @@
     }
     else 
 	{
-        if( [extension isEqualToString:@"cut"] || [extension isEqualToString:@"clu"] )
+        if( [[fileComps lastObject] isEqualToString:@"cut"] || [[fileComps objectAtIndex:nFileComps-2] isEqualToString:@"clu"] )
         {
 			int offset = 1;
-			if( [extension isEqualToString:@"cut"] )
+			if( [[fileComps lastObject] isEqualToString:@"cut"] )
 			{
 				offset = 0;
 			}
@@ -794,7 +797,7 @@
 			//iteratae through lines
 			NSEnumerator *lines_enum = [lines objectEnumerator];
 			id line;
-			NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+			NSNumberFormatter *formatter = [[[NSNumberFormatter alloc] init] autorelease];
 			int cidx = 0;
 			while ( (line = [lines_enum nextObject] ) )
 			{
@@ -807,7 +810,6 @@
 				}
 				
 			}
-			[formatter release];
 			//find the maximum cluster number
 			//TODO: this is quick and dirty; should try and speed this up
 			int maxCluster = 0;
@@ -838,7 +840,7 @@
 
 			for(i=0;i<maxCluster;i++)
 			{
-				Cluster *cluster = [[[Cluster alloc] init] autorelease];
+				Cluster *cluster = [[Cluster alloc] init];
 				cluster.clusterId = [NSNumber numberWithUnsignedInt:i];
 				//cluster.name = [NSString stringWithFormat: @"%d",i];
 				
@@ -892,7 +894,7 @@
 
 			//tell the view to change the colors
 		}
-		else if ([extension isEqualToString:@"overlap"])
+		else if ([[fileComps lastObject] isEqualToString:@"overlap"])
 		{
 			const char *fname = [path cStringUsingEncoding:NSASCIIStringEncoding];
 			uint64_t nelm = getFileSize(fname)/sizeof(uint64_t);
@@ -909,7 +911,7 @@
             //NSLog(@"maxCluster: %d", maxCluster);
 			for(i=0;i<maxCluster;i++)
 			{
-				Cluster *cluster = [[[Cluster alloc] init] autorelease];
+				Cluster *cluster = [[Cluster alloc] init];
 				cluster.clusterId = [NSNumber numberWithUnsignedInt:i];
 				//cluster.name = [NSString stringWithFormat: @"%d",i];
 				
@@ -966,10 +968,17 @@
 			[tempArray makeObjectsPerformSelector:@selector(createName)];	
 			
 		}
-        else if ([extension isEqualToString:@"clusters"])
+        else if ([[fileComps lastObject] isEqualToString:@"clusters"])
         {
             unsigned int* cids;
             readMClustClusters([path cStringUsingEncoding:NSASCIIStringEncoding], cids);
+        }
+        else
+        {
+            //unknown extension
+            NSAlert *alert = [NSAlert alertWithMessageText:@"Unknown extension" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:nil];
+            [alert runModal];
+            
         }
         
     }
@@ -1077,7 +1086,7 @@
     }
     unsigned int *_points = NSZoneMalloc([self zone], _npoints*sizeof(unsigned int));
     int i;
-    Cluster *cluster = [[[Cluster alloc] init] autorelease];
+    Cluster *cluster = [[Cluster alloc] init];
     //create an index
     NSMutableIndexSet *_index = [NSMutableIndexSet indexSet];
     //[cluster setIndices:[NSMutableIndexSet indexSet]];
@@ -1241,6 +1250,7 @@
 - (void) loadWaveforms: (Cluster*)cluster
 {
     autoLoadWaveforms = [[NSUserDefaults standardUserDefaults] boolForKey:@"autoLoadWaveforms"];
+    NSAutoreleasePool *_pool = [[NSAutoreleasePool alloc] init];
     if ( (waveformsFile == NULL) && ( autoLoadWaveforms))
     {
         int result;
@@ -1382,7 +1392,7 @@
         }
 		//[rasterView createVertices:timestamps];
 		//[[rasterView window] orderFront:self];
-
+        [_pool drain];
 	}
 		
     
@@ -2052,7 +2062,7 @@
             [selectedCluster computeISIs:timestamps];
             //add this point to the noise cluster
             [[Clusters objectAtIndex:0] addPoints:[NSData dataWithBytes: selected length: nselected*sizeof(unsigned int)]];
-            GLfloat *_color = (GLfloat*)[[[Clusters objectAtIndex:0] color] bytes];
+            //GLfloat *_color = (GLfloat*)[[[Clusters objectAtIndex:0] color] bytes];
             //GLuint *_points = (GLuint*)selected;
             //GLuint _length = nselected/sizeof(unsigned int);
             [[fw highlightedPoints] setLength:0];
@@ -2229,7 +2239,7 @@
         {
             unsigned int nclusters = [Clusters count];
             unsigned int _npoints = [clusterPoints length]/sizeof(unsigned int);
-            Cluster *newCluster = [[[Cluster alloc] init] autorelease];
+            Cluster *newCluster = [[Cluster alloc] init];
             [newCluster setClusterId:[NSNumber numberWithUnsignedInt: nclusters]];
             //the highlighted points in fw corresponds to global coordinates, so we can use them directly.
             [newCluster setPoints:[NSMutableData dataWithData:clusterPoints]];
@@ -2432,7 +2442,7 @@
 
         }
         //now we have a bunch of indices from which we can create a new cluster
-        _newCluster = [[[Cluster alloc] init] autorelease];
+        _newCluster = [[Cluster alloc] init];
                 
         nclusters = [[self Clusters] count];
         [_newCluster setClusterId:[NSNumber numberWithUnsignedInt: nclusters]];
@@ -2581,7 +2591,7 @@
 
 -(void)mergeCluster: (Cluster *)cluster1 withCluster: (Cluster*)cluster2
 {
-    Cluster *new_cluster = [[[Cluster alloc] init] autorelease];
+    Cluster *new_cluster = [[Cluster alloc] init];
     //new_cluster.name = [[cluster1.name stringByAppendingString: @"+"] stringByAppendingString:cluster2.name];
     //set the new cluster id to the previous number of clusters
     new_cluster.clusterId = [NSNumber numberWithUnsignedInt:[Clusters count]];
@@ -2592,7 +2602,7 @@
     [points appendData:cluster1.points];
     [points appendData:cluster2.points];
     new_cluster.points = points;
-    [new_cluster setIndices:[[[NSMutableIndexSet alloc] initWithIndexSet:[cluster1 indices]]autorelease]];
+    [new_cluster setIndices:[[NSMutableIndexSet alloc] initWithIndexSet:[cluster1 indices]]];
     [[new_cluster indices] addIndexes:[cluster2 indices]];
     //set the new cluster color to that of the first cluster
     NSData *new_color = [cluster1 color];
