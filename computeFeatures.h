@@ -11,9 +11,9 @@
 #import <string.h>
 
 
-void *computeSpikeWidth(float *input, unsigned int stride_in, unsigned int N, unsigned int stride_out,float *output);
-void *computeSpikeArea(float *input, unsigned int stride_in, unsigned int N, unsigned int stride_out, float *output);
+void computeSpikeWidth(float *input, unsigned int stride_in, unsigned int N, unsigned int stride_out,float *output);
+void computeSpikeArea(float *input, unsigned int stride_in, unsigned int N, unsigned int stride_out, float *output);
 
-void *computeSpikeFFT(float *input, unsigned int stride_in, unsigned int N, unsigned int stride_out, float* ouput);
+void computeSpikeFFT(float *input, unsigned int stride_in, unsigned int N, unsigned int stride_out, float* ouput);
 
 void computeSpikePCA(float *input,unsigned int stride_in, unsigned int N1, unsigned int N2, unsigned int stride_out, float* output);

@@ -11,9 +11,9 @@
 
 
 
-void *computeSpikeArea(float *input, unsigned int stride_in, unsigned int N, unsigned int stride_out, float *output)
+void computeSpikeArea(float *input, unsigned int stride_in, unsigned int N, unsigned int stride_out, float *output)
 {
-	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, NULL);
+	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
 	dispatch_apply(N, queue, ^(size_t wf){
 		int i = 0;
@@ -28,7 +28,7 @@ void *computeSpikeArea(float *input, unsigned int stride_in, unsigned int N, uns
 	});
 }
 
-void *computeSpikeWidth(float *input, unsigned int stride_in, unsigned int N, unsigned int stride_out,float *output)
+void computeSpikeWidth(float *input, unsigned int stride_in, unsigned int N, unsigned int stride_out,float *output)
 {
 	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, NULL);
 	
@@ -89,7 +89,7 @@ void *computeSpikeWidth(float *input, unsigned int stride_in, unsigned int N, un
 	//scale
 }
 
-void *computeSpikeFFT(float *input, unsigned int stride_in, unsigned int N, unsigned int stride_out, float* output)
+void computeSpikeFFT(float *input, unsigned int stride_in, unsigned int N, unsigned int stride_out, float* output)
 {
     //create an FFT setup
     int exponent = (int)ceil(log2((double)stride_in));
