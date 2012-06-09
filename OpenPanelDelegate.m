@@ -31,7 +31,8 @@
     {
         //next compare the second last path component to see if its a cluster
         //if ([[fileComps objectAtIndex:1 /*[fileComps count]-2]*/] isEqualToString:extension]) 
-		if( ([extensions containsObject: [fileComps objectAtIndex:1]] ) || ([extensions containsObject: [fileComps lastObject]]))
+		NSInteger count = [fileComps count];
+        if( ([extensions containsObject: [fileComps objectAtIndex:count-2]] ) || ([extensions containsObject: [fileComps lastObject]]))
         {
             return YES;
         }
