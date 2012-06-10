@@ -142,6 +142,7 @@
 
 -(void) createVertices: (NSData*)vertex_data withNumberOfWaves: (NSUInteger)nwaves channels: (NSUInteger)channels andTimePoints: (NSUInteger)timepoints andColor: (NSData*)color andOrder: (NSData*)order;
 {
+    float *_vertices;
     unsigned int prevOffset;
     unsigned int _timepts,_timestep;
     _timepts = timepoints;
@@ -151,6 +152,7 @@
     queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     numSpikesAtLeastMean = nwaves;
     //define blocks to handle down-sampled data
+    
     void (^warp)(float *input,size_t n, float *output);
     if( nwaves*channels*timepoints > 10000000 )
     {
@@ -234,14 +236,17 @@
         [[self highlightWaves] setLength:0];
         [self setHighlightWaves:NULL];
     }
-    if ((wfDataloaded) && (wfVertices != NULL ) )
+    /*
+    if ((wfDataloaded) && (vertices != NULL ) )
     {
-        wfVertices = realloc(wfVertices, nWfVertices*3*sizeof(GLfloat));
+        //vertices = [NSData datawi
+        _vertices = realloc(wfVertices, nWfVertices*3*sizeof(GLfloat));
     }
     else{
         wfVertices = malloc(nWfVertices*3*sizeof(GLfloat));
         
-    }
+    }*/
+    _vertices = malloc(nWfVertices*3*sizeof(GLfloat));
     highlightWave = -1;
     float *tmp = (float*)[vertex_data bytes];
     
@@ -272,12 +277,12 @@
 					//stdoffset = (((nwaves+1)*channels+j)*_timepts + k)+prevOffset;
 
 					//x
-					wfVertices[3*out_offset] = j*(_timepts+channelHop)+k+channelHop;
+					_vertices[3*out_offset] = j*(_timepts+channelHop)+k+channelHop;
 					//y
 					//wfVertices[3*out_offset+1] = tmp[in_offset];
-                    warp(tmp+in_offset,_timestep,wfVertices+3*out_offset+1);
+                    warp(tmp+in_offset,_timestep,_vertices+3*out_offset+1);
 					//z
-					wfVertices[3*out_offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
+					_vertices[3*out_offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
 					//compute the mean, placing it after all the other waves
 					//this line is strictly not necessary
 					/*
@@ -326,11 +331,11 @@
 
 					//x
                     //TODO: For peak to work here, I need to replicate the x-value to both min/max
-					wfVertices[3*out_offset] = j*(_timepts+channelHop)+k+channelHop;
+					_vertices[3*out_offset] = j*(_timepts+channelHop)+k+channelHop;
 					//y
-					wfVertices[3*out_offset+1] = tmp[in_offset];
+					_vertices[3*out_offset+1] = tmp[in_offset];
 					//z
-					wfVertices[3*out_offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
+					_vertices[3*out_offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
 					
                     
 					//mean
@@ -370,25 +375,25 @@
         for(j=0;j<_timepts;j++)
         {
             //compute mean
-            m = wfVertices + nwaves*3*channels*_timepts + 3*(i*_timepts+j)+1+prevOffset;
-            vDSP_meanv(wfVertices+3*(i*_timepts+j)+1+prevOffset, 3*channels*_timepts, m, nwaves);
+            m = _vertices + nwaves*3*channels*_timepts + 3*(i*_timepts+j)+1+prevOffset;
+            vDSP_meanv(_vertices+3*(i*_timepts+j)+1+prevOffset, 3*channels*_timepts, m, nwaves);
             _mean[i*_timepts+j] = *m;
             //compute mean square
-            msq = wfVertices + (nwaves+2)*3*channels*_timepts + 3*(i*_timepts+j)+1 + prevOffset;
-            vDSP_measqv(wfVertices+3*(i*_timepts+j)+1+prevOffset, 3*channels*_timepts, msq, nwaves);
+            msq = _vertices + (nwaves+2)*3*channels*_timepts + 3*(i*_timepts+j)+1 + prevOffset;
+            vDSP_measqv(_vertices+3*(i*_timepts+j)+1+prevOffset, 3*channels*_timepts, msq, nwaves);
             //substract the square of the mean
             *msq = *msq-(*m)*(*m);
             //take the square root and add back the mean
             *msq = sqrt(*msq);
             _std[i*_timepts+j] = *msq;
-            wfVertices[3*((nwaves+1)*channels*_timepts+i*_timepts+j)+1+prevOffset] = *m- (*msq)*1.96;
+            _vertices[3*((nwaves+1)*channels*_timepts+i*_timepts+j)+1+prevOffset] = *m- (*msq)*1.96;
             *msq = *m+(*msq)*1.96;
             
             //also set the x and z-components
-            wfVertices[3*((nwaves+2)*wavesize+i*_timepts+j)+prevOffset] = wfVertices[3*(nwaves*wavesize+i*_timepts+j)+prevOffset];
-            wfVertices[3*((nwaves+2)*wavesize+i*_timepts+j)+2+prevOffset] = wfVertices[3*(nwaves*wavesize+i*_timepts+j)+2+prevOffset];
-            wfVertices[3*((nwaves+1)*wavesize+i*_timepts+j) + prevOffset] = wfVertices[3*(nwaves*wavesize+i*_timepts+j)+prevOffset];
-            wfVertices[3*((nwaves+1)*wavesize+i*_timepts+j)+2+prevOffset] = wfVertices[3*(nwaves*wavesize+i*_timepts+j)+2+prevOffset];
+            _vertices[3*((nwaves+2)*wavesize+i*_timepts+j)+prevOffset] = _vertices[3*(nwaves*wavesize+i*_timepts+j)+prevOffset];
+            _vertices[3*((nwaves+2)*wavesize+i*_timepts+j)+2+prevOffset] = _vertices[3*(nwaves*wavesize+i*_timepts+j)+2+prevOffset];
+            _vertices[3*((nwaves+1)*wavesize+i*_timepts+j) + prevOffset] = _vertices[3*(nwaves*wavesize+i*_timepts+j)+prevOffset];
+            _vertices[3*((nwaves+1)*wavesize+i*_timepts+j)+2+prevOffset] = _vertices[3*(nwaves*wavesize+i*_timepts+j)+2+prevOffset];
 
         }
     }
@@ -420,8 +425,8 @@
     for(i=0;i<num_spikes;i++)
        {
            //compute maximum and minimum y for each wave
-           vDSP_maxv(wfVertices+i*3*wavesize+1, 3, tmp_ymax+i, wavesize);
-           vDSP_minv(wfVertices+i*3*wavesize+1, 3, tmp_ymin+i, wavesize);
+           vDSP_maxv(_vertices+i*3*wavesize+1, 3, tmp_ymax+i, wavesize);
+           vDSP_minv(_vertices+i*3*wavesize+1, 3, tmp_ymin+i, wavesize);
        }//);
     //determine overall maximum
     vDSP_maxv(tmp_ymax, 1, wfMinmax+3, num_spikes);
@@ -447,10 +452,66 @@
         {
             float z;
             z = -2*((tmp_ymax[i]-tmp_ymin[i])-yminrange)/((ymax-ymin)-yminrange)+1.0;
-            vDSP_vfill(&z, wfVertices+i*3*wavesize+2, 3, wavesize);
+            vDSP_vfill(&z, _vertices+i*3*wavesize+2, 3, wavesize);
         }//);
     free(tmp_ymax);
     free(tmp_ymin);
+    //should push colors and vertices here
+    GLfloat *gcolor = (GLfloat*)[color bytes];
+    GLfloat *_colors = malloc(3*nWfVertices*sizeof(GLfloat));
+    for(i=0;i<nWfVertices;i++)
+    {
+        _colors[3*i] = gcolor[0];
+        _colors[3*i+1]= gcolor[1];
+        _colors[3*i+2] = gcolor[2];
+    }
+    [[self openGLContext] makeCurrentContext];
+    if(wfVertexBuffer == 0)
+    {
+        glGenBuffers(GL_ARRAY_BUFFER, &wfVertexBuffer);
+    }
+    if(wfColorBuffer == 0)
+    {
+        glGenBuffers(GL_ARRAY_BUFFER, &wfColorBuffer);
+    }
+        
+    
+    //check if we are overlaying
+    if( [self overlay] )
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
+        //need to get the previous data
+        GLfloat *tmp2 = malloc(3*nWfVertices*sizeof(GLfloat));
+        GLfloat *tmp = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+        //copy the existing vertices
+        memcpy(tmp2, tmp, prevOffset*sizeof(GLfloat));
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+        //copy the new vertices
+        memcpy(tmp2+prevOffset, _vertices, 3*nWfVertices-prevOffset);
+        glBufferData(GL_ARRAY_BUFFER, 3*nWfVertices*sizeof(GLfloat), tmp2, GL_DYNAMIC_DRAW);
+        
+        //now do the same for the colors
+        glBindBuffer(GL_ARRAY_BUFFER, wfColorBuffer);
+        tmp = glMapBuffer(GL_ARRAY_BUFFER,GL_READ_ONLY);
+        memcpy(tmp2, tmp, prevOffset*sizeof(GLfloat));
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+        memcpy(tmp2+prevOffset, _colors, 3*nWfVertices-prevOffset);
+        glBufferData(GL_ARRAY_BUFFER, 3*nWfVertices*sizeof(GLfloat), tmp2, GL_DYNAMIC_DRAW);
+        //we dont' need tmp2 anymore
+        free(tmp2);
+        //indices are handled further down
+    }
+    else
+    {
+        //not overlay; just copy everything directly
+        glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
+        glBufferData(GL_ARRAY_BUFFER, nWfVertices*3*sizeof(GLfloat), _vertices, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, wfColorBuffer);
+        glBufferData(GL_ARRAY_BUFFER, nWfVertices*3*sizeof(GLfloat), _colors, GL_DYNAMIC_DRAW);
+    }
+    free(_colors);
+
+    
     //create indices
     //here we have to be a bit clever; if we want to draw as lines, every vertex will be connected
     //However, since we are drawing waveforms across channels, we need to separate waveforms on each
@@ -518,24 +579,18 @@
     NSOpenGLContext *context = [self openGLContext];
     [context makeCurrentContext];
     //GLfloat *gcolor = malloc(4*sizeof(GLfloat));
-    GLfloat *gcolor = (GLfloat*)[color bytes];
+    
     /*gcolor[0] = 1.0;
     gcolor[1] = 0.85;
     gcolor[2] = 0.35;
     gcolor[4] = 1.0;*/
     [self setColor: color];
     //[[self getColor] getRed:gcolor green:gcolor+1 blue:gcolor+2 alpha:gcolor+3];
-    wfModifyColors(wfColors + prevOffset,gcolor,(nwaves+3)*wavesize);
-    //free(gcolor);
-    //push everything to the GPU
-    wfPushVertices();
-	
-	//free(wfVertices);
-	//free(wfColors);
-	//free(wfIndices);
-    //draw
-    //[self highlightWaveform:0];
-    //wavesize = (2*_timepts-2)*channels;
+    //wfModifyColors(wfColors + prevOffset,gcolor,(nwaves+3)*wavesize);
+    [[self openGLContext] makeCurrentContext];
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, nWfIndices*sizeof(GLuint), wfIndices, GL_DYNAMIC_DRAW);
+    
     //check if we are to draw mean and standard deviation;default is yes for both
     if( drawStd == NO )
     {
@@ -632,7 +687,7 @@
 
 }
 
-static void wfPushVertices()
+/*static void wfPushVertices()
 {
     //set up index buffer
     //int k = 0;
@@ -675,9 +730,9 @@ static void wfPushVertices()
     
     
     
-}
+}*/
 
-static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor, unsigned int n)
+/*static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor, unsigned int n)
 {
     int i;
     for(i=0;i<n;i++)
@@ -706,7 +761,7 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor, unsigned int n)
 		color_data[offset+2] = 1.0-0.5*gcolor[2];
 		
 	}
-}
+}*/
 
 -(void) highlightChannels:(NSArray*)channels
 {
@@ -752,8 +807,8 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor, unsigned int n)
             if( _hpoints[i] < orig_num_spikes )
             {
                 idx = _indexes[_hpoints[i]];
-                //zvalue = -1.0;
-                zvalue = wfVertices[idx*timepts*chs*3+2];
+                zvalue = -1.0;
+                //zvalue = wfVertices[idx*timepts*chs*3+2];
                 vDSP_vfill(&zvalue,_data+(idx*timepts*chs*3)+2,3,timepts*chs);
         
             }
@@ -881,7 +936,7 @@ static void wfModifyColors(GLfloat *color_data,GLfloat *gcolor, unsigned int n)
     [self setNeedsDisplay:YES];
 }
 
-static void wfDrawAnObject()
+-(void) wfDrawAnObject
 {
     //activate the dynamicbuffer
     glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
@@ -991,7 +1046,7 @@ static void wfDrawAnObject()
 		/*glOrtho(1.05*xmin-0.05*xmax, 1.05*xmin-0.05*xmax, 1.05*wfMinmax[2]-0.05*wfMinmax[3], 
 				1.05*wfMinmax[3]-0.05*wfMinmax[2], wfMinmax[4], wfMinmax[5]);*/
         glOrtho(xmin, xmax, 1.1*ymin, 1.1*ymax, 1.1*wfMinmax[4], 1.1*wfMinmax[5]);
-		wfDrawAnObject();
+		[self wfDrawAnObject];
 		//glPushMatrix();
 		//glScalef(1.0/(xmax-xmin),1.0/(ymax-ymin),1.0);
 		
@@ -1124,6 +1179,10 @@ static void wfDrawAnObject()
 
 -(void) hideOutlierWaveforms
 {
+    GLfloat *_vertices;
+    [[self openGLContext] makeCurrentContext];
+    glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
+    _vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
 	//hides all waveforms outside mean+/-1.96 std
 	NSUInteger *_index = malloc(num_spikes*sizeof(NSUInteger));
 	[waveformIndices getIndexes:_index maxCount:num_spikes inIndexRange:nil];
@@ -1134,7 +1193,7 @@ static void wfDrawAnObject()
 	{
 		for(j=0;j<wavesize;j++)
 		{
-			if ( (wfVertices[3*(_index[i]*wavesize+j)+1] > wfVertices[3*((orig_num_spikes+1)*wavesize+j)+1]) || (wfVertices[3*(_index[i]*wavesize+j)+1] < wfVertices[3*((orig_num_spikes+2)*wavesize+j)+1]) ) 
+			if ( (_vertices[3*(_index[i]*wavesize+j)+1] > _vertices[3*((orig_num_spikes+1)*wavesize+j)+1]) || (_vertices[3*(_index[i]*wavesize+j)+1] < _vertices[3*((orig_num_spikes+2)*wavesize+j)+1]) ) 
 			{
 				[idx appendBytes:&i length:sizeof(unsigned int)];
 				//found one, so skip to next waveform
@@ -1142,6 +1201,7 @@ static void wfDrawAnObject()
 			}
 		}
 	}
+    glUnmapBuffer(GL_ARRAY_BUFFER);
 	free(_index);
 	NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:idx,
                                                                 [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects:                                                                                                                       @"points",@"color",nil]];
@@ -1368,8 +1428,10 @@ static void wfDrawAnObject()
  */
 -(void)mouseUp:(NSEvent *)theEvent
 {
+    
 	//TODO: modify this to incorproate the new index
     //get current point in view coordinates
+    GLfloat *_vertices;
     NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
     //now we will have to figure out which waveform(s) contains this point
     //scale to data coorindates
@@ -1402,10 +1464,13 @@ static void wfDrawAnObject()
         float d_o;
         d_o = INFINITY;
         s = 0;
+        [[self openGLContext] makeCurrentContext];
+        glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
+        _vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
         for(i=0;i<n;i++)
         {
-            vDSP_vsadd(wfVertices+3*sIdx[i]*wfLength,3,p,D,2,wfLength);
-            vDSP_vsadd(wfVertices+3*sIdx[i]*wfLength+1,3,p+1,D+1,2,wfLength);
+            vDSP_vsadd(_vertices+3*sIdx[i]*wfLength,3,p,D,2,wfLength);
+            vDSP_vsadd(_vertices+3*sIdx[i]*wfLength+1,3,p+1,D+1,2,wfLength);
             //sum of squares
             vDSP_vdist(D,2,D+1,2,d,1,wfLength);
             //find the index of the minimu distance
@@ -1416,6 +1481,7 @@ static void wfDrawAnObject()
                 s = i;
             }
         }
+        glUnmapBuffer(GL_ARRAY_BUFFER);
         free(d);
         free(D);
         wfidx = sIdx[s];
@@ -1450,8 +1516,12 @@ static void wfDrawAnObject()
         float *d = malloc(nWfVertices*sizeof(float));
         float *D = malloc(2*nWfVertices*sizeof(float));
         //substract the point
-        vDSP_vsadd(wfVertices,3,p,D,2,nWfVertices);
-        vDSP_vsadd(wfVertices+1,3,p+1,D+1,2,nWfVertices);
+        [[self openGLContext] makeCurrentContext];
+        glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
+        _vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+        vDSP_vsadd(_vertices,3,p,D,2,nWfVertices);
+        vDSP_vsadd(_vertices+1,3,p+1,D+1,2,nWfVertices);
+        glUnmapBuffer(GL_ARRAY_BUFFER);
         //sum of squares
         vDSP_vdist(D,2,D+1,2,d,1,nWfVertices);
         //find the index of the minimu distance
@@ -1568,6 +1638,7 @@ static void wfDrawAnObject()
 
 -(void)saveToEPS
 {
+    GLfloat *_vertices;
     NSRect bounds = [self bounds];
     //allocate an image and intialize with the size of the view
     NSImage *image = [[[NSImage alloc] initWithSize: bounds.size] autorelease];
@@ -1583,6 +1654,9 @@ static void wfDrawAnObject()
     int timepoints = timepts;
     int channels = chs;
     NSPointArray points = malloc(timepoints*sizeof(NSPoint));
+    [[self openGLContext] makeCurrentContext];
+    glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
+    _vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
     for(i=0;i<num_spikes;i++)
     {
         for(j=0;j<channels;j++)
@@ -1593,12 +1667,13 @@ static void wfDrawAnObject()
             for(k=0;k<timepoints;k++)
             {
                 offset = 3*(i*wavesize+j*channels+k);
-                points[k] = NSMakePoint(wfVertices[offset],wfVertices[offset+1]);
+                points[k] = NSMakePoint(_vertices[offset],_vertices[offset+1]);
             }
             [path appendBezierPathWithPoints:points count:timepoints];
             [path stroke];
         }
     }
+    glUnmapBuffer(GL_ARRAY_BUFFER);
     free(points);
     
     [image unlockFocus];
@@ -1706,12 +1781,14 @@ static void wfDrawAnObject()
 		//TODO: this should be changed; just a test for now
 		else if ( [[theEvent characters] isEqualToString:@"k"] )
 		{
+            /*
 			NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
 									  [NSData dataWithBytesNoCopy:wfVertices length:3*num_spikes*wavesize*sizeof(GLfloat)],
 									  @"data",[NSNumber numberWithUnsignedInt:chs],@"channels",
 									  [NSNumber numberWithUnsignedInt:timepts],@"timepoints",nil];
 			//post notification
 			[[NSNotificationCenter defaultCenter] postNotificationName:@"computeSpikeWidth" object: self userInfo:userInfo];
+             */
 		}
 		else if ( [[theEvent characters] isEqualToString: @"a"] )
 		{
@@ -2000,11 +2077,11 @@ static void wfDrawAnObject()
     {
         nWfIndices=0;
         nWfVertices=0;
-        free(wfVertices);
+        //free(wfVertices);
         glDeleteBuffers(1, &wfVertexBuffer);
         free(wfIndices);
         glDeleteBuffers(1, &wfIndexBuffer);
-        free(wfColors);
+        //free(wfColors);
         glDeleteBuffers(1, &wfColorBuffer);
         
     }
@@ -2027,10 +2104,10 @@ static void wfDrawAnObject()
 
 -(void)dealloc
 {
-    free(wfVertices);
+    //free(wfVertices);
     free(wfIndices);
     free(wfMinmax);
-    free(wfColors);
+    //free(wfColors);
     [[NSNotificationCenter defaultCenter] removeObserver:self
                                                     name:NSViewGlobalFrameDidChangeNotification
                                                   object:self];

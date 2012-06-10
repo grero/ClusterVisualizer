@@ -10,11 +10,11 @@
 #import <Accelerate/Accelerate.h>
 #import "GLString.h"
 
-static GLuint wfVertexBuffer;
-static GLuint wfIndexBuffer;
-static GLuint wfColorBuffer;
-static GLuint wfPixelBuffer;
-static GLfloat *wfVertices;
+//static GLuint wfVertexBuffer;
+//static GLuint wfIndexBuffer;
+//static GLuint wfColorBuffer;
+//static GLuint wfPixelBuffer;
+//static GLfloat *wfVertices;
 //static GLfloat *use_vertices;
 static GLfloat *wfColors;
 //static GLfloat *use_colors;
@@ -43,7 +43,7 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color,unsigned int n);
     @private
     NSOpenGLContext *_oglContext;
     NSOpenGLPixelFormat *_pixelFormat;
-    NSData *drawingColor,*highlightColor;
+    NSData *vertices, *drawingColor,*highlightColor;
     NSMutableData *highlightWaves;
 	NSMutableArray *highlightedChannels;
 	//data to hold information on which waveforms are active
@@ -53,6 +53,7 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color,unsigned int n);
     NSMutableData *wfMean, *wfStd;
     //variable to indicate whehter to overlay
     BOOL overlay;
+    GLuint wfVertexBuffer, wfIndexBuffer, wfColorBuffer, wfPixelBuffer;
     
     
 }
@@ -94,4 +95,5 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color,unsigned int n);
 -(void)setDrawStd:(BOOL)_drawStd;
 -(void)setDrawMean:(BOOL)_drawMean;
 -(void)correlateWaveforms:(id)sender;
+-(void)drawAnObject;
 @end
