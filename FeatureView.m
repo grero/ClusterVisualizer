@@ -89,6 +89,9 @@
                                                      name: NSViewGlobalFrameDidChangeNotification object: self];
         
         //receive notification about change in highlight
+        vertexBuffer = 0;
+        indexBuffer = 0;
+        colorBuffer = 0;
 	}
     return self;
 }
@@ -170,14 +173,17 @@
 
 - (void) loadVertices: (NSURL*)url
 {
+    float *use_vertices,*colors,*_vertices;
+    int i,j;
+    GLuint *indices;
     char *path = [[url path] cStringUsingEncoding:NSASCIIStringEncoding];
     header H;
     //H = *readFeatureHeader("../../test2.hdf5", &H);
     H = *readFeatureHeader(path, &H);
     //check if vertices has already been allocated
-    vertices = malloc(H.rows*H.cols*sizeof(GLfloat));
+    _vertices = malloc(H.rows*H.cols*sizeof(GLfloat));
     //vertices = readFeatureFile("../../test2.hdf5", vertices);
-    vertices = readFeatureFile(path, vertices);
+    _vertices = readFeatureFile(path, _vertices);
     minmax = realloc(minmax,2*H.cols*sizeof(float));
     int c;
     for(c=0;c<H.cols;c++)
@@ -216,16 +222,63 @@
     
 
     [[self openGLContext] makeCurrentContext];
-    modifyVertices(use_vertices);
+    //push the data to the GPU
+    if(vertexBuffer==0)
+    {
+        glGenBuffers(1,&vertexBuffer);
+    }
+    //bind vertexBuffer
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    //push data to the current buffer
+    glBufferData(GL_ARRAY_BUFFER, nindices*3*sizeof(GLfloat), use_vertices, GL_DYNAMIC_DRAW);
+    //push the indices
+    free(use_vertices);
+    
+    indices = malloc(nindices*sizeof(GLuint));
+    for(i=0;i<nindices;i++)
+    {
+        indices[i] = i;
+    }
+    if(indexBuffer ==0)
+    {
+        glGenBuffers(1, &indexBuffer);
+    }
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, nindices*sizeof(GLuint), indices, GL_DYNAMIC_DRAW);
+    
+    //push the colors to the GPU
+    colors = malloc(nindices*3*sizeof(GLfloat));
+    for(i=0;i<nindices;i++)
+    {
+        colors[3*i] = 0.85f;
+        colors[3*i+1] = 0.56f;
+        colors[3*i+2] = 0.36f;
+    }
+    if(colorBuffer == 0)
+    {
+        glGenBuffers(1,&colorBuffer);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+    glBufferData(GL_ARRAY_BUFFER, nindices*3*sizeof(GLfloat), colors, GL_DYNAMIC_DRAW);
+    free(colors);
+	//modifyVertices(use_vertices);
+    //modifyIndices(indices);
+    //modifyColors(colors);
+    //pushVertices();
+    //notify that data has been loaded
+    dataloaded = YES;
+
+    /*modifyVertices(use_vertices);
     modifyIndices(indices);
     modifyColors(colors);
-    pushVertices();
+    pushVertices();*/
     [self setNeedsDisplay:YES];
     //[self selectDimensions];
 }
 
 -(void) createVertices: (NSData*)vertex_data withRows: (NSUInteger)r andColumns: (NSUInteger)c
 {
+    float *use_vertices, *colors,*indices;
     rows = r;
     cols = c;
     nindices = rows;
@@ -238,13 +291,21 @@
     {
         //data has already been loaded, i.e. we are requesting to draw another set of features
         dataloaded = NO;
-        free(vertices);
-        free(use_vertices);
-        free(indices);
-        free(colors);
+        //free(use_vertices);
+        //free(indices);
+        //free(colors);
     }
-    vertices = malloc(rows*cols*sizeof(GLfloat));
-    [vertex_data getBytes:vertices length: rows*cols*sizeof(float)];
+    //float *_vertices = malloc(rows*cols*sizeof(GLfloat));
+    //check if vertices already exists
+    if(vertices != NULL )
+    {
+        [vertices release];
+
+    }
+    vertices = [[NSData dataWithData:vertex_data] retain];
+    
+    //[vertex_data getBytes:vertices length: rows*cols*sizeof(float)];
+    float *_vertices = (float*)[vertices bytes];
     minmax = realloc(minmax,2*cols*sizeof(float));
     int cl;
     //this only works if we have rescaled the axis
@@ -258,16 +319,64 @@
     draw_dims[1] = 1;
     draw_dims[2] = 3;
     ndraw_dims = 3;
+    //I don't really need a separate variable for this; just use whatever is on the GPU
     use_vertices = malloc(rows*ndraw_dims*sizeof(GLfloat));
-    indices = malloc(nindices*sizeof(GLuint));
-    colors = malloc(nindices*3*sizeof(GLfloat));
+    int i,j;
+    for(i=0;i<rows;i++)
+    {
+        //indices[i] = i;
+        for(j=0;j<ndraw_dims;j++)
+        {
+            //indices[i*ndraw_dims+j] = i*ndraw_dims +j;
+            use_vertices[i*ndraw_dims+j] = _vertices[i*cols+draw_dims[j]];
+        }
+    }
     [[self openGLContext] makeCurrentContext];
+    //push the data to the GPU
+    if(vertexBuffer==0)
+    {
+        glGenBuffers(1,&vertexBuffer);
+    }
+    //bind vertexBuffer
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    //push data to the current buffer
+    glBufferData(GL_ARRAY_BUFFER, nindices*3*sizeof(GLfloat), use_vertices, GL_DYNAMIC_DRAW);
+    //push the indices
+    free(use_vertices);
     
-
-	modifyVertices(use_vertices);
-    modifyIndices(indices);
-    modifyColors(colors);
-    pushVertices();
+    indices = malloc(nindices*sizeof(GLuint));
+    for(i=0;i<nindices;i++)
+    {
+        indices[i] = i;
+    }
+    if(indexBuffer ==0)
+    {
+        glGenBuffers(1, &indexBuffer);
+    }
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, nindices*sizeof(GLuint), indices, GL_DYNAMIC_DRAW);
+    
+    //push the colors to the GPU
+    colors = malloc(nindices*3*sizeof(GLfloat));
+    for(i=0;i<nindices;i++)
+    {
+        colors[3*i] = 0.85f;
+        colors[3*i+1] = 0.56f;
+        colors[3*i+2] = 0.36f;
+    }
+    if(colorBuffer == 0)
+    {
+        glGenBuffers(1,&colorBuffer);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+    glBufferData(GL_ARRAY_BUFFER, nindices*3*sizeof(GLfloat), colors, GL_DYNAMIC_DRAW);
+    free(colors);
+	//modifyVertices(use_vertices);
+    //modifyIndices(indices);
+    //modifyColors(colors);
+    //pushVertices();
+    //notify that data has been loaded
+    dataloaded = YES;
     [self setNeedsDisplay:YES];
     
 }
@@ -280,7 +389,7 @@
 
 -(void) selectDimensions:(NSDictionary*)dims
 {
-    
+    float *_vertices;
     int dim = [[dims valueForKey: @"dim"] intValue];
     int f = [[dims valueForKey:@"dim_data"] intValue];
 
@@ -294,11 +403,21 @@
 		//glMatrixMode(GL_PROJECTION);
         //glLoadIdentity();
         //glOrtho(1.1*minmax[2*draw_dims[0]], 1.1*minmax[2*draw_dims[0]+1], 1.1*minmax[2*draw_dims[1]], 1.1*minmax[2*draw_dims[1]+1], 1.1*minmax[2*draw_dims[2]], 1.1*minmax[2*draw_dims[2]+1]);
-        
+        _vertices = (float*)[vertices bytes];
         //get the data from the GPU
         glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
         GLfloat *vertex_pointer = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-        modifyVertices(vertex_pointer);
+        int i,j;
+        for(i=0;i<rows;i++)
+        {
+            //indices[i] = i;
+            for(j=0;j<ndraw_dims;j++)
+            {
+                //indices[i*ndraw_dims+j] = i*ndraw_dims +j;
+                vertex_pointer[i*ndraw_dims+j] = _vertices[i*cols+draw_dims[j]];
+            }
+        }
+
 		//compute min/max
 		/*float max,min,l;
 		//find max
@@ -324,6 +443,7 @@
 
 -(void) showCluster: (Cluster *)cluster
 {
+    float *_vertices = (float*)[vertices bytes];
     currentCluster = cluster;
     float *_color = (float*)[[cluster color] bytes];
     if([selectedClusters containsObject:cluster] == NO)
@@ -378,14 +498,14 @@
 			//centroid[1] += vertices[points[j]*cols + draw_dims[1]];
 			//centroid[2] += vertices[points[j]*cols + draw_dims[2]];
 			//compute min/max
-			cluster_minmax[0] = MIN(cluster_minmax[0],vertices[points[j]*cols + draw_dims[0]]);
-			cluster_minmax[1] = MAX(cluster_minmax[1],vertices[points[j]*cols + draw_dims[0]]);
+			cluster_minmax[0] = MIN(cluster_minmax[0],_vertices[points[j]*cols + draw_dims[0]]);
+			cluster_minmax[1] = MAX(cluster_minmax[1],_vertices[points[j]*cols + draw_dims[0]]);
 			
-			cluster_minmax[2] = MIN(cluster_minmax[2],vertices[points[j]*cols + draw_dims[1]]);
-			cluster_minmax[3] = MAX(cluster_minmax[3],vertices[points[j]*cols + draw_dims[1]]);
+			cluster_minmax[2] = MIN(cluster_minmax[2],_vertices[points[j]*cols + draw_dims[1]]);
+			cluster_minmax[3] = MAX(cluster_minmax[3],_vertices[points[j]*cols + draw_dims[1]]);
 			
-			cluster_minmax[4] = MIN(cluster_minmax[4],vertices[points[j]*cols + draw_dims[2]]);
-			cluster_minmax[5] = MAX(cluster_minmax[5],vertices[points[j]*cols + draw_dims[2]]);
+			cluster_minmax[4] = MIN(cluster_minmax[4],_vertices[points[j]*cols + draw_dims[2]]);
+			cluster_minmax[5] = MAX(cluster_minmax[5],_vertices[points[j]*cols + draw_dims[2]]);
 			
 
         }
@@ -425,6 +545,7 @@
 
 -(void) hideCluster: (Cluster *)cluster
 {
+    GLuint *indices;
     //first check it the cluster is even shown
     if( [cluster isKindOfClass:[Cluster class]] == NO )
     {
@@ -706,6 +827,7 @@
 
 -(void) setClusterColors: (GLfloat*)cluster_colors forIndices: (GLuint*)cluster_indices length:(NSUInteger)length
 {
+    [[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
     GLfloat *tmp_colors = glMapBuffer(GL_ARRAY_BUFFER,GL_WRITE_ONLY);
     int i;
@@ -731,10 +853,32 @@
     glUnmapBuffer(GL_ARRAY_BUFFER);
     [self setNeedsDisplay:YES];
 }
+-(void) modifyVertices
+{
+    int i,j;
+    float *_vertices,*_all_vertices;
+    _all_vertices = (float*)[vertices bytes];
+    //get the vertices from the GPU
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    _vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+    for(i=0;i<rows;i++)
+    {
+        for(j = 0;j<ndraw_dims;j++)
+        {
+            _vertices[i*ndraw_dims+j] = _all_vertices[i*cols+draw_dims[i]];
+        
+        }
+    }
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+    [self setNeedsDisplay:YES];
+            
+}
  
 
-static void modifyVertices(GLfloat *vertex_data)
+/*static void modifyVertices(GLfloat *vertex_data)
 {
+    float *_vertices;
+    _vertices = (float*)[vertices bytes];
     //create vertices for drawing
     int i,j;
     
@@ -753,9 +897,10 @@ static void modifyVertices(GLfloat *vertex_data)
     }
     
     
-}
+}*/
 
-static void modifyIndices(GLuint *index_data)
+
+/*static void modifyIndices(GLuint *index_data)
 {
     int i;
     
@@ -764,9 +909,9 @@ static void modifyIndices(GLuint *index_data)
         index_data[i] = i;
     }
     
-}
+}*/
 
-static void modifyColors(GLfloat *color_data)
+/*static void modifyColors(GLfloat *color_data)
 {
     int i;
     for(i=0;i<rows;i++)
@@ -775,9 +920,9 @@ static void modifyColors(GLfloat *color_data)
         color_data[3*i+1] = 0.85f;//use_colors[3*cids[i+1]+1];
         color_data[3*i+2] = 0.35f;//use_colors[3*cids[i+1]+2];
     }
-}
+}*/
 
-static void pushVertices()
+/*static void pushVertices()
 {
     //set up index buffer
     int k = 0;
@@ -806,7 +951,8 @@ static void pushVertices()
     dataloaded = YES;
     
     
-}
+}*/
+
 static void drawFrame()
 {
 	//finally connect the corners
@@ -886,7 +1032,7 @@ static void drawFrame()
 	    
 }
 
-static void drawAnObject()
+-(void) drawAnObject
 {
     //glColor3f(1.0f,0.85f,0.35f);
     //activate the dynamicbuffer
@@ -1031,8 +1177,8 @@ static void drawAnObject()
 	*/
 	if(dataloaded)
     {
-		
-		drawAnObject();
+		[self drawAnObject];
+		//drawAnObject();
 
     }
     glFlush();
@@ -1304,6 +1450,7 @@ static void drawAnObject()
     glGetDoublev (GL_PROJECTION_MATRIX,p);
     glGetIntegerv( GL_VIEWPORT, view );
     double objXNear,objXFar,objYNear,objYFar,objZNear,objZFar;
+    float *_vertices = (float*)[vertices bytes];
     //get the position of the points in the original data space
     //note that since window coordinates are using lower left as (0,0), openGL uses upper left
     GLfloat depth[2];
@@ -1358,9 +1505,9 @@ static void drawAnObject()
         //for(i=0;i<nindices;i++)
 		{
 			double a = 0;
-            vX = vertices[k*cols+draw_dims[0]];
-            vY = vertices[k*cols+draw_dims[1]];
-            vZ = vertices[k*cols+draw_dims[2]];
+            vX = _vertices[k*cols+draw_dims[0]];
+            vY = _vertices[k*cols+draw_dims[1]];
+            vZ = _vertices[k*cols+draw_dims[2]];
 			//component along ray
 			//k = indices[i];
             //Eureka! also care about which dimensions we are drawing,i.e. the ordering could change
@@ -1590,14 +1737,15 @@ static void drawAnObject()
 
 -(void)dealloc
 {
-    free(vertices);
-    free(use_vertices);
-    free(indices);
+    [vertices release];
+    //free(use_vertices);
+    //free(indices);
     free(minmax);
-    free(colors);
+    //free(colors);
     //free(cids);
     free(use_colors);
-    free(indexset);
+   // free(indexset);
+    [indexset release];
     [[NSNotificationCenter defaultCenter] removeObserver:self
                                                     name:NSViewGlobalFrameDidChangeNotification
                                                   object:self];

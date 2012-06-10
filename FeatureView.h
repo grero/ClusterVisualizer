@@ -11,15 +11,15 @@
 #import "GLString.h"
 
 
-static GLuint vertexBuffer;
-static GLuint indexBuffer;
-static GLuint colorBuffer;
-static GLfloat *vertices;
-static GLfloat *use_vertices;
-static GLfloat *colors;
+//static GLuint vertexBuffer;
+//static GLuint indexBuffer;
+//static GLuint colorBuffer;
+//static GLfloat *vertices;
+//static GLfloat *use_vertices;
+//static GLfloat *colors;
 static GLfloat *use_colors;
 static GLfloat base_color[3];
-static GLuint *indices;
+//static GLuint *indices;
 static GLfloat pickedPoint[3];
 static int nvertices;
 static int nindices;
@@ -55,6 +55,8 @@ static BOOL picked;
     BOOL drawAxesLabels,appendHighlights,showFrame;
     Cluster *currentCluster;
     NSMutableArray *selectedClusters;
+    NSData *vertices;
+    GLuint vertexBuffer,indexBuffer,colorBuffer;
     
     
 }
@@ -99,4 +101,6 @@ static BOOL picked;
 -(NSData*)getVertexData;
 //-(void) pushVertices;
 
+-(void)modifyVertices;
+-(void)drawAnObject;
 @end
