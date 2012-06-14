@@ -250,7 +250,7 @@
         wfVertices = malloc(nWfVertices*3*sizeof(GLfloat));
         
     }*/
-    _vertices = malloc((nWfVertices*3-prevOffset)*sizeof(GLfloat));
+    _vertices = malloc(3*(nWfVertices-prevOffset)*sizeof(GLfloat));
     highlightWave = -1;
     float *tmp = (float*)[vertex_data bytes];
     
@@ -480,7 +480,7 @@
     free(tmp_ymin);
     //should push colors and vertices here
     GLfloat *gcolor = (GLfloat*)[color bytes];
-    GLfloat *_colors = malloc((3*nWfVertices-prevOffset)*sizeof(GLfloat));
+    GLfloat *_colors = malloc((3*(nWfVertices-prevOffset))*sizeof(GLfloat));
     for(i=0;i<nwaves*wavesize;i++)
     {
         _colors[3*i] = gcolor[0];
@@ -513,18 +513,18 @@
         GLfloat *tmp2 = malloc(3*nWfVertices*sizeof(GLfloat));
         GLfloat *tmp = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
         //copy the existing vertices
-        memcpy(tmp2, tmp, prevOffset*sizeof(GLfloat));
+        memcpy(tmp2, tmp, 3*prevOffset*sizeof(GLfloat));
         glUnmapBuffer(GL_ARRAY_BUFFER);
         //copy the new vertices
-        memcpy(tmp2+prevOffset, _vertices, (3*nWfVertices-prevOffset)*sizeof(GLfloat));
+        memcpy(tmp2+3*prevOffset, _vertices, (3*(nWfVertices-prevOffset))*sizeof(GLfloat));
         glBufferData(GL_ARRAY_BUFFER, 3*nWfVertices*sizeof(GLfloat), tmp2, GL_DYNAMIC_DRAW);
         
         //now do the same for the colors
         glBindBuffer(GL_ARRAY_BUFFER, wfColorBuffer);
         tmp = glMapBuffer(GL_ARRAY_BUFFER,GL_READ_ONLY);
-        memcpy(tmp2, tmp, prevOffset*sizeof(GLfloat));
+        memcpy(tmp2, tmp, 3*prevOffset*sizeof(GLfloat));
         glUnmapBuffer(GL_ARRAY_BUFFER);
-        memcpy(tmp2+prevOffset, _colors, (3*nWfVertices-prevOffset)*sizeof(GLfloat));
+        memcpy(tmp2+3*prevOffset, _colors, (3*(nWfVertices-prevOffset))*sizeof(GLfloat));
         glBufferData(GL_ARRAY_BUFFER, 3*nWfVertices*sizeof(GLfloat), tmp2, GL_DYNAMIC_DRAW);
         //we dont' need tmp2 anymore
         free(tmp2);
