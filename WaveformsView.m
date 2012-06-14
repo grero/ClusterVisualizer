@@ -250,7 +250,7 @@
         wfVertices = malloc(nWfVertices*3*sizeof(GLfloat));
         
     }*/
-    _vertices = malloc(nWfVertices*3*sizeof(GLfloat));
+    _vertices = malloc((nWfVertices*3-prevOffset)*sizeof(GLfloat));
     highlightWave = -1;
     float *tmp = (float*)[vertex_data bytes];
     
@@ -274,7 +274,7 @@
 			{
                 //add the first point
                 in_offset = (i*channels+j)*timepoints;
-                out_offset = (i*channels+j)*(_timepts+2)+prevOffset;
+                out_offset = (i*channels+j)*(_timepts+2);//+prevOffset;
                 //x
                 _vertices[3*out_offset] = j*(_timepts+channelHop) + channelHop;
                 //y
@@ -284,7 +284,7 @@
 				for(k=0;k<_timepts;k++)
 				{
 					in_offset = ((i*channels+j)*timepoints + k*_timestep);
-                    out_offset = ((i*channels+j)*(_timepts+2) + k+1)+prevOffset;
+                    out_offset = ((i*channels+j)*(_timepts+2) + k+1);//+prevOffset;
 
 					//moffset = ((nwaves*channels+j)*_timepts + k)+prevOffset;
 					//stdoffset = (((nwaves+1)*channels+j)*_timepts + k)+prevOffset;
@@ -309,7 +309,7 @@
 				}
                 //add the last point
                 in_offset = ((i*channels+j)*timepoints+(timepoints-1)*_timestep);
-                out_offset = ((i*channels+j)*(_timepts+2) + _timepts+1)+prevOffset;
+                out_offset = ((i*channels+j)*(_timepts+2) + _timepts+1);//+prevOffset;
                 //x
                 _vertices[3*out_offset] = j*(_timepts+channelHop)+_timepts-1+channelHop;
                 //y
@@ -336,7 +336,7 @@
 				for(k=0;k<_timepts;k++)
 				{
                     in_offset = ((i*channels+reorder_index[j])*timepoints + k*_timestep);
-					out_offset = ((i*channels+reorder_index[j])*_timepts + k) + prevOffset;
+					out_offset = ((i*channels+reorder_index[j])*_timepts + k);// + prevOffset;
 					//don't reorder mean and std
 					//moffset = ((nwaves*channels+j)*_timepts + k) + prevOffset;
 					//stdoffset = (((nwaves+1)*channels+j)*_timepts + k) + prevOffset;
@@ -384,28 +384,34 @@
     float *m,*msq;
     for(i=0;i<channels;i++)
     {
-        for(j=0;j<_timepts;j++)
+        for(j=0;j<_timepts+2;j++)
         {
             //compute mean
-            m = _vertices + nwaves*3*channels*_timepts + 3*(i*_timepts+j)+1+prevOffset;
-            vDSP_meanv(_vertices+3*(i*(_timepts+2)+j)+1+prevOffset, 3*channels*(_timepts+2), m, nwaves);
-            _mean[i*_timepts+j] = *m;
+            m = _vertices + nwaves*3*wavesize + 3*(i*(_timepts+2)+j)+1/*+prevOffset*/;
+            vDSP_meanv(_vertices+3*(i*(_timepts+2)+j)+1/*+prevOffset*/, 3*channels*(_timepts+2), m, nwaves);
+            _mean[i*(_timepts+2)+j] = *m;
             //compute mean square
-            msq = _vertices + (nwaves+2)*3*channels*(_timepts+2) + 3*(i*(_timepts+2)+j)+1 + prevOffset;
-            vDSP_measqv(_vertices+3*(i*(_timepts+2)+j)+1+prevOffset, 3*channels*(_timepts+2), msq, nwaves);
+            msq = _vertices + (nwaves+2)*3*wavesize + 3*(i*(_timepts+2)+j)+1; /*+ prevOffset*/;
+            vDSP_measqv(_vertices+3*(i*(_timepts+2)+j)+1,/*+prevOffset,*/ 3*wavesize, msq, nwaves);
             //substract the square of the mean
             *msq = *msq-(*m)*(*m);
             //take the square root and add back the mean
             *msq = sqrt(*msq);
             _std[i*_timepts+j] = *msq;
-            _vertices[3*((nwaves+1)*channels*(_timepts+2)+i*(_timepts+2)+j)+1+prevOffset] = *m- (*msq)*1.96;
+            _vertices[3*((nwaves+1)*wavesize+i*(_timepts+2)+j)+1/*+prevOffset*/] = *m- (*msq)*1.96;
             *msq = *m+(*msq)*1.96;
             
             //also set the x and z-components
-            _vertices[3*((nwaves+2)*wavesize+i*(_timepts+2)+j)+prevOffset] = _vertices[3*(nwaves*wavesize+i*(_timepts+2)+j)+prevOffset];
-            _vertices[3*((nwaves+2)*wavesize+i*(_timepts+2)+j)+2+prevOffset] = _vertices[3*(nwaves*wavesize+i*(_timepts+2)+j)+2+prevOffset];
-            _vertices[3*((nwaves+1)*wavesize+i*(_timepts+2)+j) + prevOffset] = _vertices[3*(nwaves*wavesize+i*(_timepts+2)+j)+prevOffset];
-            _vertices[3*((nwaves+1)*wavesize+i*(_timepts+2)+j)+2+prevOffset] = _vertices[3*(nwaves*wavesize+i*(_timepts+2)+j)+2+prevOffset];
+            _vertices[3*(nwaves*wavesize+i*(_timepts+2)+j) /*+ prevOffset*/] = _vertices[3*((nwaves-1)*wavesize+i*(_timepts+2)+j)/*+prevOffset*/];
+            _vertices[3*(nwaves*wavesize+i*(_timepts+2)+j)+2/*+prevOffset*/] = _vertices[3*((nwaves-1)*wavesize+i*(_timepts+2)+j)+2/*+prevOffset*/];
+            
+            _vertices[3*((nwaves+2)*wavesize+i*(_timepts+2)+j)/*+prevOffset*/] = _vertices[3*(nwaves*wavesize+i*(_timepts+2)+j)/*+prevOffset*/];
+            _vertices[3*((nwaves+2)*wavesize+i*(_timepts+2)+j)+2/*+prevOffset*/] = _vertices[3*(nwaves*wavesize+i*(_timepts+2)+j)+2/*+prevOffset*/];
+            
+            _vertices[3*((nwaves+1)*wavesize+i*(_timepts+2)+j) /*+ prevOffset*/] = _vertices[3*(nwaves*wavesize+i*(_timepts+2)+j)/*+prevOffset*/];
+            _vertices[3*((nwaves+1)*wavesize+i*(_timepts+2)+j)+2/*+prevOffset*/] = _vertices[3*(nwaves*wavesize+i*(_timepts+2)+j)+2/*+prevOffset*/];
+            
+            
 
         }
     }
@@ -434,7 +440,7 @@
     
     //dispatch_apply(num_spikes, queue, ^(size_t i) 
     //int i;
-    for(i=0;i<num_spikes;i++)
+    for(i=0;i<nwaves/*num_spikes*/;i++)
        {
            //compute maximum and minimum y for each wave
            vDSP_maxv(_vertices+i*3*wavesize+1, 3, tmp_ymax+i, wavesize);
@@ -474,12 +480,19 @@
     free(tmp_ymin);
     //should push colors and vertices here
     GLfloat *gcolor = (GLfloat*)[color bytes];
-    GLfloat *_colors = malloc(3*nWfVertices*sizeof(GLfloat));
-    for(i=0;i<nWfVertices;i++)
+    GLfloat *_colors = malloc((3*nWfVertices-prevOffset)*sizeof(GLfloat));
+    for(i=0;i<nwaves*wavesize;i++)
     {
         _colors[3*i] = gcolor[0];
         _colors[3*i+1]= gcolor[1];
         _colors[3*i+2] = gcolor[2];
+    }
+    //do mean and std separately;the last 3 waveforms
+    for(i=0;i<3*wavesize;i++)
+    {
+        _colors[3*(nwaves*wavesize+i)] = 1-gcolor[0];
+        _colors[3*(nwaves*wavesize+i)+1] = 1-gcolor[1];
+        _colors[3*(nwaves*wavesize+i)+2] = 1-gcolor[2];
     }
     [[self openGLContext] makeCurrentContext];
     if(wfVertexBuffer == 0)
@@ -503,7 +516,7 @@
         memcpy(tmp2, tmp, prevOffset*sizeof(GLfloat));
         glUnmapBuffer(GL_ARRAY_BUFFER);
         //copy the new vertices
-        memcpy(tmp2+prevOffset, _vertices, 3*nWfVertices-prevOffset);
+        memcpy(tmp2+prevOffset, _vertices, (3*nWfVertices-prevOffset)*sizeof(GLfloat));
         glBufferData(GL_ARRAY_BUFFER, 3*nWfVertices*sizeof(GLfloat), tmp2, GL_DYNAMIC_DRAW);
         
         //now do the same for the colors
@@ -511,7 +524,7 @@
         tmp = glMapBuffer(GL_ARRAY_BUFFER,GL_READ_ONLY);
         memcpy(tmp2, tmp, prevOffset*sizeof(GLfloat));
         glUnmapBuffer(GL_ARRAY_BUFFER);
-        memcpy(tmp2+prevOffset, _colors, 3*nWfVertices-prevOffset);
+        memcpy(tmp2+prevOffset, _colors, (3*nWfVertices-prevOffset)*sizeof(GLfloat));
         glBufferData(GL_ARRAY_BUFFER, 3*nWfVertices*sizeof(GLfloat), tmp2, GL_DYNAMIC_DRAW);
         //we dont' need tmp2 anymore
         free(tmp2);
@@ -608,10 +621,18 @@
     //glBufferData(GL_ELEMENT_ARRAY_BUFFER, nWfIndices*sizeof(GLuint), wfIndices, GL_DYNAMIC_DRAW);
     
     //check if we are to draw mean and standard deviation;default is yes for both
+    ///[self setDrawStd:drawStd];
+    //[self setDrawMean:drawMean];
+    
     if( drawStd == NO )
     {
         drawStd = YES;
         [self setDrawStd:NO];
+    }
+    else
+    {
+        drawStd = NO;
+        [self setDrawStd:YES];
     }
 
     if( drawMean == NO )
@@ -620,6 +641,12 @@
         drawMean = YES;
         [self setDrawMean:NO];
     }
+    else
+    {
+        drawMean = NO;
+        [self setDrawMean:YES];
+    }
+     
     wfDataloaded = YES;
     [self setNeedsDisplay: YES];
     
@@ -1965,8 +1992,17 @@
 {
     if(wfDataloaded)
     {
+        GLfloat *tmp,z,newz;
+        unsigned int i;
+        if (_drawMean == drawMean) 
+        {
+            //no change; just return
+            return;
+        }
         if(( _drawMean == NO) && (drawMean == YES) )
         {
+            //turn off
+            newz = -5.0;
             /*if( drawStd == NO )
             {
                 //if we want to turn off drawing of mean, we have to reduce the number of waveforms to draw by the size of one waveform
@@ -1976,7 +2012,9 @@
             {*/
                 //since we are drawing just the standard deviation, we have to shift the indices to skip the mean waveform
                 //make sure we are using the correct context
-            [[self openGLContext] makeCurrentContext];
+            //just change the z-value
+            
+                        /*
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
             unsigned int *idx = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
             if(idx)
@@ -1999,13 +2037,15 @@
                 }
                 nWfIndices-=waveIndexSize;
                 glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-            }
+            }*/
             
                 
             //}
         }
         else if (( _drawMean == YES) && (drawMean == NO))
         {
+            //turn on;
+            newz = 1.0;
             /*if( drawStd == NO )
             {
                 //if we want to turn on drawing of mean, we have to increase the number of waveforms to draw by the size of one waveform
@@ -2014,6 +2054,7 @@
             else
             {*/
              //shift indices
+            /*
             [[self openGLContext] makeCurrentContext];
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
             unsigned int *idx = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
@@ -2046,9 +2087,23 @@
             }
 
                 
-            //}
+            //}*/
         
         }
+        //effect the change
+        [[self openGLContext] makeCurrentContext];
+        glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
+        tmp = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
+        for(i=0;i<wavesize;i++)
+        {
+            //z-value
+            z = tmp[3*(num_spikes*wavesize+i)+2];
+            //only change if it's not an invisible vertex
+            z = z > -50 ? newz : z;
+            tmp[3*(num_spikes*wavesize+i)+2] = z;
+        }
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+
         drawMean = _drawMean;
         [self setNeedsDisplay:YES]; 
     }
@@ -2064,8 +2119,17 @@
     if( wfDataloaded )
     {   
         //check that we are actually changing the state
+        if( _drawStd == drawStd)
+        {
+            return;
+        }
+        float *tmp,z,newz;
+        unsigned int i;
         if( (_drawStd == YES ) && (drawStd == NO ) )
         {
+            //turn on
+            newz = 1.0;
+            /*
             if( drawMean == NO )
             {
                 //if we are not drawing anything, 
@@ -2075,12 +2139,28 @@
             {
                 //since standard devation is always drawn after the mean, we can just do the same
                 nWfIndices+=2*waveIndexSize;
-            }
+            }*/
+            
+            
         }
         else if ( (_drawStd == NO) && (drawStd == YES ))
         {
-            nWfIndices-=2*waveIndexSize;
+            //turn off
+            newz = -5.0;
+            //nWfIndices-=2*waveIndexSize;
         }
+        [[self openGLContext] makeCurrentContext];
+        glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
+        tmp = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
+        for(i=0;i<2*wavesize;i++)
+        {
+            //z-value
+            z = tmp[3*((num_spikes+1)*wavesize+i)+2];
+            //only change if it's not an invisible vertex
+            z = z > -50 ? newz : z;
+            tmp[3*((num_spikes+1)*wavesize+i)+2] = z;
+        }
+        glUnmapBuffer(GL_ARRAY_BUFFER);
         drawStd = _drawStd;
         [self setNeedsDisplay:YES];
     }
