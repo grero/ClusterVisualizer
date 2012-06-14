@@ -2975,6 +2975,8 @@
         //TODO: This should be made more general
         /*if( ([[firstCluster clusterId] unsignedIntValue] > 0 ) && ([[firstCluster npoints] unsignedIntValue] < [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"]))
         {*/
+        if( [firstCluster npoints] > 0)
+        {
             [[self wfv] setOverlay:NO];
             [self loadWaveforms: firstCluster];
             [[wfv window] orderFront: self];
@@ -2985,6 +2987,7 @@
                 [firstCluster setWaveformsImage:img];
             
             }
+        }
         
         //}
         if(shouldShowRaster)
