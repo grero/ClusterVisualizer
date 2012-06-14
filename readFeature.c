@@ -109,7 +109,7 @@ float *readFeatureData(const char *fname,float *data, float *channelValidity)
     file_id = H5Fopen (fname, H5F_ACC_RDONLY, H5P_DEFAULT);
 	if (file_id < 0 )
 	{
-		data = readMatlabFeatureData(fname, data);
+		data = readMatlabFeatureData(fname, data,channelValidity);
 		return data;
 	}
 	//check for channelValidity
@@ -121,14 +121,16 @@ float *readFeatureData(const char *fname,float *data, float *channelValidity)
     
 }
 
-float *readMatlabFeatureData(const char *fname,float *data)
+float *readMatlabFeatureData(const char *fname,float *data, float *channelValidity)
 {
 	matvar_t *matvar;
 	mat_t *mat;
+	size_t *dims;
+	unsigned int rank;
 	
 	//open file
 	mat = Mat_Open(fname,MAT_ACC_RDONLY);
-	matvar = Mat_VarReadInfo(mat,"FeatureData");
+	matvar = Mat_VarRead(mat,"FeatureData");
 	//int err = Mat_VarReadDataAll(mat,matvar);
 	//int nel = (matvar->nbytes)/(matvar->data_size);
 	double *_data = matvar->data;
@@ -150,6 +152,16 @@ float *readMatlabFeatureData(const char *fname,float *data)
 			data[i*cols+j] = (float)_data[i*cols+j];
 
 		}
+	}
+	Mat_VarFree(matvar);
+	//read channel validity
+	matvar = Mat_VarRead(mat,"ChannelValidity");
+	rank = (unsigned int)(matvar->rank);
+	dims = matvar->dims;
+	_data = matvar->data;
+	for(i=0;i<dims[0]*dims[1];i++)
+	{
+		channelValidity[i] = (float)(_data[i]);
 	}
 	Mat_VarFree(matvar);
 	Mat_Close(mat);

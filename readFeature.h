@@ -21,7 +21,7 @@ header *readFeatureHeader(const char *fname, header *H);
 header *readMatlabFeatureHeader(const char *fname, header *H);
 float *readFeatureFile(const char *fname,float *data);
 float *readFeatureData(const char *fname,float *data,float* channelValidity);
-float *readMatlabFeatureData(const char *fname, float*data);
+float *readMatlabFeatureData(const char *fname,float *data, float *channelValidity);
 char *readFeatureNames(const char *fname, char *data);
 float *getMinMax(float *minmax,float *data, int nrows,int ncols);
 int *readClusterIds(const char *fname,  int *cids);
