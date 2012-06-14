@@ -1763,7 +1763,7 @@
                                                        bitsPerPixel:32] autorelease];
     [self display];
     [[self openGLContext] makeCurrentContext];
-    
+    [[self openGLContext] flushBuffer];
     //bind the vertex buffer as an pixel buffer
     //glBindBuffer(GL_PIXEL_PACK_BUFFER, wfVertexBuffer);
     glReadPixels(0,0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, [imageRep bitmapData]);
@@ -1774,6 +1774,7 @@
     [imageRep drawInRect:NSMakeRect(0,0,[image size].width, [image size].height)];
     [image unlockFocus];
     return image;
+    [self setNeedsDisplay:YES];
 }
 
 //Indicate what kind of drag-operation we are going to support

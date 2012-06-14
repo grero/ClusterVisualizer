@@ -2981,12 +2981,13 @@
             [self loadWaveforms: firstCluster];
             [[wfv window] orderFront: self];
             //make sure we also update the waveformsImage
-            if([firstCluster waveformsImage] == NULL)
+            if( [firstCluster waveformsImage] == NULL )
             {
-                NSImage *img = [[self wfv] image];
-                [firstCluster setWaveformsImage:img];
-            
+            NSImage *img = [[self wfv] image];
+            [firstCluster setWaveformsImage:img];
             }
+            
+            
         }
         
         //}
