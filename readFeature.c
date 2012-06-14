@@ -75,6 +75,11 @@ header *readMatlabFeatureHeader(const char *fname, header *H)
 	//swap these since we want to read in row major order
 	H->rows = dims[1];
 	H->cols = dims[0];
+	Mat_VarFree(matvar);
+	matvar = Mat_VarReadInfo(mat,"ChannelValidity");
+	dims = matvar->dims;
+	H->numChannels = dims[0]>dims[1] ? dims[0] : dims[1];
+	Mat_VarFree(matvar);
 	Mat_Close(mat);
 	return H;
 }
