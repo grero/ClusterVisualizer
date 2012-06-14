@@ -383,8 +383,7 @@
 
 -(NSData*)getVertexData
 {
-    NSData *data = [NSData dataWithBytesNoCopy:vertices length:rows*cols*sizeof(float)];
-    return data;
+    return vertices;
 }
 
 -(void) selectDimensions:(NSDictionary*)dims
@@ -650,7 +649,7 @@
             [indexset getIndexes: _index maxCount:nindices*sizeof(NSUInteger) inIndexRange:nil];
             for(i=0;i<nindices;i++)
             {
-                indices[i] = (unsigned int)_index[i];
+                //indices[i] = (unsigned int)_index[i];
                 tmp_indices[i] = (GLuint) _index[i];
             }
             //push the new indices
