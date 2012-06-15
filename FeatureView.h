@@ -57,7 +57,8 @@ static BOOL picked;
     NSMutableArray *selectedClusters;
     NSData *vertices;
     GLuint vertexBuffer,indexBuffer,colorBuffer;
-    
+    //current cluster centroid
+    float CM[3];
     
 }
 

@@ -32,7 +32,10 @@
 	rotatez = 0.0;
 	originx = 0.0;
 	originy = 0.0;
-	originz = -2.0;
+	originz = 0.0;
+    CM[0] = 0;
+    CM[1] = 0;
+    CM[2] = 0;
 	scale = 1.0;
     base_color[0] = 1.0f;
 	base_color[1] = 0.85f;
@@ -486,16 +489,19 @@
                 j+=1;
             }
         }*/
-		//float *centroid = NSZoneMalloc([self zone], 3*sizeof(float));
+		float *centroid = NSZoneCalloc([self zone], 3,sizeof(float));
         unsigned int *points = (unsigned int*)[[cluster points] bytes];
 		float *cluster_minmax = NSZoneCalloc([self zone], 6,sizeof(float));
+        //originx = 0;
+        //originy = 0;
+        
         for(j=0;j<new_size;j++)
         {
             //tmp_indices[nindices+j] = points[j];
-			//compute centroid
-			//centroid[0] += vertices[points[j]*cols + draw_dims[0]];
-			//centroid[1] += vertices[points[j]*cols + draw_dims[1]];
-			//centroid[2] += vertices[points[j]*cols + draw_dims[2]];
+			//compute centroid; this is only valid int he original coordinate system
+			centroid[0] += _vertices[points[j]*cols + draw_dims[0]];
+			centroid[1] += _vertices[points[j]*cols + draw_dims[1]];
+			centroid[2] += _vertices[points[j]*cols + draw_dims[2]];
 			//compute min/max
 			cluster_minmax[0] = MIN(cluster_minmax[0],_vertices[points[j]*cols + draw_dims[0]]);
 			cluster_minmax[1] = MAX(cluster_minmax[1],_vertices[points[j]*cols + draw_dims[0]]);
@@ -526,13 +532,14 @@
 		//nindices += new_size;
 
 		//normalize
-		//centroid[0]/=new_size;
-		//centroid[1]/=new_size;
-		//centroid[2]/=new_size;
-		//originx = -centroid[0];
-		//originy = -centroid[1];
-		//originz = -centroid[1];
-        //NSZoneFree([self zone], centroid);
+		centroid[0]/=new_size;
+		centroid[1]/=new_size;
+		centroid[2]/=new_size;
+        
+		CM[0] = centroid[0];
+		CM[1] = centroid[1];
+		CM[2] = centroid[2];
+        NSZoneFree([self zone], centroid);
 				//calculate the centroid of the cluster in the current space
         //do colors
         [self setClusterColors:_color forIndices:(unsigned int*)[[cluster points] bytes] length:[[cluster npoints] unsignedIntValue]];
@@ -1151,11 +1158,36 @@ static void drawFrame()
     {
         [self drawLabels];
     }
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+	//glFrustum(-1*scale, 1*scale, -1*scale,1*scale, 1, 4);
+    //define an orthographic projection, spanning -10 to 10 in the z-direction
+	glOrtho(-2*scale, 2*scale, -2*scale, 2*scale, -10, 10);
+    //use look at to define our viewing transform. Eye is positioned 4 units in the NEGATIVE z-direction (towards the viewer), and the origin is 2 units into the screen (z-0 is in the viewing plane, i.e. the screen
+    gluLookAt(0, 0, 4.0, 0, 0, -2, 0, 1, 0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(originx, originy, originz);
+    //draw lines to indicate the centroid; this should be removed
+    glBegin(GL_LINES);
+    glVertex3f(originx, -2, originz);
+    glColor3f(1.0, 0.0, 0.0);
+    glVertex3f(originx, 2, originz);
+    glColor3f(1.0, 0.0, 0.0);
+    glEnd();
+
+    glTranslatef(originx, originy, originz);
+
 	glRotatef(rotatey,0, 1, 0);
 	glRotatef(rotatez, 0, 0,1);
+    glTranslatef(-originx,-originy , -originz);
+    //glTranslatef(originx, originy, originz);
+    //test; draw a line parallel to the y-axis through the origin
+    glBegin(GL_LINES);
+    glVertex3f(originx, -2, originz);
+    glColor3f(1.0, 0.0, 0.0);
+    glVertex3f(originx, 2, originz);
+    glColor3f(1.0, 0.0, 0.0);
+    glEnd();
     if ([self showFrame] )
     {
         drawFrame();
@@ -1180,7 +1212,7 @@ static void drawFrame()
 		//drawAnObject();
 
     }
-    glFlush();
+    //glFlush();
     [[self openGLContext] flushBuffer];
 
 }
@@ -1249,8 +1281,8 @@ static void drawFrame()
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-	glFrustum(-1*scale, 1*scale, -1*scale,1*scale, 2, 6);
-	gluLookAt(0, 0, 2.0, 0, 0, 0.0, 0, 1, 0);
+	glFrustum(-1*scale, 1*scale, -1*scale,1*scale, 1, 6);
+	gluLookAt(0, 0, 2.0, originx, originy, originz, 0, 1, 0);
 
     [context flushBuffer];
     //[self update];
@@ -1266,7 +1298,7 @@ static void drawFrame()
 	glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 	glFrustum(-1*scale, 1*scale, -1*scale,1*scale, 2, 6);
-	gluLookAt(0, 0, 2.0, 0, 0, 0.0, 0, 1, 0);
+	gluLookAt(0, 0, 2.0, 0, 0, 0, 0, 1, 0);
 
     //glMatrixMode(GL_PROJECTION);
     //glLoadIdentity();
@@ -1298,8 +1330,9 @@ static void drawFrame()
 	//to be called after zoom factor has changed
 	glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-	glFrustum(-1*scale, 1*scale, -1*scale,1*scale, 2, 6);
-	gluLookAt(0, 0, 2.0, 0, 0, 0.0, 0, 1, 0);
+	glFrustum(-1*scale, 1*scale, -1*scale,1*scale, 1, 6);
+    //always look at the origin
+	gluLookAt(0, 0, 2.0, originx, originy, originz-2, 0, 1, 0);
 	
 	[self setNeedsDisplay:YES];
 	
