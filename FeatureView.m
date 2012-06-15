@@ -592,10 +592,9 @@
             CM[0] = (nindices*CM[0] - _npoints*clusterMean[draw_dims[0]])/(nindices-_npoints);
             CM[1] = (nindices*CM[1] - _npoints*clusterMean[draw_dims[1]])/(nindices-_npoints);
             CM[2] = (nindices*CM[2] - _npoints*clusterMean[draw_dims[2]])/(nindices -_npoints);
-            unsigned int *points = (unsigned int*)[[cluster points] bytes];
             //unsigned int *_points = (unsigned int*)malloc((nindices-new_size)*sizeof(unsigned int));
             //new_size = [[cluster indices] count];
-            int i,j,k,found;
+            int i,j,found;
             i = 0;
             //TODO: The following is a very naiv way of doing intersection. Should fix this 
             //      One way to fix make it more efficient is to make sure the indices are sorted. This can
@@ -1699,24 +1698,24 @@ static void drawFrame()
 	BOOL needDisplay = NO;
 	if( [theEvent deltaX] < -1 )
 	{
-		originx-=0.1*scale;
+		originx+=0.1*scale;
 		needDisplay = YES;
 	}
 	else if( [theEvent deltaX] > 1 )
 	{
-		originx+=0.1*scale;
+		originx-=0.1*scale;
 		needDisplay = YES;
 
 	}
 	if( [theEvent deltaY] < -1 )
 	{
-		originy+=0.1*scale;
+		originy-=0.1*scale;
 		needDisplay = YES;
 
 	}
 	else if( [theEvent deltaY] > 1 )
 	{
-		originy-=0.1*scale;
+		originy+=0.1*scale;
 		needDisplay = YES;
 
 	}
