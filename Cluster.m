@@ -109,6 +109,7 @@
 
 -(void)setCov:(NSData *)_cov
 {
+	int sign;
     unsigned int dimSquare = [_cov length]/sizeof(float);
     cov = [[NSData dataWithData:_cov] retain];
     //also update the inverse covariance matrix
@@ -116,7 +117,7 @@
     _icov= malloc(dimSquare*sizeof(float));
     __cov = (float*)[_cov bytes];
     memcpy(_icov, __cov, dimSquare*sizeof(float));
-    matrix_inverse(_icov, (unsigned int)sqrt(dimSquare), &det);
+    matrix_inverse(_icov, (unsigned int)sqrt(dimSquare), &det,&sign);
     //det = exp(det);
     [self setCovi:[NSData dataWithBytes:_icov length:dimSquare*sizeof(float)]];
     free(_icov);

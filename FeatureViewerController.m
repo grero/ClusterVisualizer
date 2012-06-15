@@ -2831,7 +2831,8 @@
         //[cluster setObject: [NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)] forKey: @"Cov"];
         [[Clusters objectAtIndex:i] setCov:[NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)]];
         //compute inverse covariance matrix
-        int status = matrix_inverse(cov, ndim, &det);
+		int sign;
+        int status = matrix_inverse(cov, ndim, &det,&sign);
         //[cluster setObject: [NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)] forKey: @"Covi"];
         [[Clusters objectAtIndex:i] setCovi:[NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)]];
         [[Clusters objectAtIndex:i] setDet:det];
