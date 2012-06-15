@@ -586,7 +586,12 @@
         GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
         if( tmp_indices != NULL)
         {
-            
+            //update the centroid
+            float *clusterMean = (float*)[[cluster mean] bytes];
+            unsigned int _npoints = [[cluster npoints] unsignedIntValue];
+            CM[0] = (nindices*CM[0] - _npoints*clusterMean[draw_dims[0]])/(nindices-_npoints);
+            CM[1] = (nindices*CM[1] - _npoints*clusterMean[draw_dims[1]])/(nindices-_npoints);
+            CM[2] = (nindices*CM[2] - _npoints*clusterMean[draw_dims[2]])/(nindices -_npoints);
             unsigned int *points = (unsigned int*)[[cluster points] bytes];
             //unsigned int *_points = (unsigned int*)malloc((nindices-new_size)*sizeof(unsigned int));
             //new_size = [[cluster indices] count];
@@ -668,6 +673,7 @@
             originy = 0.0;
             originz = -2.0;
             glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+            
             [self setNeedsDisplay:YES];
         }
 
