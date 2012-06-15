@@ -1004,7 +1004,7 @@
     
     
     //[selectClusterOption removeAllItems];
-    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Find correlated waverforms",@"Show cluster notes",nil];
+    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Find correlated waverforms",@"Show cluster notes",@"Split among clusters",nil];
     
     //test
     //clusterOptionsMenu  = [[[NSMenu alloc] initWithTitle:@"Options"] autorelease];
@@ -1049,6 +1049,7 @@
     [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] setSubmenu:addToClustersMenu];
 	[[wfv window] orderOut: self];
 	[self performComputation:@"Compute Feature Mean" usingSelector:@selector(computeFeatureMean:)];
+    [self performComputation:@"Compute Feature Covariance" usingSelector:@selector(computeFeatureCovariance:)];
 	[allActive setState:1];
 	[[self fw] showAllClusters];
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -2459,6 +2460,64 @@
         [self insertObject:_newCluster inClustersAtIndex:nclusters];
         [_newCluster makeActive];
     }
+    else if( [selection isEqualToString:@"Split among clusters"] )
+    {
+        Cluster *useCluster, *tmpCluster;
+        unsigned int _npoints,*_points,ncandidates,c,q;
+        int cid;
+        double *_p,threshold,_d,_pp;
+        NSData *cfData,*belonginess;
+        //use threshold of 0.95
+        threshold = logf(0.95);
+        //get the vertex data corresponding to this cluster
+        ncandidates = [candidates count];
+        useCluster = [self selectedCluster];
+        _points = (unsigned int*)[[useCluster points] bytes];
+        _npoints = [[useCluster npoints] unsignedIntValue];
+        //array to hold the probabilities
+        _p = calloc(_npoints*ncandidates,sizeof(double));
+        //get the feature data for this cluster
+        cfData = [useCluster getRelevantData:[[self fw] getVertexData] withElementSize:sizeof(float)];
+        NSEnumerator *clusterEmurator = [candidates objectEnumerator];
+        c = 0;
+        while( (tmpCluster = [clusterEmurator nextObject]) )
+        {
+            //compute the probabilty of points for this cluster
+            belonginess = [tmpCluster computeBelonginess:cfData];
+            if(belonginess != NULL)
+            {
+                //copy the probabilities so that we can compare them later
+                [belonginess getBytes:_p+c*_npoints length:_npoints*sizeof(double)];
+            }
+            c+=1;
+
+        }
+        //now loop through the probabilities
+        for(c=0;c<_npoints;c++)
+        {
+            _d = -1.0;
+            cid = -1;
+            for(q=0;q<ncandidates;q++)
+            {
+                _pp = _p[q*_npoints+c];
+                if( (_pp > _d) & (_pp > threshold) )
+                {
+                    _d = _pp;
+                    cid = q;
+                }
+            }
+            if(cid > -1 )
+            {
+                //we have a match, so add the point to the matching cluster
+                tmpCluster = [candidates objectAtIndex:cid];
+                [tmpCluster addPoints:[NSData dataWithBytes:_points+c length:sizeof(unsigned int)]];
+                NSLog(@"Assigned 1 point to cluster %d with probability %.2f", cid,_d);
+                
+            }
+        }
+        //we don't need _p anymore
+        free(_p);
+    }
     else if( [selection isEqualToString:@"Show cluster notes"] )
     {
         [[self clusterNotesPanel] orderFront:self];
@@ -2634,6 +2693,16 @@
     }
     [new_cluster setMean:[NSData dataWithBytes:_mean12 length:cols*sizeof(float)]];
     free(_mean12);
+    //do the same for covariance matrix
+    //just use the same variables as above
+    _mean1 = (float*)[[cluster1 cov] bytes];
+    _mean2 = (float*)[[cluster2 cov] bytes];
+    _mean12 = malloc(cols*cols*sizeof(float));
+    for(i=0;i<cols*cols;i++)
+    {
+        _mean12[i] = (_npoints1*_mean1[i] + _npoints2*_mean2[i])/(_npoints1+_npoints2);
+    }
+    [new_cluster setCov:[NSData dataWithBytes:_mean12 length:cols*cols*sizeof(float)]];
     //[self insertObject:new_cluster inClustersAtIndex:[Clusters indexOfObject: cluster1]];
     //set the new cluste colors
     int nclusters = [Clusters count];
