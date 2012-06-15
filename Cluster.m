@@ -27,7 +27,7 @@
 @synthesize textColor;
 @synthesize shortISIs;
 @synthesize mean;
-@synthesize cov;
+//@synthesize cov;
 @synthesize covi;
 @synthesize lRatio;
 @synthesize isolationDistance;
@@ -105,6 +105,21 @@
     color = [[NSData dataWithData:new_color] retain];
     float *buffer = (float*)[color bytes];
     textColor = [[NSColor colorWithCalibratedRed:buffer[0] green:buffer[1] blue:buffer[2] alpha:1.0] retain];
+}
+
+-(void)setCov:(NSData *)_cov
+{
+    unsigned int dimSquare = [_cov length]/sizeof(float);
+    cov = [[NSData dataWithData:_cov] retain];
+    //also update the inverse covariance matrix
+    float *_icov,*__cov;
+    _icov= malloc(dimSquare*sizeof(float));
+    __cov = (float*)[_cov bytes];
+    memcpy(_icov, __cov, dimSquare*sizeof(float));
+    matrix_inverse(_icov, (unsigned int)sqrt(dimSquare), &det);
+    //det = exp(det);
+    [self setCovi:[NSData dataWithBytes:_icov length:dimSquare*sizeof(float)]];
+    free(_icov);
 }
 
 -(NSData*)color
@@ -227,13 +242,13 @@
     
 }
 
--(void)computeBelonginess:(NSData*)features
+-(NSData*)computeBelonginess:(NSData*)features
 {
     //compute the degree to which each point in the cluster belongs to this cluster
     //this can only be computed if we have already loaded the model
     if(([self mean] == nil) || ([self covi] == nil) )
     {
-        return;
+        return NULL;
     }
     float *_fpoints = (float*)[features bytes];
     float *v;
@@ -247,7 +262,7 @@
     float *_mean = (float*)[[self mean] bytes];
     float *_covi = (float*)[[self covi] bytes];
     float x;
-    float f = sqrt(1.0/(pow(2*PI,cols))*[self det]);
+    double f = -0.5*(double)cols*log(2*pi)-0.5*[self det];
     unsigned m,l;
     while(k != NSNotFound )
     {
@@ -266,13 +281,15 @@
         }
         //compute mahalanobis distance
         x = cblas_sdsdot(cols, 0, d, 1, q, 1);
-        p[i] = -0.5*x + log(f);
+        p[i] = -0.5*x + f;
         k = [[self indices] indexGreaterThanIndex:k];
         i+=1;
     }
     free(q);
     free(d);
+    NSData *bP = [NSData dataWithBytes:p length:sizeof(double)*[[self npoints] unsignedIntValue]];
     free(p);
+    return bP;              
 }
 
 -(NSData*)computeWaveformProbability:(NSData*)waveforms length:(NSUInteger)nwaves
@@ -338,6 +355,49 @@
     }
 	mean = [[NSData dataWithBytes:_mean length:cols*sizeof(float)] retain];
 	free(_mean);
+}
+
+-(void)computeFeatureCovariance:(NSData*)data
+{
+    //this only works in mean has been compute
+    if( mean == NULL )
+    {
+        return;
+    }
+    int cols = featureDims;
+	float *_sq = calloc(cols*cols,sizeof(float));
+	float *_data = (float*)[data bytes];
+    float *_mean = (float*)[[self mean] bytes];
+    float *v;
+	NSUInteger i,k,j,l;
+    k = [[self indices] firstIndex];
+    j = 0;
+    while(k != NSNotFound )
+    {
+        v = _data + k*cols;
+        for(i=0;i<cols;i++)
+        {
+            for(l=0;l<cols;l++)
+            {
+                _sq[i*cols+l]+=v[i]*v[l];
+            }
+        }
+        j+=1;
+        k = [[self indices] indexGreaterThanIndex:k];
+    }
+    
+    for(i=0;i<cols;i++)
+    {
+        for(l=0;l<cols;l++)
+        {
+            //unbiased
+            _sq[i*cols+l]/=([[self indices] count]-1);
+            _sq[i*cols+l]-=_mean[i]*_mean[l];
+        }
+    }
+    [self setCov:[NSData dataWithBytes:_sq length:cols*cols*sizeof(float)]];
+    free(_sq);
+
 }
 
 -(void)computeIsolationDistance:(NSData*)data
