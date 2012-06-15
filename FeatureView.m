@@ -32,7 +32,7 @@
 	rotatez = 0.0;
 	originx = 0.0;
 	originy = 0.0;
-	originz = 0.0;
+	originz = -2.0;
     CM[0] = 0;
     CM[1] = 0;
     CM[2] = 0;
@@ -1164,28 +1164,28 @@ static void drawFrame()
     //define an orthographic projection, spanning -10 to 10 in the z-direction
 	glOrtho(-2*scale, 2*scale, -2*scale, 2*scale, -10, 10);
     //use look at to define our viewing transform. Eye is positioned 4 units in the NEGATIVE z-direction (towards the viewer), and the origin is 2 units into the screen (z-0 is in the viewing plane, i.e. the screen
-    gluLookAt(0, 0, 4.0, 0, 0, -2, 0, 1, 0);
+    gluLookAt(0, 0, 4.0, originx, originy, originz, 0, 1, 0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
     //draw lines to indicate the centroid; this should be removed
     glBegin(GL_LINES);
-    glVertex3f(originx, -2, originz);
+    glVertex3f(CM[0], -2, CM[2]);
     glColor3f(1.0, 0.0, 0.0);
-    glVertex3f(originx, 2, originz);
+    glVertex3f(CM[0], 2, CM[2]);
     glColor3f(1.0, 0.0, 0.0);
     glEnd();
 
-    glTranslatef(originx, originy, originz);
+    glTranslatef(CM[0], CM[1], CM[2]);
 
 	glRotatef(rotatey,0, 1, 0);
 	glRotatef(rotatez, 0, 0,1);
-    glTranslatef(-originx,-originy , -originz);
+    glTranslatef(-CM[0],-CM[1] , -CM[2]);
     //glTranslatef(originx, originy, originz);
     //test; draw a line parallel to the y-axis through the origin
     glBegin(GL_LINES);
-    glVertex3f(originx, -2, originz);
+    glVertex3f(CM[0], -2, CM[2]);
     glColor3f(1.0, 0.0, 0.0);
-    glVertex3f(originx, 2, originz);
+    glVertex3f(CM[0], 2, CM[2]);
     glColor3f(1.0, 0.0, 0.0);
     glEnd();
     if ([self showFrame] )
