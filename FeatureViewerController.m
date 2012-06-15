@@ -1909,6 +1909,7 @@
         if( [candidates count] ==2 )
         {
             [self mergeCluster: [candidates objectAtIndex: 0] withCluster: [candidates objectAtIndex: 1]];
+                        
         }
     }
     else if ( [selection isEqualToString:@"Delete"] )
@@ -2618,6 +2619,21 @@
     cluster1.active = 0;
     //cluster2.valid = 0;
     cluster2.active = 0;
+    //update cluster mean
+    float *_mean1,*_mean2,*_mean12;
+    _mean12 = malloc(cols*sizeof(float));
+    unsigned int _npoints1,_npoints2,i;
+    _mean1 = (float*)[[cluster1 mean] bytes];
+    _npoints1 = [[cluster1 npoints] unsignedIntValue];
+    _mean2 = (float*)[[cluster2 mean] bytes];
+    _npoints1 = [[cluster1 npoints] unsignedIntValue];
+    //add the two means after scaling by the respective number of points
+    for(i=0;i<cols;i++)
+    {
+        _mean12[i] = (_npoints1*_mean1[i] + _npoints2*_mean2[i])/(_npoints1+_npoints2);
+    }
+    [new_cluster setMean:[NSData dataWithBytes:_mean12 length:cols*sizeof(float)]];
+    free(_mean12);
     //[self insertObject:new_cluster inClustersAtIndex:[Clusters indexOfObject: cluster1]];
     //set the new cluste colors
     int nclusters = [Clusters count];
