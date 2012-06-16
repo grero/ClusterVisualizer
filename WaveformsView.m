@@ -349,19 +349,6 @@
 					//z
 					_vertices[3*out_offset+2] = -1.0;//-(1.0+dz*i);//-(i+1);
 					
-                    
-					//mean
-					//this line is strictly not necessary
-					//wfVertices[3*moffset] = wfVertices[3*offset];
-					//wfVertices[3*moffset+1] =(i*(wfVertices[3*moffset+1])+tmp[offset-prevOffset])/(i+1);
-					//wfVertices[3*moffset+2] = 1.0;
-					
-					//std
-					//compute x*x and place it as the last waveform
-					//wfVertices[3*stdoffset] = wfVertices[3*offset];
-					//wfVertices[3*stdoffset+1] =(i*(wfVertices[3*stdoffset+1])+(tmp[offset-prevOffset])*(tmp[offset-prevOffset]))/(i+1);
-					//wfVertices[3*stdoffset+2] = 1.0;
-					
 					
                     //compute max/min per channel
 					if ( tmp[in_offset] < chMinMax[2*j] )
@@ -463,19 +450,7 @@
     wfMinmax[5] = 1.0;//100;//nwaves+2;
 	ymin = wfMinmax[2];
 	ymax = wfMinmax[3];
-    //sort the waveform z-value (between -1 and +1) by using the y-value, the rationale being that we don't want to low amplitude waveforms to be hidden by the large amplitude ones. This is especially important when doing overlay
     
-    //dispatch_apply(num_spikes, queue, ^(size_t i) 
-    //TODO: This messes up my clever scheme for separating channels
-    /*
-    for(i=0;i<num_spikes;i++)
-        {
-            float z;
-            
-            z = -2*((tmp_ymax[i]-tmp_ymin[i])-yminrange)/((ymax-ymin)-yminrange)+1.0;
-            vDSP_vfill(&z, _vertices+i*3*wavesize+2, 3, wavesize);
-        }//);
-     */
     free(tmp_ymax);
     free(tmp_ymin);
     //should push colors and vertices here
@@ -541,89 +516,9 @@
     free(_colors);
     free(_vertices);
     
-    //create indices
-    //here we have to be a bit clever; if we want to draw as lines, every vertex will be connected
-    //However, since we are drawing waveforms across channels, we need to separate waveforms on each
-    //channel. We do this by modifying the indices. We will use GL_LINE_STRIP, which will connect every other index
-    //i.e. 1-2, 3-4,5-6,etc..
-    //for this we need to know how many channels, as well as how many points per channel
-    //each channel will have 2*pointsPerChannel-2 points
-    unsigned int pointsPerChannel = 2*_timepts-2;
-    //unsigned int offset = 0;
-	//+3 to accommodate mean waveform and +/- std
-    if([self overlay])
-    {
-        prevOffset = nWfIndices;
-        nWfIndices+=(nwaves+3)*channels*pointsPerChannel;
+    
+        [self setColor: color];
         
-    }
-    else
-    {
-        nWfIndices = (nwaves+3)*channels*pointsPerChannel;
-    }
-    if( (wfDataloaded) && (wfIndices != NULL ))
-    {
-        wfIndices = realloc(wfIndices, nWfIndices*sizeof(GLuint));
-
-    }
-    else 
-    {
-        wfIndices = malloc(nWfIndices*sizeof(GLuint));
-
-    }
-    
-    //for(i=0;i<nwaves+3;i++)
-    dispatch_apply(nwaves+3, queue, ^(size_t i) 
-    {
-        int k,j;
-        unsigned offset;
-    
-        for(j=0;j<channels;j++)
-        {
-            //do the first point seperately, since it's not repeated
-            offset = (i*channels + j)*pointsPerChannel + prevOffset;
-            wfIndices[offset] = (i*channels+j)*_timepts;
-            for(k=1;k<_timepts-1;k++)
-            {
-                wfIndices[offset+2*k-1] = (i*channels+j)*_timepts+k;
-                //replicate the previous index
-                wfIndices[offset+2*k] = wfIndices[offset+2*k-1];
-            }
-            wfIndices[offset+2*_timepts-3] = (i*channels+j)*_timepts + _timepts-1;
-        }
-    });
-    //prevent leakage
-    if([self overlay] )
-    {
-        prevOffset = 3*(nWfVertices-(nwaves+3)*wavesize);
-    }
-    if ((wfDataloaded) && (wfColors != NULL)) 
-	{
-		wfColors = realloc(wfColors, nWfVertices*3*sizeof(GLfloat));
-	}
-	else {
-		wfColors = malloc(nWfVertices*3*sizeof(GLfloat));
-	}
-
-    NSOpenGLContext *context = [self openGLContext];
-    [context makeCurrentContext];
-    //GLfloat *gcolor = malloc(4*sizeof(GLfloat));
-    
-    /*gcolor[0] = 1.0;
-    gcolor[1] = 0.85;
-    gcolor[2] = 0.35;
-    gcolor[4] = 1.0;*/
-    [self setColor: color];
-    //[[self getColor] getRed:gcolor green:gcolor+1 blue:gcolor+2 alpha:gcolor+3];
-    //wfModifyColors(wfColors + prevOffset,gcolor,(nwaves+3)*wavesize);
-    //[[self openGLContext] makeCurrentContext];
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
-    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, nWfIndices*sizeof(GLuint), wfIndices, GL_DYNAMIC_DRAW);
-    
-    //check if we are to draw mean and standard deviation;default is yes for both
-    ///[self setDrawStd:drawStd];
-    //[self setDrawMean:drawMean];
-    
     if( drawStd == NO )
     {
         drawStd = YES;
@@ -1272,16 +1167,19 @@
 
 -(void) hideWaveforms:(NSData*)wfidx
 {
+    //hide the waveforms specified in wfidx by setting their z-values to -50
 	//wfidx will be in the new coordinates
+    float z,*_vertices;
     [[self openGLContext] makeCurrentContext];
     unsigned int* _points = (unsigned int*)[wfidx bytes];
     unsigned int _npoints = [wfidx length]/sizeof(unsigned int);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,wfIndexBuffer);
-    GLuint *tmp_idx = (GLuint*)glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,wfIndexBuffer);
+    //GLuint *tmp_idx = (GLuint*)glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY);
 	//array to hold the new indices
-	GLuint* new_idx = malloc((num_spikes-_npoints+3)*waveIndexSize*sizeof(GLuint));
+	//GLuint* new_idx = malloc((num_spikes-_npoints+3)*waveIndexSize*sizeof(GLuint));
 
     int i,j,found,k,l;
+    z = -50;
     j = 0;
     found = 0;
     k = 0;	
@@ -1307,7 +1205,9 @@
 	 }];
 	*/
 	//the code below is a bit pointless; we know that wfidx are all from the currently drawn waves
-	
+	[[self openGLContext] makeCurrentContext];
+    glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
+    _vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
     for(i=0;i<num_spikes;i++)
     {
         found = 0;
@@ -1323,11 +1223,13 @@
         }
         if(found == 0)
         {
+            /*don't do this; just set the z-value to -50*/
             
-            for(l=0;l<waveIndexSize;l++)
+            /*for(l=0;l<waveIndexSize;l++)
             {
                 new_idx[k*waveIndexSize+l] = tmp_idx[i*waveIndexSize+l];
-            }
+            }*/
+            vDSP_vfill(_vertices+i*wavesize+2, &z, 3, wavesize);
 			//also, be careful about the mean waveform here
 			/*
             for(l=0;l<wavesize;l++)
@@ -1340,6 +1242,7 @@
             k+=1;
         }
     }
+    glUnmapBuffer(GL_ARRAY_BUFFER);
 	free(_index);
 	//
 	//we have now gotten rid of the extra waveforms; need to shift the mean waveform into place
@@ -1354,22 +1257,23 @@
 	//reset mean and std waveform index
     //if( drawMean )
     //{
-        for(l=0;l<waveIndexSize;l++)
+        /*for(l=0;l<waveIndexSize;l++)
         {
             new_idx[k*waveIndexSize+l] = tmp_idx[num_spikes*waveIndexSize+l];
-        }
+        }*/
     //}
     //if ( drawStd )
     //{
+    /*
         for(l=0;l<waveIndexSize;l++)
         {
             new_idx[(k+1)*waveIndexSize+l] = tmp_idx[(num_spikes+1)*waveIndexSize+l];
             new_idx[(k+2)*waveIndexSize+l] = tmp_idx[(num_spikes+2)*waveIndexSize+l];
 
         }
-    //}
+    //}*/
     
-    glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+    //glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
     
     if((NSInteger)num_spikes-_npoints<0)
     {
@@ -1397,6 +1301,7 @@
     //glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
     //push data to the current buffer
     //TODO: If mean and/or standard devation is not drawn, we have to add something to accomodate them
+    /*
     int extra = 0;
     if(drawStd==NO)
     {
@@ -1407,6 +1312,7 @@
         extra+=1;
     }
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, (nWfIndices+extra*waveIndexSize)*sizeof(GLuint), new_idx, GL_DYNAMIC_DRAW);
+     */
     //update waveform indices
 	for(i=0;i<_npoints;i++)
 	{
@@ -2218,7 +2124,7 @@
 -(void)dealloc
 {
     //free(wfVertices);
-    free(wfIndices);
+    //free(wfIndices);
     free(wfMinmax);
     //free(wfColors);
     [[NSNotificationCenter defaultCenter] removeObserver:self
