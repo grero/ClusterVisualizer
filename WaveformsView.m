@@ -71,8 +71,8 @@
                                                  selector:@selector(_surfaceNeedsUpdate:)
                                                      name: NSViewGlobalFrameDidChangeNotification object: self];
         
-        //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) 
-        //                                             name:@"highlight" object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) 
+                                                     name:@"highlight" object:nil];
         wfVertexBuffer = 0;
         wfIndexBuffer = 0;
         wfColorBuffer = 0;
@@ -900,18 +900,7 @@
     glBindBuffer(GL_ARRAY_BUFFER, wfColorBuffer);
     glEnableClientState(GL_COLOR_ARRAY);
     glColorPointer(3, GL_FLOAT, 0, (void*)0);
-    //bind the indices
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
-    //glIndexPointer(GL_UNSIGNED_INT, 0, (void*)0);
-    //glEnableClientState(GL_INDEX_ARRAY);
-    //Draw nWfIndices elements of type GL_LINES, use the loaded wfIndexBuffer
-    //the second argument to glDrawElements should be the number of objects to draw
-    //i.e. number of lines below. Since nWfIndices is the total number of points, and each line 
-    //uses two points, the total number of lines to draw is ndincies/2
-    //this fails and I have no idea why. Indexing wfVertices using indices on its own does not cause any issues.
-    //Thus,this has to be related to openGL.
-    //glDrawElements(GL_LINES, /*MIN(31*4*40000,nWfIndices)*/nWfIndices,GL_UNSIGNED_INT,(void*)0);
-    //since this works and not the above I've messed up the indexes somewhere
+   
     glDrawArrays(GL_LINES, 0, nWfVertices);
     glDrawArrays(GL_LINES, 1, nWfVertices-1);
     //glDrawRangeElement
@@ -1133,6 +1122,7 @@
 
 -(void) hideOutlierWaveforms
 {
+    //highlight the waveforms outside the 95% confidence interval
     GLfloat *_vertices;
     [[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
