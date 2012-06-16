@@ -257,19 +257,23 @@
     NSUInteger k = [[self indices] firstIndex];
     double *p = malloc(sizeof(double)*[[self npoints] unsignedIntValue]);
     unsigned int i = 0;
-    float *q = malloc(sizeof(float)*cols);
-    float *d = malloc(sizeof(float)*cols);
+    double *q = malloc(sizeof(double)*cols);
+    double *d = malloc(sizeof(double)*cols);
 
     float *_mean = (float*)[[self mean] bytes];
     float *_covi = (float*)[[self covi] bytes];
-    float x;
+    double x;
     double f = -0.5*(double)cols*log(2*pi)-0.5*[self det];
     unsigned m,l;
     while(k != NSNotFound )
     {
         v = _fpoints+k*cols;
         //subtract the mean
-        vDSP_vsub(_mean,1,v,1,d,1,cols);
+        //vDSP_vsub(_mean,1,v,1,d,1,cols);
+		for(m=0;m<cols;m++)
+		{
+			d[m] = (double)(_mean[m])-(double)(v[m]);
+		}
         //divide by covariance matrix
         //cblas_sgemv(CblasRowMajor,CblasNoTrans,cols,cols,1,_covi,cols,d,1,0,q,1);
         for(m=0;m<cols;m++)
@@ -277,12 +281,21 @@
             q[m] = 0;
             for(l=0;l<cols;l++)
             {
-                q[m]+=_covi[m*cols+l]*d[l];
+                q[m]+=(double)(_covi[m*cols+l])*d[l];
             }
         }
         //compute mahalanobis distance
-        x = cblas_sdsdot(cols, 0, d, 1, q, 1);
-        p[i] = -0.5*x + f;
+        //x = cblas_dsdot(cols, d, 1, q, 1);
+		//do it manually
+		x = 0;
+		for(m=0;m<cols;m++)
+		{
+			x+=d[m]*q[m];
+		}
+		//use chi-square cdf instead
+		//we want the probabilty for a distnace larger than the one measured to be as large as possible, i.e. the given point is close to the center
+		p[i] = 1-chi2_cdf(x,cols);
+        //p[i] = -0.5*x + f;
         k = [[self indices] indexGreaterThanIndex:k];
         i+=1;
     }

@@ -2468,7 +2468,7 @@
         double *_p,threshold,_d,_pp;
         NSData *cfData,*belonginess;
         //use threshold of 0.95
-        threshold = logf(0.95);
+        threshold = 0.95;
         //get the vertex data corresponding to this cluster
         ncandidates = [candidates count];
         useCluster = [self selectedCluster];
@@ -2500,7 +2500,7 @@
             for(q=0;q<ncandidates;q++)
             {
                 _pp = _p[q*_npoints+c];
-                if( (_pp > _d) & (_pp > threshold) )
+                if( (_pp > _d) && (_pp > threshold) )
                 {
                     _d = _pp;
                     cid = q;
