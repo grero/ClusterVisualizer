@@ -578,6 +578,10 @@
     [firstCluster setPoints:[NSMutableData dataWithBytes:points length:rows*sizeof(unsigned int)]];
     free(points);
     [firstCluster createName];
+    //compute mean and covariance
+    [firstCluster setFeatureDims:cols];
+    [firstCluster computeFeatureMean:[[self fw] getVertexData]];
+    [firstCluster computeFeatureCovariance:[[self fw] getVertexData]];
     [firstCluster makeActive];
     //create cluster color
     float *_ccolor = malloc(3*sizeof(float));
@@ -2261,6 +2265,11 @@
             }
             [newCluster setIndices:index];
             [newCluster createName];
+            //update the mean and covariance
+            //TODO; this can be done on a separate thread
+            [newCluster setFeatureDims:cols];
+            [newCluster computeFeatureMean:[[self fw] getVertexData]];
+            [newCluster computeFeatureCovariance: [[self fw] getVertexData]];
             //change colors in fw
             //first, remove highlights
             [[self fw] setHighlightedPoints:nil];
