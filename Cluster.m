@@ -337,7 +337,11 @@
 
 -(void)computeFeatureMean:(NSData*)data
 {
-	//uint64_t datasize = [data length];
+	//check if we have points	
+	if( [[self npoints] unsignedIntValue] == 0)
+	{
+		return;
+	}
 	int cols = featureDims;
 	float *_mean = calloc(cols,sizeof(float));
 	float *_data = (float*)[data bytes];
@@ -367,14 +371,15 @@
     {
         _mean[i]/=([[self indices] count]);
     }
-	mean = [[NSData dataWithBytes:_mean length:cols*sizeof(float)] retain];
+	//mean = [[NSData dataWithBytes:_mean length:cols*sizeof(float)] retain];
+	[self setMean:[NSData dataWithBytes:_mean length:cols*sizeof(float)]];
 	free(_mean);
 }
 
 -(void)computeFeatureCovariance:(NSData*)data
 {
-    //this only works in mean has been compute
-    if( mean == nil )
+    //this only works in mean has been compute and there are points in the cluster
+    if( (mean == nil) || ([[self npoints] unsignedIntValue]==0) )
     {
         return;
     }
