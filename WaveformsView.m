@@ -421,38 +421,6 @@
     free(_mean);
     free(_std);
     //determine max/min
-    float *tmp_ymax = malloc(num_spikes*sizeof(float));
-    float *tmp_ymin = malloc(num_spikes*sizeof(float));
-    float ymaxmin,yminmax,yminrange;
-    
-    //dispatch_apply(num_spikes, queue, ^(size_t i) 
-    //int i;
-    for(i=0;i<nwaves/*num_spikes*/;i++)
-       {
-           //compute maximum and minimum y for each wave
-           vDSP_maxv(_vertices+i*3*wavesize+1, 3, tmp_ymax+i, wavesize);
-           vDSP_minv(_vertices+i*3*wavesize+1, 3, tmp_ymin+i, wavesize);
-       }//);
-    //determine overall maximum
-    vDSP_maxv(tmp_ymax, 1, wfMinmax+3, num_spikes);
-    vDSP_minv(tmp_ymin, 1, wfMinmax+2, num_spikes);
-    
-    vDSP_maxv(tmp_ymin, 1, &yminmax, num_spikes);
-    vDSP_minv(tmp_ymax, 1, &ymaxmin, num_spikes);
-    
-    yminrange = (ymaxmin-yminmax);
-    
-    wfMinmax[0] = 0;
-    wfMinmax[1] = channels*(_timepts+channelHop);
-	xmin = 0;
-	xmax = wfMinmax[1];
-    wfMinmax[4] = -1.0;//0.1;
-    wfMinmax[5] = 1.0;//100;//nwaves+2;
-	ymin = wfMinmax[2];
-	ymax = wfMinmax[3];
-    
-    free(tmp_ymax);
-    free(tmp_ymin);
     //should push colors and vertices here
     GLfloat *gcolor = (GLfloat*)[color bytes];
     GLfloat *_colors = malloc((3*(nWfVertices-prevOffset))*sizeof(GLfloat));
@@ -481,6 +449,8 @@
         
     
     //check if we are overlaying
+	float *tmp_ymax,*tmp_ymin;
+	float ymaxmin,yminmax,yminrange;
     if( [self overlay] )
     {
         glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
@@ -493,6 +463,31 @@
         //copy the new vertices
         memcpy(tmp2+3*prevOffset, _vertices, (3*(nWfVertices-prevOffset))*sizeof(GLfloat));
         glBufferData(GL_ARRAY_BUFFER, 3*nWfVertices*sizeof(GLfloat), tmp2, GL_DYNAMIC_DRAW);
+
+		//determine min/max;num spikes is everything
+		tmp_ymax = malloc(num_spikes*sizeof(float));
+		tmp_ymin = malloc(num_spikes*sizeof(float));
+		
+		//dispatch_apply(num_spikes, queue, ^(size_t i) 
+		//int i;
+		for(i=0;i<num_spikes;i++)
+		   {
+			   //compute maximum and minimum y for each wave
+			   vDSP_maxv(tmp2+i*3*wavesize+1, 3, tmp_ymax+i, wavesize);
+			   vDSP_minv(tmp2+i*3*wavesize+1, 3, tmp_ymin+i, wavesize);
+		   }//);
+		//determine overall maximum
+		vDSP_maxv(tmp_ymax, 1, wfMinmax+3, num_spikes);
+		vDSP_minv(tmp_ymin, 1, wfMinmax+2, num_spikes);
+		
+		vDSP_maxv(tmp_ymin, 1, &yminmax, num_spikes);
+		vDSP_minv(tmp_ymax, 1, &ymaxmin, num_spikes);
+		
+		
+		
+		free(tmp_ymax);
+		free(tmp_ymin);
+
         
         //now do the same for the colors
         glBindBuffer(GL_ARRAY_BUFFER, wfColorBuffer);
@@ -512,12 +507,46 @@
         glBufferData(GL_ARRAY_BUFFER, nWfVertices*3*sizeof(GLfloat), _vertices, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, wfColorBuffer);
         glBufferData(GL_ARRAY_BUFFER, nWfVertices*3*sizeof(GLfloat), _colors, GL_DYNAMIC_DRAW);
+
+		//determine min/max;num spikes is everything
+		tmp_ymax = malloc(nwaves*sizeof(float));
+		tmp_ymin = malloc(nwaves*sizeof(float));
+		
+		//dispatch_apply(num_spikes, queue, ^(size_t i) 
+		//int i;
+		for(i=0;i<nwaves;i++)
+		   {
+			   //compute maximum and minimum y for each wave
+			   vDSP_maxv(_vertices+i*3*wavesize+1, 3, tmp_ymax+i, wavesize);
+			   vDSP_minv(_vertices+i*3*wavesize+1, 3, tmp_ymin+i, wavesize);
+		   }//);
+		//determine overall maximum
+		vDSP_maxv(tmp_ymax, 1, wfMinmax+3, nwaves);
+		vDSP_minv(tmp_ymin, 1, wfMinmax+2, nwaves);
+		
+		vDSP_maxv(tmp_ymin, 1, &yminmax, nwaves);
+		vDSP_minv(tmp_ymax, 1, &ymaxmin, nwaves);
+		
+		
+		
+		free(tmp_ymax);
+		free(tmp_ymin);
     }
     free(_colors);
     free(_vertices);
-    
-    
-        [self setColor: color];
+
+	yminrange = (ymaxmin-yminmax);
+	wfMinmax[0] = 0;
+	wfMinmax[1] = channels*(_timepts+channelHop);
+	xmin = 0;
+	xmax = wfMinmax[1];
+	wfMinmax[4] = -1.0;//0.1;
+	wfMinmax[5] = 1.0;//100;//nwaves+2;
+	ymin = wfMinmax[2];
+	ymax = wfMinmax[3];
+
+
+	[self setColor: color];
         
     if( drawStd == NO )
     {
