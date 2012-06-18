@@ -154,8 +154,6 @@
     //get the group; format: gXXXX
     //NSError *xerror = NULL;
     //NSString *group = [[NSRegularExpression regularExpressionWithPattern:@"(g[0-9]*)" options: NSRegularExpressionCaseInsensitive: error &xerror] firstMatchInString: path option: 0 range:NSMakeRange(0,[path length])];
-    NSRange grange = [path rangeOfString:@"waveforms"];
-    NSString *group = [path substringWithRange:NSMakeRange(grange.location-5, 5)];
 	if( [[path pathExtension] isEqualToString:@"fd"])
 	{
 		NSArray *dir_contents = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath: directory error: nil] pathsMatchingExtensions:[NSArray arrayWithObjects:@"fd",nil]];
@@ -214,7 +212,7 @@
 				if(tmp_data == NULL)
 				{
 					//create an alert
-				NSAlert *alert = [NSAlert alertWithMessageText:@"Feature file could not be loaded" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@""];
+                    NSAlert *alert = [NSAlert alertWithMessageText:@"Feature file could not be loaded" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@""];
 					[alert runModal];
 					NSZoneFree([self zone], tmp_data);
 					NSZoneFree([self zone], tmp_data2);
@@ -229,27 +227,7 @@
 						tmp_data2[j*H.rows+i] = tmp_data[i*H.cols+j];
 					}
 				}
-				/*//find max
-				float max,min;
-				float l;
-				vDSP_maxv(tmp_data2,1,&max,H.rows*(H.cols));
-				//find min
-				vDSP_minv(tmp_data2,1,&min,H.rows*(H.cols));
-				l = max-min;
-                 */
-				//scale each feature to be between -1 and +1 if autoscale is requested
-                //note that this is an overall scaling, so it should not distort the relationship
-                //between dimensions
-                /*
-                if( [[NSUserDefaults standardUserDefaults] boolForKey:@"autoScaleAxes"] == YES )
-                {
-                    for(j=0;j<(H.rows)*(H.cols);j++)
-                    {
-                        tmp_data2[j] = 2*(tmp_data2[j]-min)/l-1;
-                    }
-				}
-                */
-	
+					
 				[data appendBytes:tmp_data2 length: H.rows*H.cols*sizeof(float)];
 				NSZoneFree([self zone], tmp_data);
 				NSZoneFree([self zone], tmp_data2);
@@ -324,7 +302,8 @@
 		{
 			rows = [lines count]-1;
 		}
-		tmp_data = malloc(rows*cols*sizeof(float));
+        //make sure tmp_data is always located in the zone
+		tmp_data = NSZoneMalloc([self zone], rows*cols*sizeof(float));
 		int i,j;
 		for(i=0;i<rows;i++)
 		{
@@ -415,9 +394,9 @@
     
 	[fw createVertices:data withRows:rows andColumns:cols];
 	//[fw loadVertices: [openPanel URL]];
-	[dim1 addItemsWithObjectValues:feature_names];
-	[dim2 addItemsWithObjectValues:feature_names];
-	[dim3 addItemsWithObjectValues:feature_names];
+	[[self dim1] addItemsWithObjectValues:feature_names];
+	[[self dim2] addItemsWithObjectValues:feature_names];
+	[[self dim3] addItemsWithObjectValues:feature_names];
 	
 	
 	//get time data
@@ -488,12 +467,12 @@
      }*/
     params.rows = rows;
     params.cols = cols;
-    [dim1 setEditable:NO];
-    [dim1 selectItemAtIndex:0];
-    [dim2 setEditable:NO];
-    [dim2 selectItemAtIndex:1];
-    [dim3 setEditable:NO];
-    [dim3 selectItemAtIndex:2];
+    [[self dim1] setEditable:NO];
+    [[self dim1] selectItemAtIndex:0];
+    [[self dim2] setEditable:NO];
+    [[self dim2] selectItemAtIndex:1];
+    [[self dim3] setEditable:NO];
+    [[self dim3] selectItemAtIndex:2];
 	featureNames = [[NSMutableArray arrayWithArray:feature_names] retain];
 	//register featureview for notification about change in highlight
 	//feature view only received notification from waveforms view
@@ -607,6 +586,8 @@
     {
         [self setClusters:[NSMutableArray arrayWithObject:firstCluster]];
     }
+	//release first cluster since we are done with it; it now belongs to Clusters
+	[firstCluster release];
 	[_pool drain];
 }
 
@@ -801,7 +782,7 @@
 			//iteratae through lines
 			NSEnumerator *lines_enum = [lines objectEnumerator];
 			id line;
-			NSNumberFormatter *formatter = [[[NSNumberFormatter alloc] init] autorelease];
+			NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
 			int cidx = 0;
 			while ( (line = [lines_enum nextObject] ) )
 			{
@@ -814,6 +795,8 @@
 				}
 				
 			}
+			//done with formatter, so release it
+			[formatter release];
 			//find the maximum cluster number
 			//TODO: this is quick and dirty; should try and speed this up
 			int maxCluster = 0;
@@ -891,6 +874,8 @@
 				[cluster setIsTemplate:0];
 				[cluster setActive: 1];
 				[tempArray addObject:cluster];
+				//we have handed over ownership of cluster to tempArray, so release it
+				[cluster release];
 			}
 			NSZoneFree([self zone], cids);
 			free(npoints);
@@ -941,6 +926,7 @@
                 //TODO: for some reason, the update doesn't work properly so I had to disable it
 				//[cluster updateDescription];
 				[tempArray addObject:cluster];
+				[cluster release];
 			}
 			//now loop through the overlap matrix, adding points to the clusters as we go along
 			unsigned int cid,wfidx,npoints;
@@ -995,7 +981,7 @@
 	if( dataloaded == YES )
 	{
 		//only do this if data has been loaded
-		[fw setClusterColors: cluster_colors forIndices: NULL length: 1];
+		[fw setClusterColors: cluster_colors forIndices: NULL length: rows];
 	}
     //since colors are now ccopied, we can free it
     NSZoneFree([self zone],cluster_colors);
@@ -1068,7 +1054,7 @@
     }
     [selectClusterOption addItemsWithTitles:options];
     //once we have loaded the clusters, start up a timer that will ensure that data gets arhived automatically every 5 minutes
-    archiveTimer = [NSTimer scheduledTimerWithTimeInterval:300 target:self selector:@selector(archiveClusters) userInfo:nil repeats: YES];
+    archiveTimer = [[NSTimer scheduledTimerWithTimeInterval:300 target:self selector:@selector(archiveClusters) userInfo:nil repeats: YES] retain];
 	[_pool drain];
 }
 
@@ -1389,7 +1375,7 @@
             }
             times = getTimes(path, &spikeHeader, times_indices, spikeHeader.num_spikes, times);
             timestamps = [[NSData dataWithBytes:times length:spikeHeader.num_spikes*sizeof(unsigned long long int)] retain];
-			            free(times);
+			free(times);
             free(times_indices);
             //add the ISI options to cluster options
             [selectClusterOption addItemWithTitle:@"Shortest ISI"];
@@ -1600,9 +1586,9 @@
 		{
 			[cyclePanel orderFront:self];
 		}
-		int currentDim1 = [featureNames indexOfObject:[dim1 objectValueOfSelectedItem]];
-		int currentDim2 = [featureNames indexOfObject:[dim2 objectValueOfSelectedItem]];
-		int currentDim3 = [featureNames indexOfObject:[dim3 objectValueOfSelectedItem]];
+		int currentDim1 = [featureNames indexOfObject:[[ self dim1] objectValueOfSelectedItem]];
+		int currentDim2 = [featureNames indexOfObject:[[self dim2] objectValueOfSelectedItem]];
+		int currentDim3 = [featureNames indexOfObject:[[self dim3] objectValueOfSelectedItem]];
 
 		NSMutableDictionary *info = [NSMutableDictionary dictionaryWithObjectsAndKeys:
 									 [NSNumber numberWithInt:currentDim1],@"currentDim1", [NSNumber numberWithInt:currentDim2], @"currentDim2",
@@ -1655,9 +1641,9 @@
 	else 
 	{
 		//TODO: a bit inefficient; change this
-		[dim1 selectItemAtIndex:currentDim1];
-		[dim1 setObjectValue:[dim1 objectValueOfSelectedItem]];
-		[self changeDim1:dim1];
+		[[self dim1] selectItemAtIndex:currentDim1];
+		[[self dim1] setObjectValue:[[self dim1] objectValueOfSelectedItem]];
+		[self changeDim1:[self dim1]];
 		
 		
 		[dim2 selectItemAtIndex:currentDim2];
@@ -1822,9 +1808,9 @@
 {
 	//sets the features based on the channels
 	//unsigned nfeatures = cols;
-	[dim1 removeAllItems];
-	[dim2 removeAllItems];
-	[dim3 removeAllItems];
+	[[self dim1] removeAllItems];
+	[[self dim2] removeAllItems];
+	[[self dim3] removeAllItems];
 
 	NSEnumerator *channelEnumerator = [channels objectEnumerator];
 	id ch;
@@ -1834,21 +1820,21 @@
 		NSString *regexp = [NSString stringWithFormat: @"[A-Za-z]*%d",[ch intValue]+1];
 		NSArray *validFeatures = [featureNames filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"SELF MATCHES %@",regexp]];
 
-		[dim1 addItemsWithObjectValues:validFeatures];
-		[dim2 addItemsWithObjectValues:validFeatures];
+		[[self dim1] addItemsWithObjectValues:validFeatures];
+		[[self dim2] addItemsWithObjectValues:validFeatures];
 
-		[dim3 addItemsWithObjectValues:validFeatures];
+		[[self dim3] addItemsWithObjectValues:validFeatures];
 		
 	   //[dim1 objectValueOfSelectedItem]
 	}
-	[dim1 selectItemAtIndex:0];
+	[[self dim1] selectItemAtIndex:0];
 	//notify that soemthing changed
-	[self changeDim1:dim1];
-	[dim2 selectItemAtIndex:1];
-	[self changeDim2:dim2];
+	[self changeDim1:[self dim1]];
+	[[self dim2] selectItemAtIndex:1];
+	[self changeDim2:[self dim2]];
 
-	[dim3 selectItemAtIndex:2];
-	[self changeDim3:dim3];			
+	[[self dim3] selectItemAtIndex:2];
+	[self changeDim3:[self dim3]];			
 	
 }
 
@@ -2748,7 +2734,7 @@
     }];
     
     NSEnumerator *parentsEnumerator = [[cluster parents] objectEnumerator];
-    id parent;
+    Cluster *parent;
     while(parent = [parentsEnumerator nextObject] )
     {
         //restore previous cluster colors
@@ -2840,11 +2826,11 @@
         //[cluster setObject: [NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)] forKey: @"Cov"];
         [[Clusters objectAtIndex:i] setCov:[NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)]];
         //compute inverse covariance matrix
-		int sign;
-        int status = matrix_inverse(cov, ndim, &det,&sign);
+		//int sign;
+        //int status = matrix_inverse(cov, ndim, &det,&sign);
         //[cluster setObject: [NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)] forKey: @"Covi"];
-        [[Clusters objectAtIndex:i] setCovi:[NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)]];
-        [[Clusters objectAtIndex:i] setDet:det];
+        //[[Clusters objectAtIndex:i] setCovi:[NSData dataWithBytes:cov length:ndim*ndim*sizeof(float)]];
+        //[[Clusters objectAtIndex:i] setDet:det];
         //   [[Clusters objectAtIndex:i] computeBelonginess:[[self fw] getVertexData]];
         //[cluster setObject: [NSNumber numberWithUnsignedInteger: i] forKey: @"ID"];
         //[clusterParams addObject:cluster];
@@ -3036,18 +3022,18 @@
         }
     }
 	
-	[dim1 removeAllItems];
-	[dim1 addItemsWithObjectValues:featureNames];
-    [dim1 selectItemAtIndex:0];
+	[[self dim1] removeAllItems];
+	[[self dim1] addItemsWithObjectValues:featureNames];
+    [[self dim1] selectItemAtIndex:0];
 
 	
-	[dim2 removeAllItems];
-	[dim2 addItemsWithObjectValues:featureNames];
-	[dim2 selectItemAtIndex:1];
+	[[self dim2] removeAllItems];
+	[[self dim2] addItemsWithObjectValues:featureNames];
+	[[self dim2] selectItemAtIndex:1];
     
-	[dim3 removeAllItems];
-	[dim3 addItemsWithObjectValues:featureNames];
-    [dim3 selectItemAtIndex:2];
+	[[self dim3] removeAllItems];
+	[[self dim3] addItemsWithObjectValues:featureNames];
+    [[self dim3] selectItemAtIndex:2];
     //make the feature view window visible
     
     [[[self fw] window] orderFront:self];
