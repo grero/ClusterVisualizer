@@ -35,7 +35,7 @@ int matrix_inverse(double *A,int N, double *det, int *sign)
         {
             //do this to avoid underflow
             *det+= log(fabs(A[i*N+i]));
-            neg = IPIV[i*N+i] != i+1 ? -neg : neg; 
+            neg = IPIV[i] != i+1 ? -neg : neg; 
             //neg*=IPIV[i*N+i];
         }
     }
