@@ -195,11 +195,11 @@
 				const char *filename = [[NSString pathWithComponents: [NSArray arrayWithObjects: directory,file,nil]] cStringUsingEncoding:NSASCIIStringEncoding];
 				H = *readFeatureHeader(filename, &H);
 				
-				tmp_data = NSZoneMalloc([self zone], H.rows*H.cols*sizeof(float));
-				tmp_data2 = NSZoneMalloc([self zone], H.rows*H.cols*sizeof(float));
+				tmp_data = malloc(H.rows*H.cols*sizeof(float));
+				tmp_data2 = malloc(H.rows*H.cols*sizeof(float));
 				//the feature file will in general have a channelValidity file; this tells me which channels were used
-				float *_channelValidity = NSZoneMalloc([self zone],H.numChannels*sizeof(float));
-				channelValidity = NSZoneMalloc([self zone],H.numChannels*sizeof(uint8_t));
+				float *_channelValidity = malloc(H.numChannels*sizeof(float));
+				channelValidity = malloc(H.numChannels*sizeof(uint8_t));
 				tmp_data = readFeatureData(filename, tmp_data,_channelValidity);
 				//copy to the global channelValidity variable
 				for(i=0;i<H.numChannels;i++)
@@ -208,14 +208,14 @@
 				}
 				nchannels = H.numChannels;
 				nvalidChannels = H.rows;
-				NSZoneFree([self zone],_channelValidity);
+				free(_channelValidity);
 				if(tmp_data == NULL)
 				{
 					//create an alert
                     NSAlert *alert = [NSAlert alertWithMessageText:@"Feature file could not be loaded" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@""];
 					[alert runModal];
-					NSZoneFree([self zone], tmp_data);
-					NSZoneFree([self zone], tmp_data2);
+					free(tmp_data);
+					free(tmp_data2);
 					continue;
 					
 				}
@@ -229,8 +229,8 @@
 				}
 					
 				[data appendBytes:tmp_data2 length: H.rows*H.cols*sizeof(float)];
-				NSZoneFree([self zone], tmp_data);
-				NSZoneFree([self zone], tmp_data2);
+				free(tmp_data);
+				free(tmp_data2);
 				cols+=H.rows;
 				//feature names
 				//get basename
@@ -268,7 +268,8 @@
 			return;
 		}
 		//need to reshape
-		tmp_data = NSZoneMalloc([self zone], rows*cols*sizeof(float));
+		//tmp_data = NSZoneMalloc([self zone], rows*cols*sizeof(float));
+		tmp_data = malloc(rows*cols*sizeof(float));
 		tmp_data2 = (float*)[data bytes];
 		for(i=0;i<rows;i++)
 		{
@@ -303,7 +304,8 @@
 			rows = [lines count]-1;
 		}
         //make sure tmp_data is always located in the zone
-		tmp_data = NSZoneMalloc([self zone], rows*cols*sizeof(float));
+		//tmp_data = NSZoneMalloc([self zone], rows*cols*sizeof(float));
+		tmp_data = malloc(rows*cols*sizeof(float));
 		int i,j;
 		for(i=0;i<rows;i++)
 		{
@@ -390,7 +392,7 @@
 	 */
 	[data replaceBytesInRange:range withBytes:tmp_data length: rows*cols*sizeof(float)];
 	 
-	NSZoneFree([self zone], tmp_data);
+	free(tmp_data);
     
 	[fw createVertices:data withRows:rows andColumns:cols];
 	//[fw loadVertices: [openPanel URL]];
@@ -560,7 +562,7 @@
     //compute mean and covariance
     [firstCluster setFeatureDims:cols];
     [firstCluster computeFeatureMean:[[self fw] getVertexData]];
-    [firstCluster computeFeatureCovariance:[[self fw] getVertexData]];
+    //[firstCluster computeFeatureCovariance:[[self fw] getVertexData]];
     [firstCluster makeActive];
     //create cluster color
     float *_ccolor = malloc(3*sizeof(float));
@@ -741,7 +743,7 @@
         tempArray = [NSKeyedUnarchiver unarchiveObjectWithFile:path];
         //get cluster colors
         //NSMutableData *_cluster_colors = [NSMutableData dataWithCapacity:params.rows*3*sizeof(float)];
-        cluster_colors = NSZoneMalloc([self zone], params.rows*3*sizeof(float));
+        cluster_colors = malloc(params.rows*3*sizeof(float));
         id _cluster;
         NSEnumerator *_clustersEnumerator = [tempArray objectEnumerator];
         while( _cluster = [_clustersEnumerator nextObject] )
@@ -776,7 +778,7 @@
 			 H = *readFeatureHeader("../../test2.hdf5", &H);
 			 int rows = H.rows;
 			 */
-			int *cids = NSZoneMalloc([self zone], (rows+1)*sizeof(int));
+			int *cids = malloc((rows+1)*sizeof(int));
 			//cids = readClusterIds(fname, cids);
 			NSArray *lines = [[NSString stringWithContentsOfFile:path encoding: NSASCIIStringEncoding error: NULL] componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
 			//iteratae through lines
@@ -816,7 +818,7 @@
 			//count the number of points in each cluster
 			unsigned int *npoints;
 			npoints = calloc(maxCluster,sizeof(unsigned int));
-			cluster_colors = NSZoneMalloc([self zone],rows*3*sizeof(float));
+			cluster_colors = malloc(rows*3*sizeof(float));
 			for(i=0;i<rows;i++)
 			{
 				if( cids[i+offset] >= 0 )
@@ -877,7 +879,7 @@
 				//we have handed over ownership of cluster to tempArray, so release it
 				[cluster release];
 			}
-			NSZoneFree([self zone], cids);
+			free(cids);
 			free(npoints);
 			//free(cluster_colors);
 
@@ -888,14 +890,14 @@
 			const char *fname = [path cStringUsingEncoding:NSASCIIStringEncoding];
 			uint64_t nelm = getFileSize(fname)/sizeof(uint64_t);
 			unsigned ncols = nelm/2;
-			uint64_t *overlaps = NSZoneMalloc([self zone], nelm*sizeof(uint64_t));
+			uint64_t *overlaps = malloc(nelm*sizeof(uint64_t));
 			overlaps = readOverlapFile(fname, overlaps, nelm);
 			//since the overlaps are assumed to ordered according to clusters, with cluster ids in the first column, we can easily get
 			//the maximum numbers of clusters
 			unsigned int maxCluster = overlaps[ncols-2]+1;
 			unsigned i;
 				
-			cluster_colors = NSZoneMalloc([self zone], 3*ncols*sizeof(float));
+			cluster_colors = malloc(3*ncols*sizeof(float));
 			tempArray = [NSMutableArray arrayWithCapacity:maxCluster];
             //NSLog(@"maxCluster: %d", maxCluster);
 			for(i=0;i<maxCluster;i++)
@@ -954,7 +956,7 @@
 				[cluster setNpoints:[NSNumber numberWithUnsignedInt:npoints+1]];
 			}
 			//free overlaps since we don't need it
-			NSZoneFree([self zone], overlaps);
+			free(overlaps);
 			[tempArray makeObjectsPerformSelector:@selector(createName)];	
 			
 		}
@@ -984,7 +986,7 @@
 		[fw setClusterColors: cluster_colors forIndices: NULL length: rows];
 	}
     //since colors are now ccopied, we can free it
-    NSZoneFree([self zone],cluster_colors);
+    free(cluster_colors);
     if( ([self Clusters] != nil) && (dataloaded == YES ) )
     {
         [self removeAllObjectsFromClusters];
@@ -1014,7 +1016,7 @@
     //draw image of all clusters
 	
 	NSEnumerator *clusterEn = [[self Clusters] objectEnumerator];
-	id cluster;
+	Cluster *cluster;
     NSMenu *addToClustersMenu = [[[NSMenu alloc] init] autorelease];
 	while( (cluster=[clusterEn nextObject] ) ) 
 	{
@@ -1034,24 +1036,29 @@
 		}
 		//add set the feature dimension
 		[cluster setFeatureDims: params.cols];
+		//compute mean and covariance
+		[cluster computeFeatureMean: [[self fw] getVertexData]];
+		//[cluster computeFeatureCovariance: [[self fw] getVertexData]];
 		
 	}
     [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] setSubmenu:addToClustersMenu];
 	[[wfv window] orderOut: self];
-	[self performComputation:@"Compute Feature Mean" usingSelector:@selector(computeFeatureMean:)];
-    [self performComputation:@"Compute Feature Covariance" usingSelector:@selector(computeFeatureCovariance:)];
+	//[self performComputation:@"Compute Feature Mean" usingSelector:@selector(computeFeatureMean:)];
+    //[self performComputation:@"Compute Feature Covariance" usingSelector:@selector(computeFeatureCovariance:)];
 	[allActive setState:1];
 	[[self fw] showAllClusters];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(ClusterStateChanged:)
                                                  name:@"ClusterStateChanged" object:nil];
 	    //check for model file
+	/*j
     NSString *modelFilePath = [path stringByReplacingOccurrencesOfString: extension withString: @"model"];
     if ([[NSFileManager defaultManager] fileExistsAtPath: modelFilePath ] )
     {
         [self readClusterModel:modelFilePath];
         [options addObject: @"Compute L-ratio"];
     }
+	*/
     [selectClusterOption addItemsWithTitles:options];
     //once we have loaded the clusters, start up a timer that will ensure that data gets arhived automatically every 5 minutes
     archiveTimer = [[NSTimer scheduledTimerWithTimeInterval:300 target:self selector:@selector(archiveClusters) userInfo:nil repeats: YES] retain];
@@ -1075,7 +1082,7 @@
     {
         _npoints = spikeHeader.num_spikes;
     }
-    unsigned int *_points = NSZoneMalloc([self zone], _npoints*sizeof(unsigned int));
+    unsigned int *_points = malloc(_npoints*sizeof(unsigned int));
     int i;
     Cluster *cluster = [[Cluster alloc] init];
     //create an index
@@ -1108,7 +1115,7 @@
     color[1] = ((float)rand())/RAND_MAX;
     color[2] = ((float)rand())/RAND_MAX;
     cluster.color = [NSData dataWithBytes: color length:3*sizeof(float)];
-    NSZoneFree([self zone], _points);
+    free(_points);
     [self loadWaveforms:cluster];
     //allow the waveforms view to receive notification about highlights
     [[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
@@ -2902,7 +2909,7 @@
     //NSUInteger stride = s/(nwaves*channels*timepoints*sizeof(float));
 	
 	float *wfdata = (float*)[waveforms bytes];
-	float *sparea = NSZoneMalloc([self zone], nwaves*channels*sizeof(float));
+	float *sparea = malloc(nwaves*channels*sizeof(float));
     float *spwidth = malloc(nwaves*channels*sizeof(float));
     float *spfft = malloc(nwaves*channels*timepoints*sizeof(float));
     float *sppca = malloc(nwaves*channels*timepoints*sizeof(float));
@@ -2989,7 +2996,7 @@
 	//NSZoneFree([self zone], spwidth);
 	
     free(spwidth);
-	NSZoneFree([self zone], sparea);
+	free(sparea);
     free(spfft);
     free(sppca);
 	[fw createVertices:[NSData dataWithBytes: fv length: fvsize*sizeof(float)] withRows:nwaves andColumns:channels*(2+2*timepoints)];
@@ -3135,7 +3142,7 @@
     [timestamps release];
     [queue release];
 	[selectedClusters release];
-	NSZoneFree([self zone],channelValidity);
+	free(channelValidity);
     [super dealloc];
     
 }
