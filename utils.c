@@ -17,15 +17,15 @@ unsigned int *histogram_sorted(float *data, int datal, float*bins, int binsl,uns
 
 
 //compute matrix inverse of square matrix A via LU factorization
-int matrix_inverse(float *A,int N, double *det, int *sign)
+int matrix_inverse(double *A,int N, double *det, int *sign)
 {
 	//pivots
 	int *IPIV = malloc((N+1)*sizeof(int));
 	int LWORK = N*N;
-	float *WORK = malloc(LWORK*sizeof(float));
+	double *WORK = malloc(LWORK*sizeof(double));
     int neg = 1;
 	int INFO;
-	sgetrf_(&N,&N,A,&N,IPIV,&INFO);
+	dgetrf_(&N,&N,A,&N,IPIV,&INFO);
     if ( det != NULL)
     {
         //compute determinant
@@ -34,14 +34,15 @@ int matrix_inverse(float *A,int N, double *det, int *sign)
         for(i=0;i<N;i++)
         {
             //do this to avoid underflow
-            *det+= log(fabs((double)A[i*N+i]));
-            neg*=IPIV[i*N+i];
+            *det+= log(fabs(A[i*N+i]));
+            neg = IPIV[i*N+i] != i+1 ? -neg : neg; 
+            //neg*=IPIV[i*N+i];
         }
     }
     //*det = exp(*det);
 	//the sign of determinant determined by neg; if it's negative, we can return the log
 	*sign = neg;
-	sgetri_(&N,A,&N,IPIV,WORK,&LWORK,&INFO);
+	dgetri_(&N,A,&N,IPIV,WORK,&LWORK,&INFO);
     free(IPIV);
 	free(WORK);
 
