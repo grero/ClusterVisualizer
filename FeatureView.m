@@ -535,10 +535,13 @@
 		//centroid[0]/=new_size;
 		//centroid[1]/=new_size;
 		//centroid[2]/=new_size;
-        
-		CM[0] = ((nindices-new_size)*CM[0] + centroid[0])/nindices;
-		CM[1] = ((nindices-new_size)*CM[1] + centroid[1])/nindices;
-		CM[2] = ((nindices-new_size)*CM[2] + centroid[2])/nindices;
+      	//only do this of nidinces > 0  
+		if(nindices > 0)
+		{
+			CM[0] = ((nindices-new_size)*CM[0] + centroid[0])/nindices;
+			CM[1] = ((nindices-new_size)*CM[1] + centroid[1])/nindices;
+			CM[2] = ((nindices-new_size)*CM[2] + centroid[2])/nindices;
+		}
         NSZoneFree([self zone], centroid);
 				//calculate the centroid of the cluster in the current space
         //do colors
