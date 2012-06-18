@@ -197,7 +197,7 @@
     //minmax = getMinMax(minmax, vertices, H.rows, H.cols);
     draw_dims[0] = 0;
     draw_dims[1] = 1;
-    draw_dims[2] = 3;
+    draw_dims[2] = 2;
     rows = H.rows;
     cols = H.cols;
     //cluster indices
@@ -305,7 +305,9 @@
         [vertices release];
 
     }
-    vertices = [[NSData dataWithData:vertex_data] retain];
+    //vertices = [[NSData dataWithData:vertex_data] retain];
+	//make a copy of vertex data and retain it
+	vertices = [[vertex_data copy] retain];
     
     //[vertex_data getBytes:vertices length: rows*cols*sizeof(float)];
     float *_vertices = (float*)[vertices bytes];
@@ -320,7 +322,7 @@
 	scale = 1.0;
     draw_dims[0] = 0;
     draw_dims[1] = 1;
-    draw_dims[2] = 3;
+    draw_dims[2] = 2;
     ndraw_dims = 3;
     //I don't really need a separate variable for this; just use whatever is on the GPU
     use_vertices = malloc(rows*ndraw_dims*sizeof(GLfloat));
@@ -499,9 +501,9 @@
         {
             //tmp_indices[nindices+j] = points[j];
 			//compute centroid; this is only valid int he original coordinate system
-			centroid[0] += _vertices[points[j]*cols + draw_dims[0]];
-			centroid[1] += _vertices[points[j]*cols + draw_dims[1]];
-			centroid[2] += _vertices[points[j]*cols + draw_dims[2]];
+			//centroid[0] += _vertices[points[j]*cols + draw_dims[0]];
+			//centroid[1] += _vertices[points[j]*cols + draw_dims[1]];
+			//centroid[2] += _vertices[points[j]*cols + draw_dims[2]];
 			//compute min/max
 			cluster_minmax[0] = MIN(cluster_minmax[0],_vertices[points[j]*cols + draw_dims[0]]);
 			cluster_minmax[1] = MAX(cluster_minmax[1],_vertices[points[j]*cols + draw_dims[0]]);
@@ -538,9 +540,13 @@
       	//only do this of nidinces > 0  
 		if(nindices > 0)
 		{
-			CM[0] = ((nindices-new_size)*CM[0] + centroid[0])/nindices;
-			CM[1] = ((nindices-new_size)*CM[1] + centroid[1])/nindices;
-			CM[2] = ((nindices-new_size)*CM[2] + centroid[2])/nindices;
+			float *clusterMean = (float*)[[cluster mean] bytes];
+			CM[0] = ((nindices-new_size)*CM[0] + new_size*clusterMean[draw_dims[0]])/nindices;
+			//CM[0] = ((nindices-new_size)*CM[0] + centroid[0])/nindices;
+			CM[1] = ((nindices-new_size)*CM[1] + new_size*clusterMean[draw_dims[1]])/nindices;
+			//CM[1] = ((nindices-new_size)*CM[1] + centroid[1])/nindices;
+			CM[2] = ((nindices-new_size)*CM[2] + new_size*clusterMean[draw_dims[2]])/nindices;
+			//CM[2] = ((nindices-new_size)*CM[2] + centroid[2])/nindices;
 		}
         NSZoneFree([self zone], centroid);
 				//calculate the centroid of the cluster in the current space
@@ -570,31 +576,33 @@
     {
         currentCluster = [selectedClusters lastObject];
     }
-	unsigned int new_size = [[cluster npoints] intValue];
+	unsigned int _npoints = [[cluster npoints] intValue];
 	//first check if hiding this cluster takes away all indices, if so, simply set nindices to 0
-	if(nindices - new_size ==0)
+	if(nindices - _npoints ==0)
 	{
 		nindices = 0;
         [indexset removeAllIndexes];
-        //also remove highlights
+		//update the centroid
+		CM[0] = 0;
+        CM[1] = 0;
+		CM[2] = 0;
         [[self highlightedPoints] setLength:0];
 		[self setNeedsDisplay:YES];
 		return;
 	}
 	
-    if(new_size>0)
+    if(_npoints>0)
     {
         [[self openGLContext] makeCurrentContext];
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
         GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
         if( tmp_indices != NULL)
         {
-            //update the centroid
-            float *clusterMean = (float*)[[cluster mean] bytes];
-            unsigned int _npoints = [[cluster npoints] unsignedIntValue];
-            CM[0] = (nindices*CM[0] - _npoints*clusterMean[draw_dims[0]])/(nindices-_npoints);
-            CM[1] = (nindices*CM[1] - _npoints*clusterMean[draw_dims[1]])/(nindices-_npoints);
-            CM[2] = (nindices*CM[2] - _npoints*clusterMean[draw_dims[2]])/(nindices -_npoints);
+			//update the centroid
+			float *clusterMean = (float*)[[cluster mean] bytes];
+			CM[0] = (nindices*CM[0] - _npoints*clusterMean[draw_dims[0]])/(nindices-_npoints);
+			CM[1] = (nindices*CM[1] - _npoints*clusterMean[draw_dims[1]])/(nindices-_npoints);
+			CM[2] = (nindices*CM[2] - _npoints*clusterMean[draw_dims[2]])/(nindices -_npoints);
             //unsigned int *_points = (unsigned int*)malloc((nindices-new_size)*sizeof(unsigned int));
             //new_size = [[cluster indices] count];
             int i,j,found;
@@ -636,7 +644,7 @@
             {
                 //check if the currentl highltighted points belong to this cluster
                 unsigned int *_points = (unsigned int*)[[self highlightedPoints] bytes];
-                unsigned int _npoints = [[self highlightedPoints] length]/sizeof(unsigned int);
+                _npoints = [[self highlightedPoints] length]/sizeof(unsigned int);
                 //new array to hold the higlighted points we keep
                 unsigned int* newpoints = malloc(_npoints*sizeof(unsigned int  ));
                 for(i=0;i<_npoints;i++)
@@ -671,9 +679,9 @@
             //glBufferData(GL_ELEMENT_ARRAY_BUFFER, nindices*sizeof(unsigned int), indices, GL_DYNAMIC_DRAW);
             //free(_points);
             //reset origin
-            originx = 0.0;
-            originy = 0.0;
-            originz = -2.0;
+            //originx = 0.0;
+           // originy = 0.0;
+            //originz = -2.0;
             glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
             
             [self setNeedsDisplay:YES];
@@ -686,6 +694,10 @@
 {
     [selectedClusters removeAllObjects];
     nindices = 0;
+	//reset center of mass to zero
+	CM[0] = 0;
+	CM[1] = 0;
+	CM[2] = 0;
 	[indexset removeAllIndexes];
     [self setNeedsDisplay:YES];
 }
