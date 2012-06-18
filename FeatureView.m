@@ -33,9 +33,6 @@
 	originx = 0.0;
 	originy = 0.0;
 	originz = -2.0;
-    CM[0] = 0;
-    CM[1] = 0;
-    CM[2] = 0;
 	scale = 1.0;
     base_color[0] = 1.0f;
 	base_color[1] = 0.85f;
@@ -284,6 +281,8 @@
     float *use_vertices, *colors,*indices;
     rows = r;
     cols = c;
+	//allocate space for cluster centroid
+	CM = calloc(cols,sizeof(float));
     nindices = rows;
 	//create an indexset
 	NSRange rng;
@@ -491,7 +490,6 @@
                 j+=1;
             }
         }*/
-		float *centroid = NSZoneCalloc([self zone], 3,sizeof(float));
         unsigned int *points = (unsigned int*)[[cluster points] bytes];
 		float *cluster_minmax = NSZoneCalloc([self zone], 6,sizeof(float));
         //originx = 0;
@@ -540,15 +538,14 @@
       	//only do this of nidinces > 0  
 		if(nindices > 0)
 		{
+			int i;
 			float *clusterMean = (float*)[[cluster mean] bytes];
-			CM[0] = ((nindices-new_size)*CM[0] + new_size*clusterMean[draw_dims[0]])/nindices;
-			//CM[0] = ((nindices-new_size)*CM[0] + centroid[0])/nindices;
-			CM[1] = ((nindices-new_size)*CM[1] + new_size*clusterMean[draw_dims[1]])/nindices;
-			//CM[1] = ((nindices-new_size)*CM[1] + centroid[1])/nindices;
-			CM[2] = ((nindices-new_size)*CM[2] + new_size*clusterMean[draw_dims[2]])/nindices;
-			//CM[2] = ((nindices-new_size)*CM[2] + centroid[2])/nindices;
+			for(i=0;i<cols;i++)
+			{
+				CM[i] = ((nindices-new_size)*CM[i] + new_size*clusterMean[i])/nindices;
+			}
 		}
-        NSZoneFree([self zone], centroid);
+
 				//calculate the centroid of the cluster in the current space
         //do colors
         [self setClusterColors:_color forIndices:(unsigned int*)[[cluster points] bytes] length:[[cluster npoints] unsignedIntValue]];
@@ -599,13 +596,14 @@
         if( tmp_indices != NULL)
         {
 			//update the centroid
+            int i,j,found;
 			float *clusterMean = (float*)[[cluster mean] bytes];
-			CM[0] = (nindices*CM[0] - _npoints*clusterMean[draw_dims[0]])/(nindices-_npoints);
-			CM[1] = (nindices*CM[1] - _npoints*clusterMean[draw_dims[1]])/(nindices-_npoints);
-			CM[2] = (nindices*CM[2] - _npoints*clusterMean[draw_dims[2]])/(nindices -_npoints);
+			for(i=0;i<cols;i++)
+			{
+				CM[i] = (nindices*CM[i] - _npoints*clusterMean[i])/(nindices-_npoints);
+			}
             //unsigned int *_points = (unsigned int*)malloc((nindices-new_size)*sizeof(unsigned int));
             //new_size = [[cluster indices] count];
-            int i,j,found;
             i = 0;
             //TODO: The following is a very naiv way of doing intersection. Should fix this 
             //      One way to fix make it more efficient is to make sure the indices are sorted. This can
@@ -695,9 +693,11 @@
     [selectedClusters removeAllObjects];
     nindices = 0;
 	//reset center of mass to zero
-	CM[0] = 0;
-	CM[1] = 0;
-	CM[2] = 0;
+	int i;
+	for(i=0;i<cols;i++)
+	{
+		CM[i] = 0;
+	}
 	[indexset removeAllIndexes];
     [self setNeedsDisplay:YES];
 }
@@ -1186,28 +1186,6 @@ static void drawFrame()
     //use look at to define our viewing transform. Eye is positioned 4 units in the NEGATIVE z-direction (towards the viewer), and the origin is 2 units into the screen (z-0 is in the viewing plane, i.e. the screen
     gluLookAt(0, 0, 4.0, originx, originy, originz, 0, 1, 0);
 	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-    //draw lines to indicate the centroid; this should be removed
-    glBegin(GL_LINES);
-    glVertex3f(CM[0], -2, CM[2]);
-    glColor3f(1.0, 0.0, 0.0);
-    glVertex3f(CM[0], 2, CM[2]);
-    glColor3f(1.0, 0.0, 0.0);
-    glEnd();
-
-    glTranslatef(CM[0], CM[1], CM[2]);
-
-	glRotatef(rotatey,0, 1, 0);
-	glRotatef(rotatez, 0, 0,1);
-    glTranslatef(-CM[0],-CM[1] , -CM[2]);
-    //glTranslatef(originx, originy, originz);
-    //test; draw a line parallel to the y-axis through the origin
-    glBegin(GL_LINES);
-    glVertex3f(CM[0], -2, CM[2]);
-    glColor3f(1.0, 0.0, 0.0);
-    glVertex3f(CM[0], 2, CM[2]);
-    glColor3f(1.0, 0.0, 0.0);
-    glEnd();
     if ([self showFrame] )
     {
         drawFrame();
@@ -1228,6 +1206,28 @@ static void drawFrame()
 	*/
 	if(dataloaded)
     {
+		glLoadIdentity();
+		//draw lines to indicate the centroid; this should be removed
+		glBegin(GL_LINES);
+		glVertex3f(CM[draw_dims[0]], -2, CM[draw_dims[2]]);
+		glColor3f(1.0, 0.0, 0.0);
+		glVertex3f(CM[draw_dims[0]], 2, CM[draw_dims[2]]);
+		glColor3f(1.0, 0.0, 0.0);
+		glEnd();
+
+		glTranslatef(CM[draw_dims[0]], CM[draw_dims[1]], CM[draw_dims[2]]);
+
+		glRotatef(rotatey,0, 1, 0);
+		glRotatef(rotatez, 0, 0,1);
+		glTranslatef(-CM[draw_dims[0]], -CM[draw_dims[1]], -CM[draw_dims[2]]);
+		//glTranslatef(originx, originy, originz);
+		//test; draw a line parallel to the y-axis through the origin
+		glBegin(GL_LINES);
+		glVertex3f(CM[draw_dims[0]], -2, CM[draw_dims[2]]);
+		glColor3f(1.0, 0.0, 0.0);
+		glVertex3f(CM[draw_dims[0]], 2, CM[draw_dims[2]]);
+		glColor3f(1.0, 0.0, 0.0);
+		glEnd();
 		[self drawAnObject];
 		//drawAnObject();
 
@@ -1793,6 +1793,7 @@ static void drawFrame()
     //free(use_vertices);
     //free(indices);
     free(minmax);
+	free(CM);
     //free(colors);
     //free(cids);
     free(use_colors);
