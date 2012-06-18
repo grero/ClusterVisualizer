@@ -109,17 +109,17 @@
 
 -(void)setCov:(NSData *)_cov
 {
-	int sign;
-    unsigned int dimSquare = [_cov length]/sizeof(float);
+	int sign,status;
+    unsigned int dimSquare = [_cov length]/sizeof(double);
     cov = [[NSData dataWithData:_cov] retain];
     //also update the inverse covariance matrix
-    float *_icov,*__cov;
-    _icov= malloc(dimSquare*sizeof(float));
-    __cov = (float*)[_cov bytes];
-    memcpy(_icov, __cov, dimSquare*sizeof(float));
-    matrix_inverse(_icov, (unsigned int)sqrt(dimSquare), &det,&sign);
+    double *_icov,*__cov;
+    _icov= malloc(dimSquare*sizeof(double));
+    __cov = (double*)[_cov bytes];
+    memcpy(_icov, __cov, dimSquare*sizeof(double));
+    status = matrix_inverse(_icov, (unsigned int)sqrt(dimSquare), &det,&sign);
     //det = exp(det);
-    [self setCovi:[NSData dataWithBytes:_icov length:dimSquare*sizeof(float)]];
+    [self setCovi:[NSData dataWithBytes:_icov length:dimSquare*sizeof(double)]];
     free(_icov);
 }
 
@@ -261,7 +261,7 @@
     double *d = malloc(sizeof(double)*cols);
 
     float *_mean = (float*)[[self mean] bytes];
-    float *_covi = (float*)[[self covi] bytes];
+    double *_covi = (double*)[[self covi] bytes];
     double x;
     double f = -0.5*(double)cols*log(2*pi)-0.5*[self det];
     unsigned m,l;
@@ -281,7 +281,7 @@
             q[m] = 0;
             for(l=0;l<cols;l++)
             {
-                q[m]+=(double)(_covi[m*cols+l])*d[l];
+                q[m]+=(_covi[m*cols+l])*d[l];
             }
         }
         //compute mahalanobis distance
@@ -374,12 +374,12 @@
 -(void)computeFeatureCovariance:(NSData*)data
 {
     //this only works in mean has been compute
-    if( mean == NULL )
+    if( mean == nil )
     {
         return;
     }
     int cols = featureDims;
-	float *_sq = calloc(cols*cols,sizeof(float));
+	double *_sq = calloc(cols*cols,sizeof(double));
 	float *_data = (float*)[data bytes];
     float *_mean = (float*)[[self mean] bytes];
     float *v;
@@ -393,7 +393,7 @@
         {
             for(l=0;l<cols;l++)
             {
-                _sq[i*cols+l]+=v[i]*v[l];
+                _sq[i*cols+l]+=((double)v[i])*((double)v[l]);
             }
         }
         j+=1;
@@ -409,7 +409,7 @@
             _sq[i*cols+l]-=_mean[i]*_mean[l];
         }
     }
-    [self setCov:[NSData dataWithBytes:_sq length:cols*cols*sizeof(float)]];
+    [self setCov:[NSData dataWithBytes:_sq length:cols*cols*sizeof(double)]];
     free(_sq);
 
 }
