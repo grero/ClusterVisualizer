@@ -128,17 +128,17 @@ float *readFeatureData(const char *fname,float *data, float *channelValidity)
 
 float *readMatlabFeatureData(const char *fname,float *data, float *channelValidity)
 {
-	matvar_t *matvar;
+	matvar_t *matvar1, *matvar2;
 	mat_t *mat;
 	size_t *dims;
 	unsigned int rank;
 	
 	//open file
 	mat = Mat_Open(fname,MAT_ACC_RDONLY);
-	matvar = Mat_VarRead(mat,"FeatureData");
+	matvar1 = Mat_VarRead(mat,"FeatureData");
 	//int err = Mat_VarReadDataAll(mat,matvar);
 	//int nel = (matvar->nbytes)/(matvar->data_size);
-	double *_data = matvar->data;
+	double *_data = matvar1->data;
     if(_data == NULL)
     {
         data = NULL;
@@ -146,8 +146,8 @@ float *readMatlabFeatureData(const char *fname,float *data, float *channelValidi
     }
 	int i,j;
 	int rows,cols;
-	rows = matvar->dims[0];
-	cols = matvar->dims[1];
+	rows = matvar1->dims[0];
+	cols = matvar1->dims[1];
 	//copy and transpose
 	for(i=0;i<rows;i++)
 	{
@@ -158,17 +158,17 @@ float *readMatlabFeatureData(const char *fname,float *data, float *channelValidi
 
 		}
 	}
-	Mat_VarFree(matvar);
+	Mat_VarFree(matvar1);
 	//read channel validity
-	matvar = Mat_VarRead(mat,"ChannelValidity");
-	rank = (unsigned int)(matvar->rank);
-	dims = matvar->dims;
-	_data = matvar->data;
+	matvar2 = Mat_VarRead(mat,"ChannelValidity");
+	rank = (unsigned int)(matvar2->rank);
+	dims = matvar2->dims;
+	_data = matvar2->data;
 	for(i=0;i<dims[0]*dims[1];i++)
 	{
 		channelValidity[i] = (float)(_data[i]);
 	}
-	Mat_VarFree(matvar);
+	Mat_VarFree(matvar2);
 	Mat_Close(mat);
 	return data;
 }
