@@ -1024,7 +1024,7 @@
         //update the menu
         [addToClustersMenu addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[cluster clusterId] intValue] ] action:@selector(performClusterOption:) keyEquivalent:@""];
         //check that there no more than 5000 points
-		if( ([[cluster clusterId] unsignedIntValue] > 0 ) && ([[cluster npoints] unsignedIntValue] < [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"]) && ([[cluster npoints] unsignedIntValue] >0))
+		if( ([[cluster clusterId] unsignedIntValue] > 0 ) && ([[cluster npoints] unsignedIntValue] >0))
 		{
 			[self loadWaveforms: cluster];
 			//make sure we also update the waverormsImage
@@ -1312,6 +1312,10 @@
         }*/
         nptHeader spikeHeader;
         spikeHeader = *getSpikeInfo(path,&spikeHeader);
+		if( nvalidChannels == 0)
+		{
+			nvalidChannels = spikeHeader.channels;
+		}
         wfSize = npoints*nvalidChannels*spikeHeader.timepts;
         waveforms = malloc(wfSize*sizeof(short int));
         
@@ -1325,7 +1329,7 @@
         }
         free(idx);
 		
-		if(nchannels == nvalidChannels )
+		if( (nchannels == nvalidChannels ) || (nchannels == 0))
 		{
 			waveforms = getWaves(path, &spikeHeader, _idx, npoints, waveforms);
 		}
