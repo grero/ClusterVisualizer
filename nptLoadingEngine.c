@@ -112,7 +112,7 @@ short int* getWavesForChannels(const char *fname, nptHeader *header, unsigned in
     waveLength = chs*pts;
 	//offset to where we should start reading
     offset = channels[0]*pts;
-	readSize = (channels[nchannels-1] - channels[0])*pts;
+	readSize = nchannels*pts; 
     for(i = 0; i < index_length; i++ )
     //for(i = 0; i < header->num_spikes; i++)
     {
