@@ -1782,6 +1782,10 @@ static void drawFrame()
 		{
 			params = [NSDictionary dictionaryWithObjectsAndKeys:[item title], @"option", option, @"clusters",nil];
 		}
+        else if([[item title] isEqualToString:@"Move points to cluster"] ) 
+        {
+            params = [NSDictionary dictionaryWithObjectsAndKeys:[item title], @"option", option, @"clusters",nil];
+        }
 	}
 	else if([[sender title] isEqualToString:@"Remove points from cluster"] )
 	{

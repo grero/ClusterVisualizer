@@ -577,6 +577,7 @@
     [selectClusterOption addItemWithTitle:@"Compute ISOmap"];
     [clusterMenu addItemWithTitle:@"Create cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     [clusterMenu addItemWithTitle:@"Add points to cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
+    [clusterMenu addItemWithTitle:@"Move points to cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     [clusterMenu addItemWithTitle:@"Remove points from cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     //before we create the cluster, hide all existing clusters
     [[self fw] hideAllClusters];
@@ -1760,11 +1761,11 @@
     }
 	else if ([[notification name] isEqualToString:@"Remove points from cluster"])	
 	{
-		[self removePointsFromCluster: [self selectedCluster]];
+		[self movePointsFromCluster: [self selectedCluster] toCluster:[Clusters objectAtIndex:0]];
 	}
     else if ([[notification name] isEqualToString:@"performClusterOption"] )
 	{
-        if ([[[notification userInfo] objectForKey: @"option"] isEqualToString:@"Add points to cluster"])
+        if (([[[notification userInfo] objectForKey: @"option"] isEqualToString:@"Add points to cluster"]) || ( [[[notification userInfo] objectForKey:@"option"] isEqualToString:@"Move points to cluster"] ))
         {
             NSScanner *scanner = [NSScanner scannerWithString:[[notification userInfo] objectForKey:@"clusters"]];
             //skip all letters
@@ -1774,12 +1775,20 @@
             
             NSArray *candidates = [[self Clusters] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"clusterId == %d",clusterID]];
             
-            [self addPointsToCluster: [candidates objectAtIndex:0]];
+            if( [[[notification userInfo] objectForKey:@"option"] isEqualToString:@"Move points to cluster"] )
+            {
+                [self movePointsFromCluster:[self selectedCluster] toCluster:[candidates objectAtIndex:0]];
+            }
+            else
+            {
+                [self addPointsToCluster: [candidates objectAtIndex:0]];
+            }
         }
 		else if ([[[notification userInfo] objectForKey:@"option"] isEqualToString:@"Remove points from cluster"])
 		{
-			[self removePointsFromCluster: [self selectedCluster]];
-		}
+			[self movePointsFromCluster: [self selectedCluster] toCluster:[Clusters objectAtIndex:0]];		
+        }
+        
         else
         {
             //set the selected object
@@ -2298,6 +2307,14 @@
                 
             }
             [[[[self clusterMenu] itemWithTitle:@"Add points to cluster"] submenu] addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[newCluster clusterId] unsignedIntValue]] action:@selector(performClusterOption:) keyEquivalent:@""];
+            //also add to move points to cluster
+            if( [[[self clusterMenu] itemWithTitle:@"Move points to cluster"] hasSubmenu] == NO )
+            {
+                NSMenu *subMenu = [[[NSMenu alloc] init] autorelease];
+                [[[self clusterMenu] itemWithTitle:@"Move points to cluster"] setSubmenu:subMenu];
+                
+            }
+            [[[[self clusterMenu] itemWithTitle:@"Move points to cluster"] submenu] addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[newCluster clusterId] unsignedIntValue]] action:@selector(performClusterOption:) keyEquivalent:@""];
             [[NSNotificationCenter defaultCenter] addObserver:self
                                                      selector:@selector(ClusterStateChanged:)
                                                          name:@"ClusterStateChanged" object:nil];
@@ -3149,7 +3166,7 @@
 	//
 }
 
--(void)removePointsFromCluster:(Cluster*)cluster
+-(void)movePointsFromCluster:(Cluster*)fromCluster toCluster:(Cluster *)toCluster
 {
         if([fw highlightedPoints] != NULL)
         {
@@ -3159,15 +3176,15 @@
 			if (nselected == 0) {
 				return;
 			}
-			[fw hideCluster:selectedCluster];
+			[fw hideCluster:fromCluster];
 
             
-            [selectedCluster removePoints:[NSData dataWithBytes: selected length: nselected*sizeof(unsigned int)]];
+            [fromCluster removePoints:[NSData dataWithBytes: selected length: nselected*sizeof(unsigned int)]];
             //recompute ISI
             //TODO: Not necessary to recompute everything here
             [selectedCluster computeISIs:timestamps];
             //add this point to the noise cluster
-            [[Clusters objectAtIndex:0] addPoints:[NSData dataWithBytes: selected length: nselected*sizeof(unsigned int)]];
+            [toCluster addPoints:[NSData dataWithBytes: selected length: nselected*sizeof(unsigned int)]];
             [[fw highlightedPoints] setLength:0];
 			[fw setHighlightedPoints:NULL];
             [fw showCluster:selectedCluster];
@@ -3180,8 +3197,8 @@
 				//might as well just redraw. Hell yeah!
 			}
 		}
-        [selectedCluster setWfMean:[NSData dataWithData:[[self wfv] wfMean]]];
-        [selectedCluster setWfCov:[NSData dataWithData:[[self wfv] wfStd]]];
+        [fromCluster setWfMean:[NSData dataWithData:[[self wfv] wfMean]]];
+        [fromCluster setWfCov:[NSData dataWithData:[[self wfv] wfStd]]];
         [[[[self fw] menu] itemWithTitle:@"Remove points from cluster"] setEnabled:NO];
 		[fw setNeedsDisplay:YES];
 

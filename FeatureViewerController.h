@@ -125,7 +125,7 @@
 - (IBAction) changeCycleInterval: (id)sender;
 - (IBAction)saveFeatureSpace:(id)sender;
 -(void)cycleDimensionsUsingTimer:(NSTimer*)timer;
--(void)removePointsFromCluster:(Cluster*)cluster;
+-(void)movePointsFromCluster:(Cluster*)fromCluster toCluster: (Cluster*)toCluster;
 
 
 //@property (assign) IBOutlet NSWindow *window;
