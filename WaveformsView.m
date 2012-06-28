@@ -753,7 +753,10 @@
     unsigned int* _points = (unsigned int*)[wfidx bytes];
 	
     unsigned int _npoints = [wfidx length]/sizeof(unsigned int);
-    
+    if( [waveformIndices count] < _npoints)
+    {
+        return;
+    }
     GLfloat zvalue,zp;
     [[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
