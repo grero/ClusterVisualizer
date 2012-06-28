@@ -1776,15 +1776,25 @@ static void drawFrame()
     NSString *option = [sender title];
     NSMenuItem *item = [sender parentItem];
     NSDictionary *params;
-    if([[item title] isEqualToString:@"Add points to cluster"] )
-    {
-        params = [NSDictionary dictionaryWithObjectsAndKeys:[item title], @"option", option, @"clusters",nil];
-    }
+	if( item != nil )
+	{
+		if([[item title] isEqualToString:@"Add points to cluster"] )
+		{
+			params = [NSDictionary dictionaryWithObjectsAndKeys:[item title], @"option", option, @"clusters",nil];
+		}
+	}
+	else if([[sender title] isEqualToString:@"Remove points from cluster"] )
+	{
+        //params = [NSDictionary dictionaryWithObjectsAndKeys:@"Remove waveforms", @"option",nil];
+        params = [NSDictionary dictionaryWithObjectsAndKeys:@"Remove points from cluster", @"option", nil];
+
+	}
+
     else
     {
         params = [NSDictionary dictionaryWithObjectsAndKeys:option, @"option", nil];
     }
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"performClusterOption" object:self userInfo:params];
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"performClusterOption" object:self userInfo:params];
 }
 
 -(void)dealloc

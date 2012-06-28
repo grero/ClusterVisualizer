@@ -1394,8 +1394,8 @@
         }
 		//[rasterView createVertices:timestamps];
 		//[[rasterView window] orderFront:self];
-        [_pool drain];
 	}
+	[_pool drain];
 		
     
 }
@@ -1758,7 +1758,10 @@
             }
 		}	
     }
-	
+	else if ([[notification name] isEqualToString:@"Remove points from cluster"])	
+	{
+		[self removePointsFromCluster: [self selectedCluster]];
+	}
     else if ([[notification name] isEqualToString:@"performClusterOption"] )
 	{
         if ([[[notification userInfo] objectForKey: @"option"] isEqualToString:@"Add points to cluster"])
@@ -1773,10 +1776,15 @@
             
             [self addPointsToCluster: [candidates objectAtIndex:0]];
         }
+		else if ([[[notification userInfo] objectForKey:@"option"] isEqualToString:@"Remove points from cluster"])
+		{
+			[self removePointsFromCluster: [self selectedCluster]];
+		}
         else
         {
             //set the selected object
             //check that the option is valid
+			//we don't necessarily want to do this any more
             NSUInteger idx = [[selectClusterOption itemTitles] indexOfObject:[[notification userInfo] objectForKey:@"option"]];
             if (idx != NSNotFound )
             {
@@ -2407,6 +2415,7 @@
             wavesize = nvalidChannels*(spikeHeader.timepts);
         }
         _queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+		//TODO: make sure that the readWaveformsMethod repsects nvalidChannels
         waveforms = [selectedCluster readWaveformsFromFile:[self waveformsFile]];
         //get the currently selected waveform
         
@@ -3138,6 +3147,44 @@
 	//}
 	[formatter release];
 	//
+}
+
+-(void)removePointsFromCluster:(Cluster*)cluster
+{
+        if([fw highlightedPoints] != NULL)
+        {
+            //remove the currently selected waveforms
+            unsigned int *selected = (unsigned int*)[[fw highlightedPoints] bytes];
+			unsigned int nselected = ([[fw highlightedPoints] length])/sizeof(unsigned int);
+			if (nselected == 0) {
+				return;
+			}
+			[fw hideCluster:selectedCluster];
+
+            
+            [selectedCluster removePoints:[NSData dataWithBytes: selected length: nselected*sizeof(unsigned int)]];
+            //recompute ISI
+            //TODO: Not necessary to recompute everything here
+            [selectedCluster computeISIs:timestamps];
+            //add this point to the noise cluster
+            [[Clusters objectAtIndex:0] addPoints:[NSData dataWithBytes: selected length: nselected*sizeof(unsigned int)]];
+            [[fw highlightedPoints] setLength:0];
+			[fw setHighlightedPoints:NULL];
+            [fw showCluster:selectedCluster];
+			if([[wfv window] isVisible])
+			{
+				
+				[wfv hideWaveforms:[wfv highlightWaves]];
+				[[wfv highlightWaves] setLength: 0];
+				[wfv setHighlightWaves:NULL];
+				//might as well just redraw. Hell yeah!
+			}
+		}
+        [selectedCluster setWfMean:[NSData dataWithData:[[self wfv] wfMean]]];
+        [selectedCluster setWfCov:[NSData dataWithData:[[self wfv] wfStd]]];
+        [[[[self fw] menu] itemWithTitle:@"Remove points from cluster"] setEnabled:NO];
+		[fw setNeedsDisplay:YES];
+
 }
 
 
