@@ -600,43 +600,17 @@
 			//update the centroid
             int i,j,found;
 			float *clusterMean = (float*)[[cluster mean] bytes];
-			for(i=0;i<cols;i++)
-			{
-				CM[i] = (nindices*CM[i] - _npoints*clusterMean[i])/(nindices-_npoints);
-			}
+            if(clusterMean != NULL )
+            {
+                for(i=0;i<cols;i++)
+                {
+                    CM[i] = (nindices*CM[i] - _npoints*clusterMean[i])/(nindices-_npoints);
+                }
+            }
             //unsigned int *_points = (unsigned int*)malloc((nindices-new_size)*sizeof(unsigned int));
             //new_size = [[cluster indices] count];
             i = 0;
-            //TODO: The following is a very naiv way of doing intersection. Should fix this 
-            //      One way to fix make it more efficient is to make sure the indices are sorted. This can
-            //      be done by maintaining a heap, for instance. 
-            //dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-            //dispatch_apply(nindices, queue, ^(size_t j)
-            /*
-            for(j=0;j<nindices;j++)
-            {
-                //int i,k,found;
-
-                found = 0;
-                //i = 0;
-                for(k=0;k<new_size;k++)
-                {
-                    if(tmp_indices[j]==points[k])
-                    {
-                        found=1;
-                        //once we've found a match, abort
-                        break;
-                    }
-                }
-                if(found==0)
-                {
-                    indices[i] = tmp_indices[j];
-                    i+=1;
-                }
-            }//);
-             */
-            //alternative to the above: Use IndexSets
-            //NSMutableIndexSet *tmp = [NSMutableIndexSet 
+           
             [indexset removeIndexes: [cluster indices]];
             
             j = 0;
