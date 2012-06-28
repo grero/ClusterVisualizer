@@ -1189,9 +1189,9 @@
     //hide the waveforms specified in wfidx by setting their z-values to -50
 	//wfidx will be in the new coordinates
     float z,*_vertices;
-    [[self openGLContext] makeCurrentContext];
     unsigned int* _points = (unsigned int*)[wfidx bytes];
     unsigned int _npoints = [wfidx length]/sizeof(unsigned int);
+	NSUInteger largestIndex,npointsToRemove;
     //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,wfIndexBuffer);
     //GLuint *tmp_idx = (GLuint*)glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY);
 	//array to hold the new indices
@@ -1205,28 +1205,12 @@
 	//get the indices
 	NSUInteger *_index = malloc(num_spikes*sizeof(NSUInteger));
 	[waveformIndices getIndexes:_index maxCount:num_spikes inIndexRange:nil];
-	/*
-	for(i=0;i<num_spikes-_npoints;i++)
-	{
-		for(l=0;l<waveIndexSize;l++)
-		{
-			new_idx[k*waveIndexSize+l] = tmp_idx[i*waveIndexSize+l];
-		}
-	}
-	//the code below is redundant, because of the above. We already have the indexes, so we can just iterate through them
-	
-	[waveformIndices enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop)
-	 {
-		 for(l=0;l<waveIndexSize;l++)
-		 {
-			 new_idx[k*waveIndexSize+l] = tmp_idx[i*waveIndexSize+l];
-		 }
-	 }];
-	*/
-	//the code below is a bit pointless; we know that wfidx are all from the currently drawn waves
+	//get the largest index
+	largestIndex = [waveformIndices lastIndex];
 	[[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
-    _vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+    _vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
+	npointsToRemove = 0;
     for(i=0;i<num_spikes;i++)
     {
         found = 0;
@@ -1240,15 +1224,19 @@
             //found=(i==_points[j]);
             j+=1;
         }
-        if(found == 0)
+		//TODO: what if wfidx contains indices larger than num_spikes?
+        if (found == 1) 
         {
+			npointsToRemove+=1;
+			//remove the index
+			[waveformIndices removeIndex:_index[i]];
             /*don't do this; just set the z-value to -50*/
             
             /*for(l=0;l<waveIndexSize;l++)
             {
                 new_idx[k*waveIndexSize+l] = tmp_idx[i*waveIndexSize+l];
             }*/
-            vDSP_vfill(_vertices+i*wavesize+2, &z, 3, wavesize);
+            vDSP_vfill(&z,_vertices+i*3*wavesize+2, 3, wavesize);
 			//also, be careful about the mean waveform here
 			/*
             for(l=0;l<wavesize;l++)
@@ -1262,7 +1250,6 @@
         }
     }
     glUnmapBuffer(GL_ARRAY_BUFFER);
-	free(_index);
 	//
 	//we have now gotten rid of the extra waveforms; need to shift the mean waveform into place
 	k = num_spikes-_npoints;
@@ -1333,10 +1320,12 @@
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, (nWfIndices+extra*waveIndexSize)*sizeof(GLuint), new_idx, GL_DYNAMIC_DRAW);
      */
     //update waveform indices
+	/*
 	for(i=0;i<_npoints;i++)
 	{
 		[waveformIndices removeIndex:_index[_points[i]]];
-	}
+	}*/
+	free(_index);
     //update mean if change is larger than 10%
     if(num_spikes < 0.9*numSpikesAtLeastMean )
     {
