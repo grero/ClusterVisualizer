@@ -540,13 +540,15 @@
 		{
 			int i;
 			float *clusterMean = (float*)[[cluster mean] bytes];
-			for(i=0;i<cols;i++)
-			{
-				CM[i] = ((nindices-new_size)*CM[i] + new_size*clusterMean[i])/nindices;
-			}
+            if(clusterMean != NULL )
+            {
+                for(i=0;i<cols;i++)
+                {
+                    CM[i] = ((nindices-new_size)*CM[i] + new_size*clusterMean[i])/nindices;
+                }
+            }
 		}
 
-				//calculate the centroid of the cluster in the current space
         //do colors
         [self setClusterColors:_color forIndices:(unsigned int*)[[cluster points] bytes] length:[[cluster npoints] unsignedIntValue]];
         //
