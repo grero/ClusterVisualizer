@@ -325,16 +325,36 @@
     ndraw_dims = 3;
     //I don't really need a separate variable for this; just use whatever is on the GPU
     use_vertices = malloc(rows*ndraw_dims*sizeof(GLfloat));
-    int i,j;
-    for(i=0;i<rows;i++)
+    int i,l,nbatches,batchsize,rem;
+    dispatch_queue_t queue;
+    batchsize = 1000;
+    nbatches = rows/batchsize;
+    rem = rows - nbatches*batchsize;
+    //for(i=0;i<rows;i++)
+    queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    dispatch_apply(nbatches, queue, ^(size_t i) 
     {
         //indices[i] = i;
-        for(j=0;j<ndraw_dims;j++)
+        int j,k;
+        for(k=i*batchsize;k<(i+1)*batchsize;k++)
+        {
+            for(j=0;j<ndraw_dims;j++)
+            {
+                //indices[i*ndraw_dims+j] = i*ndraw_dims +j;
+                use_vertices[k*ndraw_dims+j] = _vertices[k*cols+draw_dims[j]];
+            }
+        }
+    });
+    //do the remainder
+    for(i=nbatches*batchsize;i<rows;i++)
+    {
+        for(l=0;l<ndraw_dims;l++)
         {
             //indices[i*ndraw_dims+j] = i*ndraw_dims +j;
-            use_vertices[i*ndraw_dims+j] = _vertices[i*cols+draw_dims[j]];
+            use_vertices[i*ndraw_dims+l] = _vertices[i*cols+draw_dims[l]];
         }
     }
+               
     [[self openGLContext] makeCurrentContext];
     //push the data to the GPU
     if(vertexBuffer==0)
