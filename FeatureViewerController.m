@@ -182,6 +182,10 @@
 		//float *tmp_data,*tmp_data2;
 					
 		//TODO: parallelize this
+        [progressPanel setTitle: @"Loading features"];
+        [progressPanel orderFront:self];
+        
+        [progressPanel startProgressIndicator];
 		while(file = [enumerator nextObject] )
 		{
 			if(([file hasPrefix:filebase] )) //&& ([[file stringByDeletingPathExtension]))
@@ -192,6 +196,9 @@
 					//skip
 					continue;
 				}
+                NSString *fn = [[[[file lastPathComponent] componentsSeparatedByString:@"_"] lastObject] stringByDeletingPathExtension];
+                [progressPanel setTitle:[NSString stringWithFormat:@"Loading feature %@", fn]];
+                
 				const char *filename = [[NSString pathWithComponents: [NSArray arrayWithObjects: directory,file,nil]] cStringUsingEncoding:NSASCIIStringEncoding];
 				H = *readFeatureHeader(filename, &H);
 				
@@ -234,7 +241,7 @@
 				cols+=H.rows;
 				//feature names
 				//get basename
-				NSString *fn = [[[[file lastPathComponent] componentsSeparatedByString:@"_"] lastObject] stringByDeletingPathExtension]; 
+				 
 				for(j=0;j<H.numChannels;j++)
 				{
 					if(channelValidity[j]==1)
@@ -263,6 +270,8 @@
 			
 			rows = H.cols;
 		}
+        [progressPanel stopProgressIndicator];
+        [progressPanel orderOut:self];
 		if( anyLoaded == NO)
 		{
 			return;
@@ -1018,12 +1027,16 @@
 	
 	NSEnumerator *clusterEn = [[self Clusters] objectEnumerator];
 	Cluster *cluster;
-    NSMenu *addToClustersMenu = [[[NSMenu alloc] init] autorelease];
+    NSMenu *addToClustersMenu,*moveToClusterMenu;
+    addToClustersMenu = [[[NSMenu alloc] init] autorelease];
+    moveToClusterMenu = [[[NSMenu alloc] init] autorelease];
+
 	while( (cluster=[clusterEn nextObject] ) ) 
 	{
         [cluster setFeatureDims:params.cols];
         //update the menu
         [addToClustersMenu addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[cluster clusterId] intValue] ] action:@selector(performClusterOption:) keyEquivalent:@""];
+        [moveToClusterMenu addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[cluster clusterId] intValue] ] action:@selector(performClusterOption:) keyEquivalent:@""];
         //check that there no more than 5000 points
 		if( ([[cluster clusterId] unsignedIntValue] > 0 ) && ([[cluster npoints] unsignedIntValue] >0))
 		{
@@ -1043,6 +1056,8 @@
 		
 	}
     [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] setSubmenu:addToClustersMenu];
+    [[[self clusterMenu] itemWithTitle:@"Move points to cluster"] setSubmenu:moveToClusterMenu];
+
 	[[wfv window] orderOut: self];
 	//[self performComputation:@"Compute Feature Mean" usingSelector:@selector(computeFeatureMean:)];
     //[self performComputation:@"Compute Feature Covariance" usingSelector:@selector(computeFeatureCovariance:)];
