@@ -78,3 +78,4 @@ should be put into cluster 0. If deleting a cluster that was the result of some 
 - Allow running KlustaKwik directly on a selected feature set
 - Read descriptor files to get groups from polytrodes
 - Allow pruning of waveforms larger than/smaller than a certain (confidence) interval around the mean
+- Use an alpha value to indicate the belonginess, i.e. proportional to the mahalonbis distance, or the chi2 cdf of that
