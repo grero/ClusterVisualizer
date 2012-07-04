@@ -761,23 +761,26 @@
     [[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
     GLfloat *_data = (GLfloat*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-    unsigned int idx,i,j;
+    unsigned int idx,i,j,found;
     unsigned int* _hpoints;
     unsigned int _nhpoints;
+	NSUInteger largestIndex = [waveformIndices lastIndex];
 	NSUInteger* _indexes = malloc(num_spikes*sizeof(NSUInteger));
 	[waveformIndices getIndexes:_indexes maxCount:num_spikes inIndexRange:nil];
     if( highlightWaves != NULL )
     {
         _hpoints = (unsigned int*)[highlightWaves bytes];
         _nhpoints = [highlightWaves length]/sizeof(unsigned int);
+		found = 0;
         for(i=0;i<_nhpoints;i++)
         {
             //need to reset z-value of previously highlighted waveform
             //idx = _hpoints[i];
             //TODO: we should be able to do without this check
-            if( _hpoints[i] < orig_num_spikes )
+            if( _hpoints[i] < largestIndex)
             {
-                idx = _indexes[_hpoints[i]];
+                //idx = _indexes[_hpoints[i]];
+				idx = _hpoints[i];
                 zvalue = -1.0;
                 //zvalue = wfVertices[idx*timepts*chs*3+2];
                 //vDSP_vfill(&zvalue,_data+(idx*timepts*chs*3)+2,3,timepts*chs);
@@ -797,8 +800,8 @@
     //set the z-value
     for(i=0;i<_npoints;i++)
     {
-        //idx = _points[i];
-		idx = _indexes[_points[i]];
+        idx = _points[i];
+		//idx = _indexes[_points[i]];
 		//check that the point is valid
 		if( idx < orig_num_spikes )
 		{
@@ -823,10 +826,10 @@
         //unsigned int _nhpoints = [wfidx length]/sizeof(unsigned int);
         for(i=0;i<_nhpoints;i++)
         {
-            //idx = _hpoints[i];
+            idx = _hpoints[i];
             if(_hpoints[i] >= orig_num_spikes)
                 continue;
-            idx = _indexes[_hpoints[i]];
+           // idx = _indexes[_hpoints[i]];
             dcolor = 1-_colors[idx*wavesize*3];
             vDSP_vfill(&dcolor,_colors+(idx*wavesize*3),3,wavesize);
             dcolor = 1-_colors[idx*wavesize*3+1];
@@ -845,10 +848,10 @@
      */
     for(i=0;i<_npoints;i++)
     {
-        //idx = _points[i];
+        idx = _points[i];
         if(_points[i]>= orig_num_spikes)
             continue;
-		idx = _indexes[_points[i]];
+		//idx = _indexes[_points[i]];
 		if (idx < orig_num_spikes )
 		{
             dcolor = 1-_colors[idx*wavesize*3];
@@ -1195,11 +1198,6 @@
     unsigned int* _points = (unsigned int*)[wfidx bytes];
     unsigned int _npoints = [wfidx length]/sizeof(unsigned int);
 	NSUInteger largestIndex,npointsToRemove;
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,wfIndexBuffer);
-    //GLuint *tmp_idx = (GLuint*)glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY);
-	//array to hold the new indices
-	//GLuint* new_idx = malloc((num_spikes-_npoints+3)*waveIndexSize*sizeof(GLuint));
-
     int i,j,found,k,l;
     z = -50;
     j = 0;
@@ -1220,14 +1218,14 @@
         j=0;
         while((found==0) && (j<_npoints))
         {
-            if(i==_points[j])
+			//use the index, not the index to the index
+            if(_index[i]==_points[j])
 			{
                 found = 1;
 			}
             //found=(i==_points[j]);
             j+=1;
         }
-		//TODO: what if wfidx contains indices larger than num_spikes?
         if (found == 1) 
         {
 			npointsToRemove+=1;
@@ -1239,95 +1237,31 @@
             {
                 new_idx[k*waveIndexSize+l] = tmp_idx[i*waveIndexSize+l];
             }*/
-            vDSP_vfill(&z,_vertices+i*3*wavesize+2, 3, wavesize);
-			//also, be careful about the mean waveform here
-			/*
-            for(l=0;l<wavesize;l++)
-            {
-                wfVertices[3*(k*wavesize+l)] = wfVertices[3*(i*wavesize+l)];
-                wfVertices[3*(k*wavesize+l)+1] = wfVertices[3*(i*wavesize+l)+1];
-                wfVertices[3*(k*wavesize+l)+2] = wfVertices[3*(i*wavesize+l)+2];
-            }
-			 */
-            k+=1;
+			//again we need to use the index
+            vDSP_vfill(&z,_vertices+_index[i]*3*wavesize+2, 3, wavesize);
         }
     }
     glUnmapBuffer(GL_ARRAY_BUFFER);
 	//
-	//we have now gotten rid of the extra waveforms; need to shift the mean waveform into place
-	k = num_spikes-_npoints;
-	/*
-	for(l=0;l<wavesize;l++)
-	{
-		wfVertices[3*(k*wavesize+l)] = wfVertices[3*(num_spikes*wavesize+l)];
-		wfVertices[3*(k*wavesize+l)+1] = wfVertices[3*(num_spikes*wavesize+l)+1];
-		wfVertices[3*(k*wavesize+l)+2] = wfVertices[3*(num_spikes*wavesize+l)+2];
-	}*/
-	//reset mean and std waveform index
-    //if( drawMean )
-    //{
-        /*for(l=0;l<waveIndexSize;l++)
-        {
-            new_idx[k*waveIndexSize+l] = tmp_idx[num_spikes*waveIndexSize+l];
-        }*/
-    //}
-    //if ( drawStd )
-    //{
-    /*
-        for(l=0;l<waveIndexSize;l++)
-        {
-            new_idx[(k+1)*waveIndexSize+l] = tmp_idx[(num_spikes+1)*waveIndexSize+l];
-            new_idx[(k+2)*waveIndexSize+l] = tmp_idx[(num_spikes+2)*waveIndexSize+l];
-
-        }
-    //}*/
+	//only remove points that were actually found
     
-    //glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-    
-    if((NSInteger)num_spikes-_npoints<0)
+    if((NSInteger)num_spikes-npointsToRemove<0)
     {
         num_spikes=0;
     }
     else
     {
-        num_spikes-=_npoints;   
+        num_spikes-=npointsToRemove;   
     }
-    /*
-	nWfVertices-=_npoints*wavesize;
-    if(nWfVertices<0)
-        nWfVertices=0;
-    */
-    if( (NSInteger)nWfIndices-_npoints*waveIndexSize < 0)
+
+    if( (NSInteger)nWfIndices-npointsToRemove*waveIndexSize < 0)
     {
         nWfIndices = 0;
     }
     else
     {
-        nWfIndices-=_npoints*waveIndexSize;
+        nWfIndices-=npointsToRemove*waveIndexSize;
     }
-    //push the indices again
-    //glGenBuffers(1,&wfVertexBuffer);
-    //glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
-    //push data to the current buffer
-    //TODO: If mean and/or standard devation is not drawn, we have to add something to accomodate them
-    /*
-    int extra = 0;
-    if(drawStd==NO)
-    {
-        extra+=2;
-    }
-    if(drawMean==NO)
-    {
-        extra+=1;
-    }
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (nWfIndices+extra*waveIndexSize)*sizeof(GLuint), new_idx, GL_DYNAMIC_DRAW);
-     */
-    //update waveform indices
-	/*
-	for(i=0;i<_npoints;i++)
-	{
-		[waveformIndices removeIndex:_index[_points[i]]];
-	}*/
 	free(_index);
     //update mean if change is larger than 10%
     if(num_spikes < 0.9*numSpikesAtLeastMean )
