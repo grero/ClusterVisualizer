@@ -1158,7 +1158,7 @@
 -(void) hideOutlierWaveforms
 {
     //highlight the waveforms outside the 95% confidence interval
-    GLfloat *_vertices;
+    GLfloat *_vertices,d;
     [[self openGLContext] makeCurrentContext];
     glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
     _vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
@@ -1172,9 +1172,14 @@
 	{
 		for(j=0;j<wavesize;j++)
 		{
-			if ( (_vertices[3*(_index[i]*wavesize+j)+1] > _vertices[3*((orig_num_spikes+1)*wavesize+j)+1]) || (_vertices[3*(_index[i]*wavesize+j)+1] < _vertices[3*((orig_num_spikes+2)*wavesize+j)+1]) ) 
+            //compute the distance from the mean, divided by the standard devation; essientially the Z-score
+            d = (_vertices[3*(_index[i]*wavesize+j)+1] - _vertices[3*((orig_num_spikes+1)*wavesize+j)+1])/(_vertices[3*((orig_num_spikes+2)*wavesize+j)+1]-_vertices[3*((orig_num_spikes+1)*wavesize+j)+1]);
+            //correct for the fact that the plot shows the 95% confidence interval
+            d = d*1.96;
+            //if the z-score exceeds 3, it's considered different
+			if( ( d < -3) || (d > 3) )
 			{
-				[idx appendBytes:&i length:sizeof(unsigned int)];
+				[idx appendBytes:&_index[i] length:sizeof(unsigned int)];
 				//found one, so skip to next waveform
 				break;
 			}
