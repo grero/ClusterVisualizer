@@ -1977,6 +1977,28 @@
         //[candidates makeObjectsPerformSelector:@selector(makeInvalid)];
         
     }
+	else if( [selection isEqualToString: @"Hide all"])
+	{
+		//hide all clusters
+
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:@"ClusterStateChanged" object: nil];
+		[[self fw] hideAllClusters];
+		[allActive setState:0];
+		[candidates makeObjectsPerformSelector: @selector(makeInactive)];
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(ClusterStateChanged:)
+                                                     name:@"ClusterStateChanged" object:nil];
+	}
+	else if( [selection isEqualToString: @"Show all"])
+	{
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:@"ClusterStateChanged" object: nil];
+		[[self fw] showAllClusters];
+		[allActive setState: 1];
+		[[self Clusters] makeObjectsPerformSelector: @selector(makeActive)];
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(ClusterStateChanged:)
+                                                     name:@"ClusterStateChanged" object:nil];
+	}
     else if ( [selection isEqualToString:@"Show waveforms"] )
     {
         [self loadWaveforms:[self activeCluster]];
