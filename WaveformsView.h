@@ -87,7 +87,7 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color,unsigned int n);
 -(void) highlightChannels:(NSArray*)channels;
 -(void) receiveNotification:(NSNotification*)notification;
 -(void) hideWaveforms:(NSData*)wfidx;
--(void) hideOutlierWaveforms;
+-(void) hideOutlierWaveforms:(id)sender;
 -(void)showOnlyHighlighted;
 -(NSImage*)image;
 -(void) createAxis;

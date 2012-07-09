@@ -1155,7 +1155,7 @@
 	}
 }
 
--(void) hideOutlierWaveforms
+-(void) hideOutlierWaveforms:(id)sender
 {
     //highlight the waveforms outside the 95% confidence interval
     GLfloat *_vertices,d;
@@ -1705,11 +1705,12 @@
 			//post notification
 			[[NSNotificationCenter defaultCenter] postNotificationName:@"computeSpikeWidth" object: self userInfo:userInfo];
              */
-		}
+		}/*
+        
 		else if ( [[theEvent characters] isEqualToString: @"a"] )
 		{
 			[self hideOutlierWaveforms];
-		}
+		}*/
         else if( [[theEvent characters] isEqualToString:@"s"] )
         {
             
