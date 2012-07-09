@@ -95,6 +95,7 @@
     //create the waveforms menu
     waveformsMenu = [[NSMenu alloc] init];
     [waveformsMenu addItemWithTitle:@"Find correlated waveforms" action:@selector(correlateWaveforms:) keyEquivalent:@""];
+    [waveformsMenu addItemWithTitle:@"Find outlier waveforms" action:@selector(hideOutlierWaveforms:) keyEquivalent:@"a"];
     [[self wfv] setMenu:waveformsMenu];
 }
 
@@ -1030,7 +1031,7 @@
     NSMenu *addToClustersMenu,*moveToClusterMenu;
     addToClustersMenu = [[[NSMenu alloc] init] autorelease];
     moveToClusterMenu = [[[NSMenu alloc] init] autorelease];
-
+    uint8_t _allActive = 1;
 	while( (cluster=[clusterEn nextObject] ) ) 
 	{
         [cluster setFeatureDims:params.cols];
@@ -1048,6 +1049,7 @@
 				[cluster setWaveformsImage:img];
 			}
 		}
+        _allActive = _allActive*(uint8_t)([cluster active]);
 		//add set the feature dimension
 		[cluster setFeatureDims: params.cols];
 		//compute mean and covariance
@@ -1061,7 +1063,9 @@
 	[[wfv window] orderOut: self];
 	//[self performComputation:@"Compute Feature Mean" usingSelector:@selector(computeFeatureMean:)];
     //[self performComputation:@"Compute Feature Covariance" usingSelector:@selector(computeFeatureCovariance:)];
-	[allActive setState:1];
+	//[allActive setState:1];
+    if(_allActive == 1)
+        [allActive setState:1];
 	[[self fw] showAllClusters];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(ClusterStateChanged:)
@@ -1075,6 +1079,8 @@
         [options addObject: @"Compute L-ratio"];
     }
 	*/
+    //update the state of the allActive button
+    
     [selectClusterOption addItemsWithTitles:options];
     //once we have loaded the clusters, start up a timer that will ensure that data gets arhived automatically every 5 minutes
     archiveTimer = [[NSTimer scheduledTimerWithTimeInterval:300 target:self selector:@selector(archiveClusters) userInfo:nil repeats: YES] retain];
