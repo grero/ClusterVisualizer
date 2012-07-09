@@ -93,6 +93,7 @@
 
 -(void)ClusterStateChanged:(NSNotification*)notification;
 -(void)mergeCluster: (Cluster *)cluster1 withCluster: (Cluster*)cluster2;
+-(void)mergeClusters:(NSArray*)clusters;
 -(void)deleteCluster: (Cluster *)cluster;
 -(void)loadWaveforms: (Cluster*)cluster;
 -(void)readClusterModel:(NSString*)path;

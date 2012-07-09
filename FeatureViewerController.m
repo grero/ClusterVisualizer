@@ -1953,6 +1953,10 @@
             [self mergeCluster: [candidates objectAtIndex: 0] withCluster: [candidates objectAtIndex: 1]];
                         
         }
+		else if( [candidates count] > 2 )
+		{
+			[self mergeClusters: candidates];
+		}
     }
     else if ( [selection isEqualToString:@"Delete"] )
     {
@@ -2702,6 +2706,71 @@
 		}
 	}];
 		
+}
+
+-(void)mergeClusters:(NSArray*)clusters
+{
+	float color[3];
+	float *_mean,*_clmean;
+	unsigned int i,_clnpoints;
+    Cluster *new_cluster = [[Cluster alloc] init];
+    new_cluster.clusterId = [NSNumber numberWithUnsignedInt:[Clusters count]];
+	//loop through clusters
+	NSEnumerator *clusterEnumerator = [clusters objectEnumerator];
+	Cluster *cl;
+	_mean = calloc(cols,sizeof(float));
+	while(( cl = [clusterEnumerator nextObject]))
+	{
+		//add the points to the cluster
+		[new_cluster addPoints: [cl points]];
+		//make the cluster inactive
+		[cl makeInactive];
+		//update the mean
+		_clmean = (float*)[[cl mean] bytes];
+		_clnpoints = [[cl npoints] unsignedIntValue];
+		for(i=0;i<cols;i++)
+		{
+			_mean[i]+=_clmean[i]*_clnpoints;
+		}
+		
+	}
+	_clnpoints = [[new_cluster npoints] unsignedIntValue];
+	for(i=0;i<cols;i++)
+	{
+		_mean[i] /=_clnpoints; 
+	}
+	[new_cluster setMean: [NSData dataWithBytes: _mean length: cols*sizeof(float)]];
+	free(_mean);
+	//set the color
+	color[0] = (float)random()/(float)RAND_MAX;
+	color[1] = (float)random()/(float)RAND_MAX;
+	color[2] = (float)random()/(float)RAND_MAX;
+	[new_cluster setColor:[NSData dataWithBytes: color length: 3*sizeof(float)]];
+	[new_cluster makeValid];
+    [new_cluster computeISIs: timestamps];
+ 	//set parents	
+	[new_cluster setParents: clusters];
+    int nclusters = [Clusters count];
+	
+    [self insertObject:new_cluster inClustersAtIndex:nclusters];
+	if( dataloaded == YES)
+	{
+		//only do this if data has been loaded; should probably try to make this a bit more general
+		[fw setClusterColors:(GLfloat*)[[new_cluster color] bytes] forIndices:(unsigned int*)[[new_cluster points] bytes] length:[[new_cluster npoints] unsignedIntValue]];
+	}
+    new_cluster.active = 1;
+    //make sure we also updated the waveforms image
+    [self loadWaveforms: new_cluster];
+    //make sure we also update the waverormsImage
+    if([new_cluster waveformsImage] == NULL)
+    {
+        NSImage *img = [[self wfv] image];
+        [new_cluster setWaveformsImage:img];
+    }
+    //make the new cluster the currently selected
+    [self setSelectedClusters:[NSIndexSet indexSetWithIndex:nclusters]];
+    selectedCluster = new_cluster;
+
 }
 
 -(void)mergeCluster: (Cluster *)cluster1 withCluster: (Cluster*)cluster2
