@@ -651,7 +651,7 @@
     
 
     int i;
-    if([self indices] == nil)
+    if([self indices] == NULL)
     {
         [self setIndices:[NSMutableIndexSet indexSet]];
     }
@@ -668,7 +668,14 @@
         _ppoints[i] = (unsigned int)_points[i];
     }
     free(_points);
-    [[self points] setData: [NSData dataWithBytes:_ppoints length:_npoints*sizeof(unsigned int)]];
+	if([self points] == NULL )
+	{
+		[self setPoints: [NSMutableData dataWithBytes: _ppoints length: _npoints*sizeof(unsigned int)]];
+	}
+	else
+	{
+		[[self points] setData: [NSData dataWithBytes:_ppoints length:_npoints*sizeof(unsigned int)]];
+	}
     free(_ppoints);
     [self setNpoints:[NSNumber numberWithUnsignedInt:_npoints]];
 
