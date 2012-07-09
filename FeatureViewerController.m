@@ -572,7 +572,9 @@
     //compute mean and covariance
     [firstCluster setFeatureDims:cols];
     [firstCluster computeFeatureMean:[[self fw] getVertexData]];
-    //[firstCluster computeFeatureCovariance:[[self fw] getVertexData]];
+	//[firstCluster computeFeatureCovariance:[[self fw] getVertexData]];
+	//compute pca on the whole feature space
+		
     [firstCluster makeActive];
     //create cluster color
     float *_ccolor = malloc(3*sizeof(float));
