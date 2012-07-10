@@ -1864,11 +1864,21 @@
 	[[self dim3] removeAllItems];
 
 	NSEnumerator *channelEnumerator = [channels objectEnumerator];
+	unsigned int i,k;
+	unsigned int *_validChannels = malloc(nvalidChannels*sizeof(unsigned int));
+	for(i=0;i<nchannels;i++)
+	{
+		if(channelValidity[i])
+		{
+			_validChannels[k] = i;
+			k+=1;
+		}
+	}
 	id ch;
 	while( ch = [channelEnumerator nextObject] )
 	{
 		//NSArray *validFeatures = [featureNames filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"SELF CONTAINS %@",[NSString stringWithFormat:@"%d",[ch intValue]+1]]];
-		NSString *regexp = [NSString stringWithFormat: @"[A-Za-z]*%d",[ch intValue]+1];
+		NSString *regexp = [NSString stringWithFormat: @"[A-Za-z]*%d",_validChannels[[ch intValue]]+1];
 		NSArray *validFeatures = [featureNames filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"SELF MATCHES %@",regexp]];
 
 		[[self dim1] addItemsWithObjectValues:validFeatures];
@@ -2638,21 +2648,32 @@
 		NSInteger result = [savePanel runModal];
 		if(result == NSFileHandlingPanelOKButton )
 		{
-            const char* fname = [[savePanel filename] cStringUsingEncoding:NSASCIIStringEncoding];
-            //check the extensions
-            NSString *ext = [[savePanel nameFieldStringValue] pathExtension];
+            const char* fname = [[[savePanel URL] path] cStringUsingEncoding:NSASCIIStringEncoding];
+			//check that we can write to the file
+
+			NSString *ext = [[savePanel nameFieldStringValue] pathExtension];
+			int res = 0;
 			if([ext isEqualToString:@"cut"])
-            {
-                writeCutFile(fname, cluster_indices+1, params.rows);
-            }
-            else
-            {
-                NSRange r = [[savePanel filename] rangeOfString:@"clu"];
-                if(r.location != NSNotFound )
-                {
-                    writeCutFile(fname, cluster_indices, params.rows+1);
-                }
-            }
+			{
+				res = writeCutFile(fname, cluster_indices+1, params.rows);
+			}
+			else
+			{
+				NSRange r = [[savePanel filename] rangeOfString:@"clu"];
+				if(r.location != NSNotFound )
+				{
+					res = writeCutFile(fname, cluster_indices, params.rows+1);
+				}
+			}
+
+			if( res < 0 )
+			{
+				NSAlert *_alert = [[NSAlert alloc] init];
+				[_alert setMessageText: @"Sorry, but you do not appear to have permission to write to this file"];
+				NSInteger response = [_alert runModal];
+				[_alert release];
+
+			}
             
 		}
         free(cluster_indices);
@@ -2673,7 +2694,7 @@
 		 {
 			 if(result == NSFileHandlingPanelOKButton )
 			 {
-				 [templateIdStr writeToFile:[[[savePanel directoryURL] path] stringByAppendingPathComponent: [savePanel filename]] atomically:YES];
+				 [templateIdStr writeToFile: [[savePanel URL] path] atomically:YES];
 			 }
 		 }];
         //[templateIdStr writeToFile:[NSString stringWithFormat:@"%@.scu",currentBaseName] atomically:YES];
@@ -2724,7 +2745,7 @@
 	[savePanel beginSheetModalForWindow: [fw window] completionHandler: ^(NSInteger result){
 		if (result == NSFileHandlingPanelOKButton) {
 			NSData *image = [[fw image] TIFFRepresentation];
-			[image writeToFile:[savePanel filename] atomically:YES];
+			[image writeToFile:[[savePanel URL] path] atomically:YES];
 		}
 	}];
 		
