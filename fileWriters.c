@@ -88,15 +88,17 @@ void writeAdjSpikesObject(const char* fname, double *framepts, unsigned int nfra
     status = H5Fclose(file);
 }
 
-void writeCutFile(const char* fname, int *cids, uint64_t n)
+int writeCutFile(const char* fname, int *cids, uint64_t n)
 {
     FILE *fid;
     fid = fopen(fname,"w");
+	if( fid == NULL )
+		return -1;
     uint64_t i;
     for(i=0;i<n;i++)
     {
         fprintf(fid,"%d\n",cids[i]);
     }
     fclose(fid);
-    
+	return 0;
 }
