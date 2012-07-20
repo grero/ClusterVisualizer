@@ -97,6 +97,9 @@
     [waveformsMenu addItemWithTitle:@"Find correlated waveforms" action:@selector(correlateWaveforms:) keyEquivalent:@""];
     [waveformsMenu addItemWithTitle:@"Find outlier waveforms" action:@selector(hideOutlierWaveforms:) keyEquivalent:@"a"];
     [[self wfv] setMenu:waveformsMenu];
+    //disable autoenable
+    [[NSApp mainMenu] setAutoenablesItems:NO];
+    
 }
 
 -(BOOL) acceptsFirstResponder
@@ -456,10 +459,28 @@
 			}
 			times = getTimes(waveformsPath, &spikeHeader, times_indices, rows, times);
 			timestamps = [[NSData dataWithBytes:times length:rows*sizeof(unsigned long long int)] retain];
+            [[NSUserDefaults standardUserDefaults] setFloat:(float)(times[0])/1000.0 forKey:@"minTime"];
+            [[NSUserDefaults standardUserDefaults] setFloat:(float)(times[rows-1])/1000.0 forKey:@"maxTime"];
+            [[NSUserDefaults standardUserDefaults] setFloat:(float)rows forKey:@"numPoints"];
+
 			free(times);
 			free(times_indices);
 		}
+        else
+        {
+            [[NSUserDefaults standardUserDefaults] setFloat:0.0 forKey:@"minTime"];
+            [[NSUserDefaults standardUserDefaults] setFloat:(float)rows-1 forKey:@"maxTime"];
+            [[NSUserDefaults standardUserDefaults] setFloat:(float)rows forKey:@"numPoints"];
+
+        }
 	}
+    else
+    {
+        [[NSUserDefaults standardUserDefaults] setFloat:0.0 forKey:@"minTime"];
+        [[NSUserDefaults standardUserDefaults] setFloat:(float)rows-1 forKey:@"maxTime"];
+        [[NSUserDefaults standardUserDefaults] setFloat:(float)rows forKey:@"numPoints"];
+
+    }
         
 
     //load feature anems
@@ -603,6 +624,10 @@
     }
 	//release first cluster since we are done with it; it now belongs to Clusters
 	[firstCluster release];
+    //enable the time slider on the main menu
+    [[[NSApp mainMenu] itemWithTitle: @"Time slider"] setEnabled:YES];
+    //register for slider notifications
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:@"AdvanceTime" object:nil];
 	[_pool drain];
 }
 
@@ -1410,6 +1435,9 @@
             }
             times = getTimes(path, &spikeHeader, times_indices, spikeHeader.num_spikes, times);
             timestamps = [[NSData dataWithBytes:times length:spikeHeader.num_spikes*sizeof(unsigned long long int)] retain];
+            [[NSUserDefaults standardUserDefaults] setFloat:(float)times[0] forKey:@"minTime"];
+            [[NSUserDefaults standardUserDefaults] setFloat:(float)times[rows-1] forKey:@"maxTime"];
+            [[NSUserDefaults standardUserDefaults] setFloat:(float)rows forKey:@"numPoints"];
 			free(times);
             free(times_indices);
             //add the ISI options to cluster options
@@ -1785,6 +1813,41 @@
 	else if ([[notification name] isEqualToString:@"Remove points from cluster"])	
 	{
 		[self movePointsFromCluster: [self selectedCluster] toCluster:[Clusters objectAtIndex:0]];
+	}
+	else if ([[ notification name] isEqualToString: @"AdvanceTime"])
+	{
+		NSUInteger startTime, endTime, startIdx, endIdx,windowSize;
+		//get start end end times
+		startTime = [[[notification userInfo] objectForKey: @"startTime"] floatValue];
+        windowSize = [[[notification userInfo] objectForKey:@"windowSize"] floatValue];
+        endTime = startTime + windowSize;
+		//endTime = [[[notification userInfo] objectForKey: @"endTime"] intValue];
+		//check if we have loaded timestamps
+		if( timestamps != NULL )
+		{
+			unsigned long long *_timestamps = (unsigned long long *) [timestamps bytes];
+			//start and end are given in as actual time; find the correpsonding index
+			unsigned int i;
+			i = 0;
+			while( (_timestamps[i]/1000.0 < startTime ) && (i < rows) )
+			{
+				i++;
+			}
+			startIdx = i;
+			while ( (_timestamps[i]/1000.0 < endTime ) && (i < rows ) )
+			{
+				i++;
+			}
+			endIdx = i;
+		}
+		else
+		{
+			startIdx = startTime;
+			endIdx = endTime;
+		}
+		//send a message to fw to restrict the displayed points
+		[fw showIndices: [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(startIdx,endIdx-startIdx)]];
+
 	}
     else if ([[notification name] isEqualToString:@"performClusterOption"] )
 	{

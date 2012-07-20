@@ -52,6 +52,7 @@
 	NSString *selectedWaveform;
 	NSAttributedString *releaseNotes;
     StimInfo *stimInfo;
+	NSUInteger currentTimeIndex;
     
     NSMenu *waveformsMenu;
     
