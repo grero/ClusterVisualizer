@@ -85,6 +85,8 @@ short int* getWaves(const char *fname, nptHeader *header, unsigned int *index, u
         {
             fprintf(stderr,"fseek could not complete");
         }
+        fread(data+i*waveLength, 2, waveLength, f);
+        /*
         buffer = 0;
         for(j = 0; j < waveLength; j++)
         {
@@ -93,7 +95,7 @@ short int* getWaves(const char *fname, nptHeader *header, unsigned int *index, u
             //if( (i==111) & (j>=17*32) & (j<18*32) )
             //    fprintf(stderr,"%d : %d : %d \n",index[i],ftello(f),buffer);
             data[i*waveLength + j] = buffer;
-        }
+        }*/
     }
     fclose(f);
     return data;
@@ -121,7 +123,8 @@ short int* getWavesForChannels(const char *fname, nptHeader *header, unsigned in
         {
             fprintf(stderr,"fseek could not complete");
         }
-        buffer = 0;
+        fread(data+i*readSize,2,readSize,f);
+        /*buffer = 0;
         for(j = 0; j < readSize; j++)
         {
             fread(&buffer, 2, 1, f);
@@ -129,7 +132,7 @@ short int* getWavesForChannels(const char *fname, nptHeader *header, unsigned in
             //if( (i==111) & (j>=17*32) & (j<18*32) )
             //    fprintf(stderr,"%d : %d : %d \n",index[i],ftello(f),buffer);
             data[i*readSize + j] = buffer;
-        }
+        }*/
     }
     fclose(f);
     return data;
