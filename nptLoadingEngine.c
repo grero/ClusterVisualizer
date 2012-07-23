@@ -85,6 +85,8 @@ short int* getWaves(const char *fname, nptHeader *header, unsigned int *index, u
         {
             fprintf(stderr,"fseek could not complete");
         }
+        fread(data+i*waveLength, 2, waveLength, f);
+        /*
         buffer = 0;
         for(j = 0; j < waveLength; j++)
         {
@@ -93,7 +95,7 @@ short int* getWaves(const char *fname, nptHeader *header, unsigned int *index, u
             //if( (i==111) & (j>=17*32) & (j<18*32) )
             //    fprintf(stderr,"%d : %d : %d \n",index[i],ftello(f),buffer);
             data[i*waveLength + j] = buffer;
-        }
+        }*/
     }
     fclose(f);
     return data;
@@ -103,7 +105,7 @@ short int* getWavesForChannels(const char *fname, nptHeader *header, unsigned in
 {
     FILE *f;
     int chs,pts,waveLength,i,j,status,offset,readSize;
-    short int buffer;
+    short int *buffer;
     f = fopen(fname, "r");
     if(f==NULL)
         return NULL;
@@ -113,15 +115,24 @@ short int* getWavesForChannels(const char *fname, nptHeader *header, unsigned in
 	//offset to where we should start reading
     offset = channels[0]*pts;
 	readSize = nchannels*pts; 
+    buffer = malloc(waveLength*sizeof(unsigned int));
     for(i = 0; i < index_length; i++ )
     //for(i = 0; i < header->num_spikes; i++)
     {
-        status = fseeko(f, header->headersize+index[i]*2*waveLength + offset*2, SEEK_SET);
+        status = fseeko(f, header->headersize+index[i]*2*waveLength, SEEK_SET);
         if(status!=0)
         {
             fprintf(stderr,"fseek could not complete");
         }
-        buffer = 0;
+        //read everything first
+        fread(buffer,2,waveLength,f);
+        //copy the relevant channels
+        for(j = 0;j<nchannels;j++)
+        {
+            memcpy(data+i*readSize+j*pts, buffer+channels[j]*pts, pts*2);
+        }
+        //fread(data+i*readSize,2,readSize,f);
+        /*buffer = 0;
         for(j = 0; j < readSize; j++)
         {
             fread(&buffer, 2, 1, f);
@@ -129,9 +140,10 @@ short int* getWavesForChannels(const char *fname, nptHeader *header, unsigned in
             //if( (i==111) & (j>=17*32) & (j<18*32) )
             //    fprintf(stderr,"%d : %d : %d \n",index[i],ftello(f),buffer);
             data[i*readSize + j] = buffer;
-        }
+        }*/
     }
     fclose(f);
+    free(buffer);
     return data;
 }
 
