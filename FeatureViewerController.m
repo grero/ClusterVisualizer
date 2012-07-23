@@ -96,6 +96,7 @@
     waveformsMenu = [[NSMenu alloc] init];
     [waveformsMenu addItemWithTitle:@"Find correlated waveforms" action:@selector(correlateWaveforms:) keyEquivalent:@""];
     [waveformsMenu addItemWithTitle:@"Find outlier waveforms" action:@selector(hideOutlierWaveforms:) keyEquivalent:@"a"];
+    [waveformsMenu addItemWithTitle:@"Screen waveforms" action:@selector(screenWaveforms) keyEquivalent:@"c"];
     [[self wfv] setMenu:waveformsMenu];
     //disable autoenable
     [[NSApp mainMenu] setAutoenablesItems:NO];
@@ -1034,7 +1035,7 @@
     
     
     //[selectClusterOption removeAllItems];
-    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Find correlated waverforms",@"Show cluster notes",@"Split among clusters",nil];
+    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Find correlated waverforms",@"Show cluster notes",@"Split among clusters",@"Screen waveforms",nil];
     
     //test
     //clusterOptionsMenu  = [[[NSMenu alloc] initWithTitle:@"Options"] autorelease];
@@ -1081,7 +1082,7 @@
 		[cluster setFeatureDims: params.cols];
 		//compute mean and covariance
 		[cluster computeFeatureMean: [[self fw] getVertexData]];
-		//[cluster computeFeatureCovariance: [[self fw] getVertexData]];
+		[cluster computeFeatureCovariance: [[self fw] getVertexData]];
 		
 	}
     [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] setSubmenu:addToClustersMenu];
@@ -2819,6 +2820,33 @@
         //we don't need _p anymore
         free(_p);
     }
+    else if( [selection isEqualToString:@"Screen waveforms"] )
+    {
+        NSData *cfData,*belonginess;
+        NSMutableData *screenIdx;
+        double *_p,threshold;
+        NSUInteger _npoints,i;
+        threshold = 0.05;
+        //get the feature data for this cluster
+        //cfData = [[self selectedCluster] getRelevantData:[[self fw] getVertexData] withElementSize:sizeof(float)];
+        //compute belonginess
+        belonginess = [[self selectedCluster] computeBelonginess:[[self fw] getVertexData]];
+        _npoints = [[[self selectedCluster] npoints] unsignedIntValue];
+        _p = (double*)[belonginess bytes];
+        //the find points for which the belonginess is less than or equal to the threshold
+        screenIdx = [NSMutableData dataWithCapacity:_npoints*sizeof(unsigned int)];
+        for(i=0;i<_npoints;i++)
+        {
+            if( _p[i] < threshold )
+            {
+                [screenIdx appendBytes:&i length:sizeof(unsigned int)];
+            }
+        }
+        //send a notificaiton to highlight
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:self userInfo:[NSDictionary dictionaryWithObject:screenIdx forKey:@"points"]];
+        
+        
+    }
     else if( [selection isEqualToString:@"Show cluster notes"] )
     {
         [[self clusterNotesPanel] orderFront:self];
@@ -2835,11 +2863,13 @@
     //cluster number
     //create an array to hold the indices
     //make sure there are clusters to save
-    if ([Clusters count] > 0)
+    //only save clusters that are active
+    NSArray *candidates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"active == YES"]];
+    if ([candidates count] > 0)
     {
         int* cluster_indices = malloc((params.rows+1)*sizeof(int));    
-        cluster_indices[0] = (unsigned int)[Clusters count];
-        NSEnumerator *cluster_enumerator = [[Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"valid==1"]] objectEnumerator];
+        cluster_indices[0] = (unsigned int)[candidates count];
+        NSEnumerator *cluster_enumerator = [[candidates filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"valid==1"]] objectEnumerator];
         int i;
         int npoints;
         id cluster;
