@@ -193,10 +193,13 @@
     {
         warp = ^(float *input, size_t n, float *output){
             int i;
+            memcpy(output, input, n*sizeof(float));
+            /*
             for(i=0;i<n;i++)
             {
                 output[i] = input[i];
             }
+             */
         };
     }
     //add an extra point at the beginning and end of each channel
