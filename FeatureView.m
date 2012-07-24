@@ -464,6 +464,35 @@
     }
 }
 
+-(void) showIndices: (NSIndexSet*)indices
+{   
+	unsigned int _nindices,i;
+	//get the intersection of the requested indices with the currently shown indices
+	NSIndexSet *sIndices = [indexset indexesPassingTest: ^(NSUInteger idx, BOOL *stop){
+								return [indices containsIndex: idx];
+	}]; 
+	_nindices = [sIndices count];
+	NSUInteger *_index = malloc([sIndices count]*sizeof(NSUInteger));
+	[sIndices getIndexes: _index maxCount: _nindices inIndexRange: nil];
+
+	[[self openGLContext] makeCurrentContext];
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+    GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
+	if(tmp_indices != NULL)
+	{
+		//copy to tmp_indices
+		//memcpy(tmp_indices, _index,_nindices*sizeof(unsigned int));
+		for(i=0;i<_nindices;i++)
+        {
+            tmp_indices[i] = (GLuint)_index[i];
+        }
+        glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+		nindices = _nindices;
+		[self setNeedsDisplay: YES];
+	}
+
+}
+
 -(void) showCluster: (Cluster *)cluster
 {
     float *_vertices = (float*)[vertices bytes];

@@ -80,6 +80,7 @@ static BOOL picked;
 - (void) loadVertices: (NSURL*)url;
 -(void) createVertices: (NSData*)vertex_data withRows: (NSUInteger)r andColumns: (NSUInteger)c ;
 -(void) selectDimensions:(NSDictionary*)dims;
+-(void) showIndices: (NSIndexSet*)indices;
 -(void) showCluster: (Cluster *)cluster;
 -(void) hideCluster: (Cluster *)cluster;
 -(void) hideAllClusters;

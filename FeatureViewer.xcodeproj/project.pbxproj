@@ -45,6 +45,7 @@
 		DB34A522144FAF79005E7E66 /* libopen-pal.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB34A520144FAF79005E7E66 /* libopen-pal.0.dylib */; };
 		DB34A523144FAF79005E7E66 /* libopen-rte.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = DB34A521144FAF79005E7E66 /* libopen-rte.0.dylib */; };
 		DB4F63C0146FA65500AD54B3 /* StimInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = DB4F63BF146FA65500AD54B3 /* StimInfo.m */; };
+		DB65CD3615B8F99300A017CA /* TimeSliderController.m in Sources */ = {isa = PBXBuildFile; fileRef = DB65CD3515B8F99300A017CA /* TimeSliderController.m */; };
 		DB91841B13440F580025F64A /* fileReaders.c in Sources */ = {isa = PBXBuildFile; fileRef = DB91841A13440F580025F64A /* fileReaders.c */; };
 		DB9415A214726507008C1663 /* fileWriters.c in Sources */ = {isa = PBXBuildFile; fileRef = DB9415A114726507008C1663 /* fileWriters.c */; };
 		DBA05985136A42A1008639C2 /* libhdf5_hl.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DBA05984136A42A1008639C2 /* libhdf5_hl.6.dylib */; };
@@ -137,6 +138,8 @@
 		DB34A521144FAF79005E7E66 /* libopen-rte.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libopen-rte.0.dylib"; sourceTree = "<group>"; };
 		DB4F63BE146FA65500AD54B3 /* StimInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StimInfo.h; sourceTree = "<group>"; };
 		DB4F63BF146FA65500AD54B3 /* StimInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StimInfo.m; sourceTree = "<group>"; };
+		DB65CD3415B8F99300A017CA /* TimeSliderController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeSliderController.h; sourceTree = "<group>"; };
+		DB65CD3515B8F99300A017CA /* TimeSliderController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TimeSliderController.m; sourceTree = "<group>"; };
 		DB91841913440F580025F64A /* fileReaders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fileReaders.h; sourceTree = "<group>"; };
 		DB91841A13440F580025F64A /* fileReaders.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fileReaders.c; sourceTree = "<group>"; };
 		DB9415A114726507008C1663 /* fileWriters.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fileWriters.c; sourceTree = "<group>"; };
@@ -248,6 +251,8 @@
 				C7772F43124C8CA900F7B6EA /* FirstResponder.m */,
 				C7772F44124C8CA900F7B6EA /* FirstResponder.h */,
 				C72337D2124E2B2A00FC9EF6 /* FeatureViewerController.h */,
+				DB65CD3415B8F99300A017CA /* TimeSliderController.h */,
+				DB65CD3515B8F99300A017CA /* TimeSliderController.m */,
 				C72337D3124E2B2A00FC9EF6 /* FeatureViewerController.m */,
 				C7D282221257B34A007D19EA /* WaveformsPanel.h */,
 				C7D282231257B34A007D19EA /* WaveformsPanel.m */,
@@ -433,6 +438,7 @@
 				DB9415A214726507008C1663 /* fileWriters.c in Sources */,
 				DBD41D251489E863005FEB4E /* ClusterView.m in Sources */,
 				DBF5B4981490DA1200C3E1E0 /* isomap.c in Sources */,
+				DB65CD3615B8F99300A017CA /* TimeSliderController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

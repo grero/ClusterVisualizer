@@ -36,13 +36,14 @@
 	NSIndexSet *selectedClusters;
     NSMutableArray *clustersSortDescriptors;
     NSSortDescriptor *clustersSortDescriptor;
-    NSData *vertex_data;
+    NSData *vertex_data,*reorderIndex;
     NSData *timestamps;
 	NSMutableArray *featureNames;
 	uint8_t *channelValidity;
     header params;
     BOOL dataloaded,autoLoadWaveforms, shouldShowRaster, shouldShowWaveforms;
 	NSInteger nchannels,nvalidChannels;
+    unsigned int *validChannels;
     //name of current cluster set
     NSString *currentBaseName;
     NSString *waveformsFile;
@@ -52,6 +53,7 @@
 	NSString *selectedWaveform;
 	NSAttributedString *releaseNotes;
     StimInfo *stimInfo;
+	NSUInteger currentTimeIndex;
     
     NSMenu *waveformsMenu;
     
@@ -96,6 +98,7 @@
 -(void)mergeClusters:(NSArray*)clusters;
 -(void)deleteCluster: (Cluster *)cluster;
 -(void)loadWaveforms: (Cluster*)cluster;
+- (void)updateWaveformsFromCluster: (Cluster*)cluster fromIndex: (NSUInteger)startIndex toIndex: (NSUInteger)endIndex;
 -(void)readClusterModel:(NSString*)path;
 -(void)performComputation:(NSString*)operationTitle usingSelector:(SEL)operationSelector;
 -(void)archiveClusters;

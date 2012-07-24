@@ -729,6 +729,9 @@
     [coder encodeObject: isiIdx forKey:@"ClusterIsiIdx"];
     [coder encodeObject: parents forKey:@"ClusterParents"];
     [coder encodeObject:notes forKey:@"notes"];
+	[coder encodeObject: mean forKey:@"featureMean"];
+	[coder encodeObject: cov forKey:@"featureCov"];
+	[coder encodeObject: covi forKey:@"featureCovi"];
 }
 
 -(id)initWithCoder:(NSCoder*)coder
@@ -742,6 +745,9 @@
     clusterId = [[coder decodeObjectForKey:@"ClusterId"] retain];
     isTemplate = [[coder decodeObjectForKey:@"ClusterIsTemplate"] intValue];
     color = [[coder decodeObjectForKey:@"ClusterColor"] retain];
+	mean = [[coder decodeObjectForKey:@"featureMean"] retain];
+	cov = [[coder decodeObjectForKey:@"featureCov"] retain];
+	covi = [[coder decodeObjectForKey:@"featureCovi"] retain];
     //set the textcolor
     float *buffer = (float*)[color bytes];
     textColor = [[NSColor colorWithCalibratedRed:buffer[0] green:buffer[1] blue:buffer[2] alpha:1.0] retain];
