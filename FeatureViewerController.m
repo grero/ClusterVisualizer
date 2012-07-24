@@ -2370,6 +2370,11 @@
 		}
         [selectedCluster setWfMean:[NSData dataWithData:[[self wfv] wfMean]]];
         [selectedCluster setWfCov:[NSData dataWithData:[[self wfv] wfStd]]];
+        
+        //update feature mean and covariance
+        [selectedCluster computeFeatureMean: [[self fw] getVertexData]];
+        [selectedCluster computeFeatureCovariance:[[self fw] getVertexData]];
+        
         [[[[self fw] menu] itemWithTitle:@"Remove points from cluster"] setEnabled:NO];
 		[fw setNeedsDisplay:YES];
 		
