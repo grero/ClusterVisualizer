@@ -80,6 +80,8 @@
     minVal = [[NSUserDefaults standardUserDefaults] floatForKey:@"minTime"];
     maxVal = [[NSUserDefaults standardUserDefaults] floatForKey:@"maxTime"];
     numPoints = [[NSUserDefaults standardUserDefaults] floatForKey:@"numPoints"];
+    [timeSlider setRefusesFirstResponder:NO];
+
     if([sender state] == NSOffState)
     {
         //set up the slider using values from NSUserDefaults
