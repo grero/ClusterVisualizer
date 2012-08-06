@@ -70,7 +70,7 @@
     {
         return nil;
     }
-    /*[self setOpenGLContext: [[NSOpenGLContext alloc] initWithFormat:[NSOpenGLView defaultPixelFormat] shareContext:nil]];
+    [self setOpenGLContext: [[NSOpenGLContext alloc] initWithFormat:[NSOpenGLView defaultPixelFormat] shareContext:nil]];
     [[self openGLContext] makeCurrentContext];*/
     
     return [self initWithFrame:frameRect pixelFormat: [FeatureView defaultPixelFormat]];
@@ -176,7 +176,7 @@
     float *use_vertices,*colors,*_vertices;
     int i,j;
     GLuint *indices;
-    char *path = [[url path] cStringUsingEncoding:NSASCIIStringEncoding];
+    const char *path = [[url path] cStringUsingEncoding:NSASCIIStringEncoding];
     header H;
     //H = *readFeatureHeader("../../test2.hdf5", &H);
     H = *readFeatureHeader(path, &H);
@@ -514,7 +514,7 @@
     GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
 	//
     GLuint error = glGetError();
-	const GLbyte *errstr = gluErrorString(error);
+	const GLubyte *errstr = gluErrorString(error);
 	//
     if(tmp_indices!=NULL)
     {
@@ -1800,7 +1800,7 @@ static void drawFrame()
 {
     NSString *option = [sender title];
     NSMenuItem *item = [sender parentItem];
-    NSDictionary *params;
+    NSDictionary *params = NULL;
 	if( item != nil )
 	{
 		if([[item title] isEqualToString:@"Add points to cluster"] )
@@ -1823,7 +1823,10 @@ static void drawFrame()
     {
         params = [NSDictionary dictionaryWithObjectsAndKeys:option, @"option", nil];
     }
-	[[NSNotificationCenter defaultCenter] postNotificationName:@"performClusterOption" object:self userInfo:params];
+    if(params != NULL)
+    {
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"performClusterOption" object:self userInfo:params];
+    }
 }
 
 -(void)dealloc
