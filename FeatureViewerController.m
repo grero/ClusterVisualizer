@@ -2972,7 +2972,7 @@
         
         //also store the data
         
-        [self archiveClusters];
+        [self archiveClusters:self];
     }
 }
 
@@ -3330,7 +3330,7 @@
 
 }
 
--(void)archiveClusters
+-(IBAction)archiveClusters:(id)sender
 {
     //archive on a separate thread
     NSBlockOperation *op = [NSBlockOperation blockOperationWithBlock:^{
