@@ -45,7 +45,7 @@
 	NSInteger nchannels,nvalidChannels;
     unsigned int *validChannels;
     //name of current cluster set
-    NSString *currentBaseName;
+    NSString *currentBaseName,*currentDir;
     NSString *waveformsFile;
     NSOperationQueue *queue;
     NSTimer *archiveTimer, *cycleTimer;
@@ -149,7 +149,7 @@
 @property (retain, readwrite) NSPredicate *filterClustersPredicate;
 @property (retain, readwrite) NSSortDescriptor *clustersSortDescriptor;
 @property (retain, readwrite) NSMutableArray *clustersSortDescriptors;
-@property (retain, readwrite) NSString *waveformsFile;
+@property (retain, readwrite) NSString *waveformsFile,*currentDir;
 @property (assign,readwrite) Cluster *activeCluster, *selectedCluster;
 @property (assign,readwrite) NSIndexSet *selectedClusters;
 @property (retain,readwrite) NSString *selectedWaveform;

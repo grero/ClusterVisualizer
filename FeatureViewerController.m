@@ -20,7 +20,7 @@
 //@synthesize filterClustersPredicate;
 @synthesize clustersSortDescriptor;
 @synthesize clustersSortDescriptors;
-@synthesize waveformsFile;
+@synthesize waveformsFile,currentDir;
 @synthesize activeCluster,selectedCluster;
 //@synthesize selectedClusters;
 //@synthesize selectedWaveform;
@@ -147,6 +147,7 @@
 	_pool = [[NSAutoreleasePool alloc] init];
 	//data object to hold the feature data
 	NSString *directory = [path stringByDeletingLastPathComponent];
+    [self setCurrentDir: directory];
 	NSMutableData *data = [NSMutableData dataWithCapacity:100000*sizeof(float)];
 	float *tmp_data,*tmp_data2;
 	int cols=0;
@@ -740,6 +741,7 @@
         //get the basename
         NSString *basename = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:0];
         NSString *directory = [path stringByDeletingLastPathComponent];
+        [self setCurrentDir:directory];
         NSString *featurePath = [directory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@_area.fd", basename]];
 		//set the waveforms file as well
 		NSString *wfFile = [directory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.bin", basename]];
@@ -3332,7 +3334,11 @@
 {
     //archive on a separate thread
     NSBlockOperation *op = [NSBlockOperation blockOperationWithBlock:^{
-                            [NSKeyedArchiver archiveRootObject: [self Clusters] toFile:[NSString stringWithFormat:@"%@.fv",currentBaseName]];
+        //make sure we save to the correct directory
+        NSString *fileName = [[self currentDir] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.fv",currentBaseName]];
+                            [NSKeyedArchiver archiveRootObject: [self Clusters] toFile:fileName];
+                            //notify that we successfully saved
+        NSLog(@"Successfully saved clusters to file %@", fileName);
     }];
     [queue addOperation:op];
 }
