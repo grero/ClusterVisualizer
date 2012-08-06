@@ -215,6 +215,7 @@
     */
     prevOffset = 0;
     //nWfIndices *= wavesize;
+    chs = channels;
     if([self overlay] )
     {
         prevOffset = nWfVertices;
@@ -232,7 +233,7 @@
         num_spikes = nwaves;
         orig_num_spikes = nwaves;
     }   
-    chs = channels;
+   
     timepts = _timepts;
 	//create an index that will tell us which waveforms are active
     waveformIndices = [[NSMutableIndexSet indexSetWithIndexesInRange:NSMakeRange(0, num_spikes)] retain];
@@ -925,7 +926,7 @@
     [self setNeedsDisplay:YES];
 }
 
--(void) wfDrawAnObject
+-(void) drawAnObject
 {
     //activate the dynamicbuffer
     glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
@@ -1027,7 +1028,7 @@
 		/*glOrtho(1.05*xmin-0.05*xmax, 1.05*xmin-0.05*xmax, 1.05*wfMinmax[2]-0.05*wfMinmax[3], 
 				1.05*wfMinmax[3]-0.05*wfMinmax[2], wfMinmax[4], wfMinmax[5]);*/
         glOrtho(xmin, xmax, 1.1*ymin, 1.1*ymax, 1.1*wfMinmax[4], 1.1*wfMinmax[5]);
-		[self wfDrawAnObject];
+		[self drawAnObject];
 		//glPushMatrix();
 		//glScalef(1.0/(xmax-xmin),1.0/(ymax-ymin),1.0);
 		
@@ -1253,7 +1254,7 @@
 	//
 	//only remove points that were actually found
     
-    if((NSInteger)num_spikes-npointsToRemove<0)
+    if((NSInteger)num_spikes-(NSInteger)npointsToRemove<0)
     {
         num_spikes=0;
     }
@@ -1262,7 +1263,7 @@
         num_spikes-=npointsToRemove;   
     }
 
-    if( (NSInteger)nWfIndices-npointsToRemove*waveIndexSize < 0)
+    if( (NSInteger)nWfIndices-(NSInteger)npointsToRemove*waveIndexSize < 0)
     {
         nWfIndices = 0;
     }
@@ -1855,6 +1856,7 @@
     {
         GLfloat *tmp,z,newz;
         unsigned int i;
+        newz = 1.0;
         if (_drawMean == drawMean) 
         {
             //no change; just return
@@ -1864,92 +1866,11 @@
         {
             //turn off
             newz = -5.0;
-            /*if( drawStd == NO )
-            {
-                //if we want to turn off drawing of mean, we have to reduce the number of waveforms to draw by the size of one waveform
-                nWfIndices-=waveIndexSize;
-            }
-            else
-            {*/
-                //since we are drawing just the standard deviation, we have to shift the indices to skip the mean waveform
-                //make sure we are using the correct context
-            //just change the z-value
-            
-                        /*
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
-            unsigned int *idx = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
-            if(idx)
-            {
-                unsigned int i,j,start;
-                if (drawStd == YES)
-                {
-                    start = (nWfIndices/waveIndexSize - 3);
-                }
-                else
-                {
-                    start = (nWfIndices/waveIndexSize - 1);
-                }
-                for(i=start;i<(start+2);i++)
-                {
-                    for(j=0;j<waveIndexSize;j++)
-                    {
-                        idx[i*waveIndexSize+j] = idx[(i+1)*waveIndexSize+j];
-                    }
-                }
-                nWfIndices-=waveIndexSize;
-                glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-            }*/
-            
-                
-            //}
         }
         else if (( _drawMean == YES) && (drawMean == NO))
         {
             //turn on;
             newz = 1.0;
-            /*if( drawStd == NO )
-            {
-                //if we want to turn on drawing of mean, we have to increase the number of waveforms to draw by the size of one waveform
-                nWfIndices+=waveIndexSize;
-            }
-            else
-            {*/
-             //shift indices
-            /*
-            [[self openGLContext] makeCurrentContext];
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, wfIndexBuffer);
-            unsigned int *idx = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
-            if(idx)
-            {
-                unsigned int i,j,start;
-                if( drawStd == YES )
-                {
-                    start = (nWfIndices/waveIndexSize -2);
-                }
-                else
-                {
-                    start = (nWfIndices/waveIndexSize);
-                }
-                //first shift std up
-                for(i=start+1;i>=(start);i--)
-                {
-                    for(j=0;j<waveIndexSize;j++)
-                    {
-                        idx[(i+1)*waveIndexSize+j] = idx[i*waveIndexSize+j];
-                    }
-                }
-                //then fill in the mean
-                for(j=0;j<waveIndexSize;j++)
-                {
-                    idx[start*waveIndexSize+j] = idx[(start-1)*waveIndexSize+j] + wavesize;
-                }
-                nWfIndices+=waveIndexSize;
-                glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-            }
-
-                
-            //}*/
-        
         }
         //effect the change
         [[self openGLContext] makeCurrentContext];
@@ -1986,23 +1907,11 @@
         }
         float *tmp,z,newz;
         unsigned int i;
+        newz = 1.0; //initialise to something
         if( (_drawStd == YES ) && (drawStd == NO ) )
         {
             //turn on
             newz = 1.0;
-            /*
-            if( drawMean == NO )
-            {
-                //if we are not drawing anything, 
-                nWfIndices+=2*waveIndexSize;
-            }
-            else
-            {
-                //since standard devation is always drawn after the mean, we can just do the same
-                nWfIndices+=2*waveIndexSize;
-            }*/
-            
-            
         }
         else if ( (_drawStd == NO) && (drawStd == YES ))
         {
