@@ -21,7 +21,7 @@
 @synthesize clustersSortDescriptor;
 @synthesize clustersSortDescriptors;
 @synthesize waveformsFile;
-@synthesize activeCluster,selectedCluster,selectedClusters,selectedWaveform;
+@synthesize activeCluster,selectedCluster;
 //@synthesize selectedClusters;
 //@synthesize selectedWaveform;
 @synthesize featureCycleInterval;
@@ -30,7 +30,6 @@
 @synthesize histView;
 @synthesize stimInfo;
 @synthesize clusterMenu,waveformsMenu,clusterNotesPanel;
-@synthesize filterClustersPredicate;
 
 -(void)awakeFromNib
 {
@@ -156,6 +155,8 @@
 	BOOL anyLoaded = NO;
 	NSMutableArray *feature_names = [NSMutableArray arrayWithCapacity:16];
 	NSString *filebase;
+    tmp_data = NULL;
+    tmp_data2 = NULL;
     //get the group; format: gXXXX
     //NSError *xerror = NULL;
     //NSString *group = [[NSRegularExpression regularExpressionWithPattern:@"(g[0-9]*)" options: NSRegularExpressionCaseInsensitive: error &xerror] firstMatchInString: path option: 0 range:NSMakeRange(0,[path length])];
@@ -184,6 +185,7 @@
 		NSEnumerator *enumerator = [dir_contents objectEnumerator];
 		id file;
 		header H;
+        H.cols = 0;
 		//float *tmp_data,*tmp_data2;
 					
 		//TODO: parallelize this
@@ -363,33 +365,39 @@
     float max,min,l;
     if( [[NSUserDefaults standardUserDefaults] integerForKey:@"autoScaleAxes"] == 0 )
     {
-        //find max
-		vDSP_maxv(tmp_data,1,&max,rows*cols);
-		//find min
-		vDSP_minv(tmp_data,1,&min,rows*cols);
-		l = max-min;
-
-        for(j=0;j<rows*cols;j++)
+        if(tmp_data != NULL)
         {
-            tmp_data[j] = 2*(tmp_data[j]-min)/l-1;
+            //find max
+            vDSP_maxv(tmp_data,1,&max,rows*cols);
+            //find min
+            vDSP_minv(tmp_data,1,&min,rows*cols);
+            l = max-min;
+
+            for(j=0;j<rows*cols;j++)
+            {
+                tmp_data[j] = 2*(tmp_data[j]-min)/l-1;
+            }
         }
     }
     else if( [[NSUserDefaults standardUserDefaults] integerForKey:@"autoScaleAxes"]==1 )
     {
         //scale each feature individually
-	   for(i=0;i<cols;i++)
+        if(tmp_data != NULL )
         {
-            //find max
-            vDSP_maxv(tmp_data+i,cols,&max,rows);
-            //find min
-            vDSP_minv(tmp_data+i,cols,&min,rows);
-            //scale the data
-            l = (max-min);
-            //vDSP_addv(tmp_data2+i,cols,&min,
-            //vDSP_vsdiv(tmp_data2+i,cols,&l,tmp_data+i,cols,rows*cols);
-            for(j=0;j<rows;j++)
+           for(i=0;i<cols;i++)
             {
-                tmp_data[j*cols+i] = 2*(tmp_data[j*cols+i]-min)/l-1;
+                //find max
+                vDSP_maxv(tmp_data+i,cols,&max,rows);
+                //find min
+                vDSP_minv(tmp_data+i,cols,&min,rows);
+                //scale the data
+                l = (max-min);
+                //vDSP_addv(tmp_data2+i,cols,&min,
+                //vDSP_vsdiv(tmp_data2+i,cols,&l,tmp_data+i,cols,rows*cols);
+                for(j=0;j<rows;j++)
+                {
+                    tmp_data[j*cols+i] = 2*(tmp_data[j*cols+i]-min)/l-1;
+                }
             }
         }
     }
@@ -404,11 +412,14 @@
 		tmp_data[j] = 2*(tmp_data[j]-min)/l-1;
 	}
 	 */
-	[data replaceBytesInRange:range withBytes:tmp_data length: rows*cols*sizeof(float)];
-	 
-	free(tmp_data);
+    if(tmp_data != NULL)
+    {
+        [data replaceBytesInRange:range withBytes:tmp_data length: rows*cols*sizeof(float)];
+         
+        free(tmp_data);
     
-	[fw createVertices:data withRows:rows andColumns:cols];
+        [fw createVertices:data withRows:rows andColumns:cols];
+    }
 	//[fw loadVertices: [openPanel URL]];
 	[[self dim1] addItemsWithObjectValues:feature_names];
 	[[self dim2] addItemsWithObjectValues:feature_names];
@@ -636,7 +647,7 @@
 -(void)loadStimInfo
 {
     NSString *stimInfoFile = NULL;
-    NSString *stimInfoDir;
+    NSString *stimInfoDir = NULL;
     if( waveformsFile != NULL )
     {
         //attempt to locate a simtinfo object. This should be located two levels above the waveformfile
@@ -657,7 +668,7 @@
         stimInfoFile=NULL;
         //ask for the file name
         NSOpenPanel *panel = [NSOpenPanel openPanel];
-        if( stimInfoDir != nil)
+        if( stimInfoDir != NULL)
         {
             [panel setDirectory:stimInfoDir];
         }
@@ -719,8 +730,8 @@
     NSArray *fileComps = [[path lastPathComponent] componentsSeparatedByString:@"."]; 
     NSUInteger nFileComps = [fileComps count];
     NSString *extension = [fileComps objectAtIndex:1];
-    float *cluster_colors;
-    NSMutableArray *tempArray;
+    float *cluster_colors = NULL;
+    NSMutableArray *tempArray = NULL;
     //check if data is loaded
     if(dataloaded==NO)
     {
@@ -972,7 +983,7 @@
 			//now loop through the overlap matrix, adding points to the clusters as we go along
 			unsigned int cid,wfidx,npoints;
 			cid = maxCluster+1;
-			Cluster *cluster;
+			Cluster *cluster = NULL;
 			float  *color;
 			for(i=0;i<ncols;i++)
 			{
@@ -983,16 +994,19 @@
 					cluster = [tempArray objectAtIndex:cid];
 				}
 				//set the colors
-				color = (float*)[[cluster color] bytes];
-				cluster_colors[3*i] = color[0];
-				cluster_colors[3*i+1] = color[1];
-				cluster_colors[3*i+2] = color[2];
-				
-				[[cluster points] appendBytes:&wfidx length:sizeof(unsigned int)];
-				[[cluster indices] addIndex:wfidx];
-				npoints = [[cluster npoints] unsignedIntValue];
-				//increment the number of points
-				[cluster setNpoints:[NSNumber numberWithUnsignedInt:npoints+1]];
+                if(cluster != NULL)
+                {
+                    color = (float*)[[cluster color] bytes];
+                    cluster_colors[3*i] = color[0];
+                    cluster_colors[3*i+1] = color[1];
+                    cluster_colors[3*i+2] = color[2];
+                    
+                    [[cluster points] appendBytes:&wfidx length:sizeof(unsigned int)];
+                    [[cluster indices] addIndex:wfidx];
+                    npoints = [[cluster npoints] unsignedIntValue];
+                    //increment the number of points
+                    [cluster setNpoints:[NSNumber numberWithUnsignedInt:npoints+1]];
+                }
 			}
 			//free overlaps since we don't need it
 			free(overlaps);
@@ -1001,7 +1015,7 @@
 		}
         else if ([[fileComps lastObject] isEqualToString:@"clusters"])
         {
-            unsigned int* cids;
+            unsigned int* cids = malloc(rows*sizeof(unsigned int));
             readMClustClusters([path cStringUsingEncoding:NSASCIIStringEncoding], cids);
         }
         else
@@ -1015,17 +1029,20 @@
     }
 	free(_chs);
 	//turn off the first cluster, since it's usually the noise cluster
-    if(tempArray != nil )
+    if(tempArray != NULL )
     {
         [[tempArray objectAtIndex:0] makeInactive];
     }
-	if( dataloaded == YES )
+	if( (dataloaded == YES ) && (cluster_colors != NULL))
 	{
 		//only do this if data has been loaded
 		[fw setClusterColors: cluster_colors forIndices: NULL length: rows];
 	}
     //since colors are now ccopied, we can free it
-    free(cluster_colors);
+    if( cluster_colors != NULL )
+    {
+        free(cluster_colors);
+    }
     if( ([self Clusters] != nil) && (dataloaded == YES ) )
     {
         [self removeAllObjectsFromClusters];
@@ -1291,6 +1308,7 @@
         }
         //[self computeFeature:<#(NSData *)#> withChannels:<#(NSUInteger)#> andTimepoints:<#(NSUInteger)#>
     }
+    [cluster release];//release the cluster since we have added it to the clusters array
 
     
 }
@@ -1751,6 +1769,11 @@
     [[Clusters filteredArrayUsingPredicate: [NSCompoundPredicate andPredicateWithSubpredicates:[NSArray arrayWithObjects:                                                                                                 [NSCompoundPredicate notPredicateWithSubpredicate:isActive],                                                                                                 predicate,nil]]] makeObjectsPerformSelector:@selector(makeActive)];
 }
 
+-(NSPredicate*)filterClustersPredicate
+{
+    return filterClustersPredicate;
+}
+
 - (IBAction) changeDim1: (id)sender
 {
     //[fw selectDimensions:[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:0],@"dim", [NSNumber numberWithInt: [sender indexOfSelectedItem]],@"dim_data",nil]];
@@ -2077,6 +2100,7 @@
 	NSEnumerator *channelEnumerator = [channels objectEnumerator];
 	unsigned int i,k;
 	unsigned int *_validChannels = malloc(nvalidChannels*sizeof(unsigned int));
+    k = 0;
 	for(i=0;i<nchannels;i++)
 	{
 		if(channelValidity[i])
@@ -2595,6 +2619,7 @@
             [[NSNotificationCenter defaultCenter] addObserver:self
                                                      selector:@selector(ClusterStateChanged:)
                                                          name:@"ClusterStateChanged" object:nil];
+            [newCluster release];//release since we have already added it to clusters
         }
 
         
@@ -2858,9 +2883,6 @@
     {
         [[self clusterNotesPanel] orderFront:self];
     }
-
-
-        
                                                                                  
 }
 
@@ -3039,7 +3061,7 @@
 	[new_cluster makeValid];
     [new_cluster computeISIs: timestamps];
  	//set parents	
-	[new_cluster setParents: clusters];
+	[new_cluster setParents: [NSMutableArray arrayWithArray: clusters]];
     int nclusters = [Clusters count];
 	
     [self insertObject:new_cluster inClustersAtIndex:nclusters];
@@ -3099,7 +3121,7 @@
     _mean1 = (float*)[[cluster1 mean] bytes];
     _npoints1 = [[cluster1 npoints] unsignedIntValue];
     _mean2 = (float*)[[cluster2 mean] bytes];
-    _npoints1 = [[cluster1 npoints] unsignedIntValue];
+    _npoints2 = [[cluster2 npoints] unsignedIntValue];
     //add the two means after scaling by the respective number of points
     for(i=0;i<cols;i++)
     {
@@ -3121,7 +3143,7 @@
     //set the new cluste colors
     int nclusters = [Clusters count];
     new_cluster.parents = [NSArray arrayWithObjects:cluster1,cluster2,nil];
-    [self insertObject:new_cluster inClustersAtIndex:nclusters];
+    
 	if( dataloaded == YES)
 	{
 		//only do this if data has been loaded; should probably try to make this a bit more general
@@ -3138,7 +3160,9 @@
     }
     //make the new cluster the currently selected
     [self setSelectedClusters:[NSIndexSet indexSetWithIndex:nclusters]];
-    selectedCluster = new_cluster;
+    [self insertObject:new_cluster inClustersAtIndex:nclusters];
+    selectedCluster = [[self Clusters] objectAtIndex:nclusters];
+    [new_cluster release];//release this since we have already added it to clusters
 }
 
 -(void)deleteCluster: (Cluster *)cluster
@@ -3528,6 +3552,11 @@
 	
 }
 
+-(NSIndexSet*)selectedClusters
+{
+    return selectedClusters;
+}
+
 -(void)setSelectedWaveform:(NSString *)wf
 {
 	
@@ -3546,6 +3575,11 @@
 	//}
 	[formatter release];
 	//
+}
+
+-(NSString*)selectedWaveform
+{
+    return selectedWaveform;
 }
 
 -(void)movePointsFromCluster:(Cluster*)fromCluster toCluster:(Cluster *)toCluster
