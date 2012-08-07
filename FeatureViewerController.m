@@ -2325,7 +2325,7 @@
         unsigned int *tpts = (unsigned int*)[[activeCluster points] bytes];
         unsigned int *pts = (unsigned int*)[[activeCluster isiIdx] bytes];
         unsigned long long int* times = (unsigned long long int*)[timestamps bytes];
-        if( (pts == NULL) & (times != NULL))
+        if( (pts == NULL) && (times != NULL))
         {
             [activeCluster computeISIs:timestamps];
             pts = (unsigned int*)[[activeCluster isiIdx] bytes];
