@@ -20,6 +20,7 @@
 @synthesize shouldDrawLabels;//,drawMean,drawStd;
 @synthesize overlay;
 @synthesize wfMean, wfStd;
+@synthesize globalIndices,firstIndex;
 
 -(void)awakeFromNib
 {
@@ -768,8 +769,8 @@
     unsigned int idx,i,j,found;
     unsigned int* _hpoints;
     unsigned int _nhpoints;
-	NSUInteger largestIndex = [waveformIndices lastIndex];
-	NSUInteger* _indexes = malloc(num_spikes*sizeof(NSUInteger));
+	NSUInteger largestIndex = firstIndex + [waveformIndices lastIndex];
+    NSUInteger* _indexes = malloc(num_spikes*sizeof(NSUInteger));
 	[waveformIndices getIndexes:_indexes maxCount:num_spikes inIndexRange:nil];
     if( highlightWaves != NULL )
     {
@@ -781,10 +782,10 @@
             //need to reset z-value of previously highlighted waveform
             //idx = _hpoints[i];
             //TODO: we should be able to do without this check
-            if( _hpoints[i] < largestIndex)
+            if( (_hpoints[i] < largestIndex) && (_hpoints[i] >= firstIndex))
             {
                 //idx = _indexes[_hpoints[i]];
-				idx = _hpoints[i];
+				idx = _hpoints[i]-firstIndex;
                 zvalue = -1.0;
                 //zvalue = wfVertices[idx*timepts*chs*3+2];
                 //vDSP_vfill(&zvalue,_data+(idx*timepts*chs*3)+2,3,timepts*chs);
@@ -804,7 +805,7 @@
     //set the z-value
     for(i=0;i<_npoints;i++)
     {
-        idx = _points[i];
+        idx = _points[i]- firstIndex;
 		//idx = _indexes[_points[i]];
 		//check that the point is valid
 		if( idx < orig_num_spikes )
@@ -830,8 +831,8 @@
         //unsigned int _nhpoints = [wfidx length]/sizeof(unsigned int);
         for(i=0;i<_nhpoints;i++)
         {
-            idx = _hpoints[i];
-            if(_hpoints[i] >= orig_num_spikes)
+            idx = _hpoints[i]-firstIndex;
+            if(idx >= orig_num_spikes)
                 continue;
            // idx = _indexes[_hpoints[i]];
             dcolor = 1-_colors[idx*wavesize*3];
@@ -852,19 +853,18 @@
      */
     for(i=0;i<_npoints;i++)
     {
-        idx = _points[i];
-        if(_points[i]>= orig_num_spikes)
+        idx = _points[i]-firstIndex;
+        if(idx>= orig_num_spikes)
             continue;
 		//idx = _indexes[_points[i]];
-		if (idx < orig_num_spikes )
-		{
-            dcolor = 1-_colors[idx*wavesize*3];
-			vDSP_vfill(&dcolor,_colors+(idx*wavesize*3),3,wavesize);
-            dcolor = 1-_colors[idx*wavesize*3+1];
-			vDSP_vfill(&dcolor,_colors+(idx*wavesize*3)+1,3,wavesize);
-            dcolor = 1-_colors[idx*wavesize*3+2];
-			vDSP_vfill(&dcolor,_colors+(idx*wavesize*3)+2,3,wavesize);
-		}
+		
+        dcolor = 1-_colors[idx*wavesize*3];
+        vDSP_vfill(&dcolor,_colors+(idx*wavesize*3),3,wavesize);
+        dcolor = 1-_colors[idx*wavesize*3+1];
+        vDSP_vfill(&dcolor,_colors+(idx*wavesize*3)+1,3,wavesize);
+        dcolor = 1-_colors[idx*wavesize*3+2];
+        vDSP_vfill(&dcolor,_colors+(idx*wavesize*3)+2,3,wavesize);
+		
     }
     if(highlightWaves != NULL)
     {
@@ -1774,7 +1774,7 @@
 		int i;
 		for(i=0;i<len;i++)
 		{
-			if( idx[i] > 0 )
+			if( idx[i] > firstIndex )
 			{
 				idx[i]--;
 				//move one index back
@@ -1817,7 +1817,7 @@
 		//NSUInteger  k;
 		for(i=0;i<len;i++)
 		{
-			if( idx[i] < num_spikes -1 )
+			if( idx[i] - firstIndex < num_spikes -1 )
 			{
 				idx[i]++;
 				//advance one index
@@ -1830,7 +1830,7 @@
 	else
 	{
 		//no highlighted waves, so set highlight to the first wave
-		unsigned int idx = 0;//(unsigned int)[waveformIndices firstIndex];
+		unsigned int idx = firstIndex;//(unsigned int)[waveformIndices firstIndex];
 		hdata = [NSMutableData dataWithBytes:&idx length:sizeof(unsigned int)];
 		
 	}
