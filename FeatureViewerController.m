@@ -1130,7 +1130,7 @@
     
     [selectClusterOption addItemsWithTitles:options];
     //once we have loaded the clusters, start up a timer that will ensure that data gets arhived automatically every 5 minutes
-    archiveTimer = [[NSTimer scheduledTimerWithTimeInterval:300 target:self selector:@selector(archiveClusters) userInfo:nil repeats: YES] retain];
+    archiveTimer = [[NSTimer scheduledTimerWithTimeInterval:300 target:self selector:@selector(archiveClusters:) userInfo:nil repeats: YES] retain];
 	[_pool drain];
 }
 
@@ -3336,9 +3336,17 @@
     NSBlockOperation *op = [NSBlockOperation blockOperationWithBlock:^{
         //make sure we save to the correct directory
         NSString *fileName = [[self currentDir] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.fv",currentBaseName]];
-                            [NSKeyedArchiver archiveRootObject: [self Clusters] toFile:fileName];
+        BOOL success;
+        success = [NSKeyedArchiver archiveRootObject: [self Clusters] toFile:fileName];
                             //notify that we successfully saved
-        NSLog(@"Successfully saved clusters to file %@", fileName);
+        if(success == YES)
+        {
+            NSLog(@"Successfully saved clusters to file %@", fileName);
+        }
+        else
+        {
+            NSLog(@"Clusters could not be saved. Most probably because of a permission issue on the file %@", fileName);
+        }
     }];
     [queue addOperation:op];
 }
