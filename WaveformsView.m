@@ -1420,11 +1420,6 @@
 		return;
 
 	}
-    else if ([theEvent modifierFlags] & NSShiftKeyMask )
-    {
-        //if we select while the shift key is down, add the poin to the already selected points
-        
-    }
     else 
     {
         //get only the relevant vertices
@@ -1473,7 +1468,7 @@
     free(p);
     //if command key is pressed, we want to add this wavform to the currently drawn waveforms
     NSMutableData *hdata;
-    if([theEvent modifierFlags] & NSCommandKeyMask)
+    if([theEvent modifierFlags] & NSShiftKeyMask)
     {
         hdata = [NSMutableData dataWithData:[self highlightWaves]];
     }
