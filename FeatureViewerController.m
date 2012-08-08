@@ -2938,17 +2938,18 @@
         int* cluster_indices = calloc((params.rows+1),sizeof(int));    
         cluster_indices[0] = (unsigned int)[candidates count];
         NSEnumerator *cluster_enumerator = [[candidates filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"valid==1"]] objectEnumerator];
-        int i;
-        int npoints;
+        int i,npoints,cid;
         id cluster;
+        cid = 1;
         while( cluster = [cluster_enumerator nextObject] )
         {
             unsigned int *clusteridx = (unsigned int*)[[cluster points] bytes];
             npoints = [[cluster npoints] intValue];
             for(i=0;i<npoints;i++)
             {
-                cluster_indices[clusteridx[i]+1] = (unsigned int)[[cluster clusterId] unsignedIntValue];
+                cluster_indices[clusteridx[i]+1] = cid;
             }
+            cid+=1;
         }
         NSSavePanel *savePanel = [NSSavePanel savePanel];
 		[savePanel setNameFieldStringValue:[NSString stringWithFormat: @"%@.cut",currentBaseName]];
