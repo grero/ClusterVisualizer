@@ -1571,14 +1571,17 @@
             }
 			waveforms = getWavesForChannels(path, &spikeHeader, _idx,npoints,validChannels,nvalidChannels,waveforms);
 		}
-        //update the global index as well; this keeps track of which points within the cluster we are actually drawing. Initially, we are drawing everything up to maxWaveformsDrwan
-        NSMutableIndexSet *tidx = [NSMutableIndexSet alloc];
-        [tidx initWithIndexSet:[[cluster indices] indexesInRange:NSMakeRange(0, npoints-1) options:NSEnumerationConcurrent passingTest:^BOOL(NSUInteger idx, BOOL *stop) {
-            return YES;
-        }]];
-        [[self wfv] setGlobalIndices:tidx];
-        [[self wfv] setFirstIndex:0];
-        [tidx release];
+        //update the global index as well; this keeps track of which points within the cluster we are actually drawing. Initially, we are drawing everything up to maxWaveformsDrawn
+        if(npoints > 0 )
+        {
+            NSMutableIndexSet *tidx = [NSMutableIndexSet alloc];
+            [tidx initWithIndexSet:[[cluster indices] indexesInRange:NSMakeRange(_idx[0], _idx[npoints-1]-_idx[0]) options:NSEnumerationConcurrent passingTest:^BOOL(NSUInteger idx, BOOL *stop) {
+                return YES;
+            }]];
+            [[self wfv] setGlobalIndices:tidx];
+            [[self wfv] setFirstIndex:0];
+            [tidx release];
+        }
 
         free(_idx);
         
@@ -2364,7 +2367,7 @@
             {
                 //check if the point is within the points shown
                 NSUInteger maxWaveformsDrawn = [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"];
-                if( tpts[pts[0]+1] > [[[self wfv] globalIndices] lastIndex] )
+                if( (tpts[pts[0]+1] > [[[self wfv] globalIndices] lastIndex]) || (tpts[pts[0]] < [[[self wfv] globalIndices] firstIndex]) )
                 {
                     //update the waveformsview first
                     [self updateWaveformsFromCluster:[self selectedCluster] fromIndex:tpts[pts[0]] toIndex:tpts[MIN(pts[0]+maxWaveformsDrawn,rows-1)]];

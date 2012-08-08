@@ -1228,7 +1228,9 @@
         while((found==0) && (j<_npoints))
         {
 			//use the index, not the index to the index
-            if(_index[i]==_points[j])
+            //remeber to offset
+            
+            if(_index[i] + firstIndex==_points[j])
 			{
                 found = 1;
 			}
@@ -1378,6 +1380,7 @@
         float *D = malloc(2*wfLength*sizeof(float));
         unsigned int *sIdx = (unsigned int*)[[self highlightWaves] bytes];
         unsigned int n = [[self highlightWaves] length]/sizeof(unsigned int);
+        unsigned int _sidx;
         //use a for loop for now
         unsigned int i,s;
         float d_o;
@@ -1388,8 +1391,9 @@
         _vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
         for(i=0;i<n;i++)
         {
-            vDSP_vsadd(_vertices+3*sIdx[i]*wfLength,3,p,D,2,wfLength);
-            vDSP_vsadd(_vertices+3*sIdx[i]*wfLength+1,3,p+1,D+1,2,wfLength);
+            _sidx = sIdx[i]-firstIndex;
+            vDSP_vsadd(_vertices+3*_sidx*wfLength,3,p,D,2,wfLength);
+            vDSP_vsadd(_vertices+3*_sidx*wfLength+1,3,p+1,D+1,2,wfLength);
             //sum of squares
             vDSP_vdist(D,2,D+1,2,d,1,wfLength);
             //find the index of the minimu distance
@@ -1463,7 +1467,8 @@
         
         free(d);
         free(D);
-		wfidx = imin;//(wfLength);
+        //we need to offset appropriately, since imin referes to the current drawn waveforms, not the full index set
+		wfidx = imin + firstIndex;//(wfLength);
     }
     free(p);
     //if command key is pressed, we want to add this wavform to the currently drawn waveforms
