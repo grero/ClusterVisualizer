@@ -21,7 +21,7 @@
     NSArray *fileComps = [[path lastPathComponent] componentsSeparatedByString:@"."]; 
 	if( basePath != NULL )
 	{
-		NSRange range = [path rangeOfString:basePath];
+		NSRange range = [path rangeOfString:basePath options: NSCaseInsensitiveSearch];
 		if( range.location == NSNotFound)
 		{
 			return NO;

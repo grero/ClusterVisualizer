@@ -456,7 +456,7 @@
         //waveforms file usually resides in a directory above the feature file
 		NSArray *waveformfiles = [[[[NSFileManager defaultManager] contentsOfDirectoryAtPath: [directory stringByDeletingLastPathComponent] error: nil] 
 								   pathsMatchingExtensions:[NSArray arrayWithObjects:@"bin",nil]] filteredArrayUsingPredicate:
-								  [NSPredicate predicateWithFormat:@"SELF BEGINSWITH %@", filebase]];
+								  [NSPredicate predicateWithFormat:@"SELF BEGINSWITH[c] %@", filebase]];
 		//NSString *waveformsPath = @"";
 		if( [waveformfiles count] == 1 )
 		{
@@ -1216,7 +1216,7 @@
         }
         else
         {
-            files = [files filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"SELF BEGINSWITH %@", [[path lastPathComponent] stringByDeletingPathExtension]]];
+            files = [files filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"SELF BEGINSWITH[c] %@", [[path lastPathComponent] stringByDeletingPathExtension]]];
             if([files count] > 0 )
             {
                 [self openFeatureFile:[featurePath stringByAppendingPathComponent:[files objectAtIndex:0]]];
@@ -1386,6 +1386,22 @@
         {
             uindex[i] = (unsigned int)_index[i];
         }
+        NSMutableIndexSet *tidx = [NSMutableIndexSet alloc];
+        [tidx initWithIndexSet:[[cluster indices] indexesInRange:NSMakeRange(_index[0], _index[nindexes-1]-_index[0]) options:NSEnumerationConcurrent passingTest:^BOOL(NSUInteger idx, BOOL *stop) {
+            return YES;
+        }]];
+        //locate the first index
+        NSUInteger fidx,sidx;
+        fidx = 0;
+        sidx = [[cluster indices] firstIndex];
+        while(sidx != NSNotFound )
+        {
+            sidx = [[cluster indices] indexGreaterThanIndex:sidx];
+            fidx+=1;
+        }
+        [[self wfv] setGlobalIndices:tidx];
+        [[self wfv] setFirstIndex:fidx];
+        [tidx release];
         free(_index);
         _index = NULL;
         nptHeader spikeHeader;
@@ -1555,6 +1571,18 @@
             }
 			waveforms = getWavesForChannels(path, &spikeHeader, _idx,npoints,validChannels,nvalidChannels,waveforms);
 		}
+        //update the global index as well; this keeps track of which points within the cluster we are actually drawing. Initially, we are drawing everything up to maxWaveformsDrawn
+        if(npoints > 0 )
+        {
+            NSMutableIndexSet *tidx = [NSMutableIndexSet alloc];
+            [tidx initWithIndexSet:[[cluster indices] indexesInRange:NSMakeRange(_idx[0], _idx[npoints-1]-_idx[0]) options:NSEnumerationConcurrent passingTest:^BOOL(NSUInteger idx, BOOL *stop) {
+                return YES;
+            }]];
+            [[self wfv] setGlobalIndices:tidx];
+            [[self wfv] setFirstIndex:0];
+            [tidx release];
+        }
+
         free(_idx);
         
         //convert to float
@@ -1565,7 +1593,8 @@
         [[wfv window] orderFront: self];
         [wfv createVertices:[NSData dataWithBytes:fwaveforms length:wfSize*sizeof(float)] withNumberOfWaves: npoints channels: (NSUInteger)nvalidChannels andTimePoints: (NSUInteger)spikeHeader.timepts 
                    andColor:[cluster color] andOrder:reorderIndex];
-        [cluster setWfMean:[[self wfv] wfMean]];
+        //update the global indices
+                [cluster setWfMean:[[self wfv] wfMean]];
         [cluster setWfCov: [[self wfv] wfStd]];
         free(fwaveforms);
         //remove this
@@ -2336,7 +2365,15 @@
         {
             if ( times[tpts[pts[0]+1]]-times[tpts[pts[0]]] < 1000)
             {
-            
+                //check if the point is within the points shown
+                NSUInteger maxWaveformsDrawn = [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"];
+                if( (tpts[pts[0]+1] > [[[self wfv] globalIndices] lastIndex]) || (tpts[pts[0]] < [[[self wfv] globalIndices] firstIndex]) )
+                {
+                    //update the waveformsview first
+                    [self updateWaveformsFromCluster:[self selectedCluster] fromIndex:tpts[pts[0]] toIndex:tpts[MIN(pts[0]+maxWaveformsDrawn,rows-1)]];
+                    //reset the index
+                    [[self wfv] setFirstIndex:pts[0]];
+                }
                 unsigned int *spts = malloc(2*sizeof(unsigned int));
                 spts[0] = pts[0];
                 spts[1] = pts[0]+1;
@@ -2901,17 +2938,18 @@
         int* cluster_indices = calloc((params.rows+1),sizeof(int));    
         cluster_indices[0] = (unsigned int)[candidates count];
         NSEnumerator *cluster_enumerator = [[candidates filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"valid==1"]] objectEnumerator];
-        int i;
-        int npoints;
+        int i,npoints,cid;
         id cluster;
+        cid = 1;
         while( cluster = [cluster_enumerator nextObject] )
         {
             unsigned int *clusteridx = (unsigned int*)[[cluster points] bytes];
             npoints = [[cluster npoints] intValue];
             for(i=0;i<npoints;i++)
             {
-                cluster_indices[clusteridx[i]+1] = (unsigned int)[[cluster clusterId] unsignedIntValue];
+                cluster_indices[clusteridx[i]+1] = cid;
             }
+            cid+=1;
         }
         NSSavePanel *savePanel = [NSSavePanel savePanel];
 		[savePanel setNameFieldStringValue:[NSString stringWithFormat: @"%@.cut",currentBaseName]];
@@ -3513,7 +3551,7 @@
         //TODO: This should be made more general
         /*if( ([[firstCluster clusterId] unsignedIntValue] > 0 ) && ([[firstCluster npoints] unsignedIntValue] < [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"]))
         {*/
-        if( [firstCluster npoints] > 0)
+        if( [[firstCluster npoints] unsignedIntValue]> 0)
         {
             [[self wfv] setOverlay:NO];
             [self loadWaveforms: firstCluster];
