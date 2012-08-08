@@ -456,7 +456,7 @@
         //waveforms file usually resides in a directory above the feature file
 		NSArray *waveformfiles = [[[[NSFileManager defaultManager] contentsOfDirectoryAtPath: [directory stringByDeletingLastPathComponent] error: nil] 
 								   pathsMatchingExtensions:[NSArray arrayWithObjects:@"bin",nil]] filteredArrayUsingPredicate:
-								  [NSPredicate predicateWithFormat:@"SELF BEGINSWITH %@", filebase]];
+								  [NSPredicate predicateWithFormat:@"SELF BEGINSWITH[c] %@", filebase]];
 		//NSString *waveformsPath = @"";
 		if( [waveformfiles count] == 1 )
 		{
@@ -1216,7 +1216,7 @@
         }
         else
         {
-            files = [files filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"SELF BEGINSWITH %@", [[path lastPathComponent] stringByDeletingPathExtension]]];
+            files = [files filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"SELF BEGINSWITH[c] %@", [[path lastPathComponent] stringByDeletingPathExtension]]];
             if([files count] > 0 )
             {
                 [self openFeatureFile:[featurePath stringByAppendingPathComponent:[files objectAtIndex:0]]];
