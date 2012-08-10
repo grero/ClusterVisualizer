@@ -2354,6 +2354,7 @@
         unsigned int *tpts = (unsigned int*)[[activeCluster points] bytes];
         unsigned int *pts = (unsigned int*)[[activeCluster isiIdx] bytes];
         unsigned long long int* times = (unsigned long long int*)[timestamps bytes];
+        double timeScaleFactor;
         if( (pts == NULL) && (times != NULL))
         {
             [activeCluster computeISIs:timestamps];
@@ -2361,9 +2362,16 @@
         }
         //isiIdx contains the indices of the isis; the first index is the index of the shortest isi
         //only mark if the shortest ISI is less than 1000 microseconds
+        timeScaleFactor = [[NSUserDefaults standardUserDefaults] doubleForKey:
+                @"timeScaleFactor"];
+        if( timeScaleFactor == 0 )
+        {
+            timeScaleFactor = 100.0;
+            [[NSUserDefaults standardUserDefaults] setDouble:timeScaleFactor forKey:@"timeScaleFactor"];
+        }
         if(pts)
         {
-            if ( times[tpts[pts[0]+1]]-times[tpts[pts[0]]] < 1000)
+            if ( times[tpts[pts[0]+1]]-times[tpts[pts[0]]] < 1.0*timeScaleFactor)
             {
                 //check if the point is within the points shown
                 NSUInteger maxWaveformsDrawn = [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"];
