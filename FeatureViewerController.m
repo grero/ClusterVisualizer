@@ -132,6 +132,14 @@
             [[self fw] hideAllClusters];
             [self removeAllObjectsFromClusters];
             [[[self wfv]  window] orderOut:self];
+            if(timestamps != NULL)
+            {
+                [timestamps release];
+                timestamps = NULL;
+            }
+            
+            [self setWaveformsFile:NULL];
+            
             
         }
         NSString *path = [[openPanel URL] path];
@@ -432,7 +440,7 @@
 	//NSLog(@"Filebase: %@",filebase);
     //check for the presence of xml file
     
-	if (([self waveformsFile] == NULL ) && (autoLoadWaveforms == YES) )
+	if (autoLoadWaveforms == YES)
 	{
         //check for the presence of spk files; first we need to load some info
         NSString *xmlFile = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:1];
