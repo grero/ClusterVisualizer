@@ -243,6 +243,11 @@
 					
 				}
 				//transpose
+				//this is kind of a hack; if we are loading spikewdiths, use absolute values
+				if([fn compare: @"spikewidth" options: NSCaseInsensitiveSearch] == NSOrderedSame )
+				{
+					vDSP_vabs(tmp_data,1,tmp_data,1,H.rows*H.cols);
+				}
 				for(i=0;i<H.rows;i++)
 				{ 
 					for(j=0;j<H.cols;j++)
