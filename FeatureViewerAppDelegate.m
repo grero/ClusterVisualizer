@@ -78,7 +78,7 @@
 -(void)applicationWillTerminate:(NSNotification *)notification
 {
     //ask featureview controller to archive the clusters first
-    [controller archiveClusters];
+	[controller archiveClusters:self];
 }
 
 -(id)init
