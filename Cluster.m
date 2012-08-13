@@ -850,10 +850,23 @@
     nptHeader spikeHeader;
     NSUInteger wavesize;
     NSData *waveformsData = nil;
-   	_channels = (unsigned int*)[[self channels] bytes];
-	_nchs = [[self channels] length]/sizeof(unsigned int);
     fname = [filename cStringUsingEncoding:NSASCIIStringEncoding];
     getSpikeInfo(fname, &spikeHeader);
+   	_channels = (unsigned int*)[[self channels] bytes];
+	if(_channels == NULL)
+	{
+		_nchs = spikeHeader.channels;
+		_channels = malloc(_nchs*sizeof(unsigned int));
+		int i;
+		for(i=0;i<_nchs;i++)
+		{
+			_channels[i] = i;
+		}
+	}
+	else
+	{
+		_nchs = [[self channels] length]/sizeof(unsigned int);
+	}
     wavesize = (spikeHeader.timepts)*(_nchs);
     nwaves = [[self indices] count];
     if(nwaves>0)
