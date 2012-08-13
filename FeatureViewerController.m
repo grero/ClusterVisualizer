@@ -2918,21 +2918,29 @@
         //cfData = [[self selectedCluster] getRelevantData:[[self fw] getVertexData] withElementSize:sizeof(float)];
         //compute belonginess
         belonginess = [[self selectedCluster] computeBelonginess:[[self fw] getVertexData]];
-        _npoints = [[[self selectedCluster] npoints] unsignedIntValue];
-        _p = (double*)[belonginess bytes];
-        //the find points for which the belonginess is less than or equal to the threshold
-        screenIdx = [NSMutableData dataWithCapacity:_npoints*sizeof(unsigned int)];
-        for(i=0;i<_npoints;i++)
-        {
-            if( _p[i] < threshold )
-            {
-                [screenIdx appendBytes:&i length:sizeof(unsigned int)];
-            }
-        }
-        //send a notificaiton to highlight
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:self userInfo:[NSDictionary dictionaryWithObject:screenIdx forKey:@"points"]];
+		if( belonginess != NULL)
+		{
+			_npoints = [[[self selectedCluster] npoints] unsignedIntValue];
+			_p = (double*)[belonginess bytes];
+			//the find points for which the belonginess is less than or equal to the threshold
+			screenIdx = [NSMutableData dataWithCapacity:_npoints*sizeof(unsigned int)];
+			for(i=0;i<_npoints;i++)
+			{
+				if( _p[i] < threshold )
+				{
+					[screenIdx appendBytes:&i length:sizeof(unsigned int)];
+				}
+			}
+			//send a notificaiton to highlight
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:self userInfo:[NSDictionary dictionaryWithObject:screenIdx forKey:@"points"]];
         
-        
+		} 
+		else
+		{
+			//Notify that something went wrong
+			NSLog(@"Could not compute belonginess for cluster");
+		}
+
     }
     else if( [selection isEqualToString:@"Show cluster notes"] )
     {
@@ -3103,12 +3111,15 @@
 		
 	}
 	_clnpoints = [[new_cluster npoints] unsignedIntValue];
+	
 	for(i=0;i<cols;i++)
 	{
 		_mean[i] /=_clnpoints; 
 	}
 	[new_cluster setMean: [NSData dataWithBytes: _mean length: cols*sizeof(float)]];
 	free(_mean);
+	//compute covariance matrix; this could also be done incrementally
+	[new_cluster computeFeatureCovariance:[[self fw] getVertexData]];
 	//set the color
 	color[0] = (float)random()/(float)RAND_MAX;
 	color[1] = (float)random()/(float)RAND_MAX;

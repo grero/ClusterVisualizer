@@ -262,6 +262,11 @@
 
     float *_mean = (float*)[[self mean] bytes];
     double *_covi = (double*)[[self covi] bytes];
+	//one more check
+	if( (_mean == NULL) || (_covi==NULL))
+	{
+		return NULL;
+	}
     double x;
     double f = -0.5*(double)cols*log(2*pi)-0.5*[self det];
     unsigned m,l;
