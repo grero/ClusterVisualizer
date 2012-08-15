@@ -900,6 +900,7 @@
 				
 				
 				cluster.npoints = [NSNumber numberWithUnsignedInt: npoints[i]];
+				[cluster setTotalNPoints: [NSNumber numberWithUnsignedInt:rows]];
 				//cluster.name = [[[[cluster clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[cluster npoints] stringValue]];
 				[cluster createName];
 				cluster.indices = [NSMutableIndexSet indexSet];
@@ -3096,6 +3097,7 @@
 	unsigned int i,_clnpoints;
     Cluster *new_cluster = [[Cluster alloc] init];
     new_cluster.clusterId = [NSNumber numberWithUnsignedInt:[Clusters count]];
+	[new_cluster setTotalNPoints: [NSNumber numberWithUnsignedInt:rows]];
 	//loop through clusters
 	NSEnumerator *clusterEnumerator = [clusters objectEnumerator];
 	Cluster *cl;

@@ -18,7 +18,7 @@
 @synthesize points;
 @synthesize active;
 @synthesize isTemplate;
-@synthesize npoints;
+@synthesize npoints,totalNPoints;
 @synthesize color;
 @synthesize indices;
 @synthesize valid;
@@ -423,11 +423,95 @@
     free(_sq);
 
 }
+-(void)computeIsolationDistance:(NSData*)data withFeatures: (NSData*)fdim
+{
+	//compute isolation distance using the feature points in data
+	if( fdim == nil )
+	{
+		[self computeIsolationDistance: data];
+	}
+	else
+	{
+		//fdim indicates a subset of dimensiosn to use
+		unsigned int *_fdim, _nfdim,i,ndim,n,*_points, _npoints,_ntpoints,j,k;
+		float *_data, *_mean,*_useMean;
+
+		n = [npoints unsignedIntValue];
+		_points = (unsigned int*)[[self points] bytes];
+		//get the total number of points
+		_ntpoints = [[self totalNPoints] unsignedIntValue];
+		_fdim = (unsigned int*)[fdim data];
+		_nfdim = [fdim length]/sizeof(unsigned int);
+		_data = (float*)[data bytes];
+    	_mean = (float*)[[self mean] bytes];
+		if(_mean == NULL)
+		{
+			[self computeFeatureMean:data];
+			_mean = (float*)[[self mean] bytes];
+		}
+		ndim = [[self mean] length]/sizeof(float);
+		//now pick out the relevant dimensions	
+		if( fdim == nil )
+		{
+			_useMean = _mean;
+			_nfdim = ndim;
+		}
+		else
+		{
+			_useMean = malloc(_nfdim*sizeof(float));
+			for(i=0;i<_nfdim;i++)
+			{
+				//check that we don't exceed
+				if( (_fdim[i] >= ndim ) || (_fdim[i]<0))
+				{
+					free(_useMean);
+					return;
+				}
+				_useMean[i] = _mean[_fdim[i]];
+			}
+		}
+		NSMutableIndexSet *idx = [NSMutableIndexSet indexSetWithIndexesInRange:NSMakeRange(0,_ntpoints)];
+		[idx removeIndexes:[self indices]];
+		unsigned int N = [idx count];
+
+		NSUInteger *_idx = malloc(N*sizeof(NSUInteger));
+		[idx getIndexes:_idx maxCount:_ntpoints inIndexRange:nil];
+		
+		float *d = malloc(_nfdim*sizeof(float));
+	  
+		float *D = malloc(N*sizeof(float));
+		float q;
+		k = 0;
+		j = 0;
+		for(i=0;i<N;i++)
+		{
+			k = _idx[i];
+			//compute the distance
+			vDSP_vsub(_mean,1,_data+k*_nfdim,1,d,1,_nfdim);
+			//sum of squares
+			vDSP_svesq(d,1,&q,_nfdim);
+			D[i] = sqrt(q);
+		}
+		free(_idx);
+		//sort
+		vDSP_vsort(D,N,1);
+		//isolation distance is the distance to the n'th closest point not in this cluster,
+		//where n is the number of points in this cluster
+		[self setIsolationDistance: [NSNumber numberWithFloat:D[n-1]]];
+		free(d);
+		free(D);
+
+
+	}
+}
 
 -(void)computeIsolationDistance:(NSData*)data
 {
     unsigned int n = [npoints unsignedIntValue];
     unsigned int *_points = (unsigned int*)[[self points] bytes];
+	//get the total number of points
+	unsigned _ntpoints = [[self totalNPoints] unsignedIntValue];
+	
     if((_points==NULL) | (n==0) )
     {
         [self setIsolationDistance: [NSNumber numberWithFloat: 0]];
@@ -442,16 +526,14 @@
 
 	}
 				
-	
 	unsigned int ndim = (unsigned int)([[self mean] length]/sizeof(float));
-	unsigned int _npoints = (unsigned int)([data length]/(ndim*sizeof(float)));
     //create an index that contains all the points not in this cluster
-    NSMutableIndexSet *idx = [NSMutableIndexSet indexSetWithIndexesInRange:NSMakeRange(0,_npoints)];
+    NSMutableIndexSet *idx = [NSMutableIndexSet indexSetWithIndexesInRange:NSMakeRange(0,_ntpoints)];
     [idx removeIndexes:[self indices]];
     unsigned int N = [idx count];
 
     NSUInteger *_idx = malloc(N*sizeof(NSUInteger));
-    [idx getIndexes:_idx maxCount:_npoints inIndexRange:nil];
+    [idx getIndexes:_idx maxCount:_ntpoints inIndexRange:nil];
     
 	float *d = malloc(ndim*sizeof(float));
   
@@ -725,6 +807,7 @@
     [coder encodeObject:name forKey: @"ClusterName"];
     [coder encodeObject:points forKey: @"ClusterPoints"];
     [coder encodeObject:npoints forKey: @"ClusterNPoints"];
+	[coder encodeObject:totalNPoints forKey: @"ClusterTotalNPoints"];
     [coder encodeObject:indices forKey: @"ClusterIndices"];
     [coder encodeObject:waveformsImage forKey: @"ClusterWaveformsImage"];
     [coder encodeObject:clusterId forKey:@"ClusterId"];
@@ -745,6 +828,7 @@
     name = [[coder decodeObjectForKey:@"ClusterName"] retain];
     points = [[coder decodeObjectForKey:@"ClusterPoints"] retain];
     npoints = [[coder decodeObjectForKey:@"ClusterNPoints"] retain];
+	totalNPoints = [[coder deocdeObjectForKey: @"ClusterTotalNPoints"] retain];
     indices = [[coder decodeObjectForKey:@"ClusterIndices"] retain];
     waveformsImage = [[coder decodeObjectForKey:@"ClusterWaveformsImage"] retain];
     clusterId = [[coder decodeObjectForKey:@"ClusterId"] retain];

@@ -101,6 +101,7 @@ static BOOL picked;
 -(NSImage*)image;
 //-(void) drawBox;
 -(NSData*)getVertexData;
+-(NSData*)getVertexDataForDims:(NSData*)dims;
 //-(void) pushVertices;
 
 -(void)modifyVertices;
