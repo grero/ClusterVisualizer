@@ -1,6 +1,6 @@
 #include "utils.h"
 
-void computeIsolationDistance(float *data, float *means, unsigned int nrows, unsigned int ncols, unsigned int* cids, unsigned int nclusters, unsigned int *npoints, unsigned int* dims)
+void computeIsolationDistance(float *data, float *means, unsigned int nrows, unsigned int ncols, unsigned int* cids, unsigned int nclusters, unsigned int *npoints, unsigned int* dims,float *minIsoDist)
 {
 
 	unsigned int i,j,k,l,bestIdx, ncombis,*combis;
@@ -68,6 +68,7 @@ void computeIsolationDistance(float *data, float *means, unsigned int nrows, uns
 		bestIdx = isoDist[i] > bestV ? i : bestIdx;
 		bestV = isoDist[i] > bestV ? isoDist[i] : bestV;
 	}
+	*minIsoDist = bestV;
 	free(isoDist);
 	dims[0] = combis[3*bestIdx];
 	dims[1] = combis[3*bestIdx+1];

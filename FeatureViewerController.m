@@ -2953,8 +2953,8 @@
 		//find the best 3d projection 
 		unsigned int i,j,k,*dims,*combis,nclusters,m,*_npoints,s,l;
 		int *cluster_indices,npoints,cid;
-		double _isoD,isoDmin,bestV;
-		float *_means,*_data,*_fmeans,*d,*D,q;
+		//double _isoD,isoDmin,bestV;
+		float *_means,*_data,*_fmeans,*d,*D,q,bestV;
 		NSData *vdata, *fdata;
         NSArray *candidates; 
 		NSEnumerator *clusterEnum;
@@ -2989,8 +2989,9 @@
         }
 		//compute isolation distance
 		_data = (float*)[[[self fw] getVertexData] bytes];
-		computeIsolationDistance(_data,_means,rows,cols,cluster_indices,nclusters,_npoints,dims);
+		computeIsolationDistance(_data,_means,rows,cols,cluster_indices,nclusters,_npoints,dims,&bestV);
 				//update dimensions
+		NSLog(@"Best isolation distance: %.3f", bestV);
 		[dim1 selectItemAtIndex:dims[0]];
 		[dim1 setObjectValue:[dim1 objectValueOfSelectedItem]];
 		[self changeDim1:dim1];
