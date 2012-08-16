@@ -1,15 +1,15 @@
 #include "utils.h"
 
-void computeIsolationDistance(float *data, float *means, unsigned int nrows, unsigned int ncols, unsigned int* cids, unsigned int nclusters, unsigned int *npoints, unsigned int* dims,float *minIsoDist)
+void computeIsolationDistance(float *data, float *means, unsigned int nrows, unsigned int ncols, unsigned int* cids, unsigned int nclusters, unsigned int *npoints, unsigned int* dims,double *minIsoDist)
 {
 
 	unsigned int i,j,k,l,bestIdx, ncombis,*combis;
-	float *isoDist,bestV;
+	double *isoDist,bestV;
 	dispatch_queue_t queue;
 	//we are doing triplets
 	ncombis = ncols*(ncols-1)*(ncols-2)/6;
 	//vector to hold the minimum isolation distances for each combination
-	isoDist = malloc(ncombis*sizeof(float));
+	isoDist = malloc(ncombis*sizeof(double));
 	//first construct the combinations
 	combis = malloc(ncombis*3*sizeof(unsigned int));
 	l = 0;
@@ -30,12 +30,12 @@ void computeIsolationDistance(float *data, float *means, unsigned int nrows, uns
 	queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0);
 	dispatch_apply(ncombis,queue,^(size_t ii)
 		{
-			float *D,d,dd,isoDmin;
+			double *D,d,dd,isoDmin;
 			unsigned int ll,kk,m,s;	
 			isoDmin = HUGE_VAL;
 			for(ll=0;ll<nclusters;ll++)	
 			{
-				D = malloc((nrows-npoints[ll])*sizeof(float));
+				D = malloc((nrows-npoints[ll])*sizeof(double));
 				s = 0;
 				for(kk=0;kk<nrows;kk++)
 				{
@@ -53,7 +53,7 @@ void computeIsolationDistance(float *data, float *means, unsigned int nrows, uns
 					}
 				}
 				//sort the distance
-				vDSP_vsort(D,s,1);
+				vDSP_vsortD(D,s,1);
 				//use this distance if it is smaller than what we have so far
 				isoDmin = MIN(isoDmin,D[npoints[ll]-1]);
 				free(D);

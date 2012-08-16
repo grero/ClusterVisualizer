@@ -2953,8 +2953,8 @@
 		//find the best 3d projection 
 		unsigned int i,j,k,*dims,*combis,nclusters,m,*_npoints,s,l;
 		int *cluster_indices,npoints,cid;
-		//double _isoD,isoDmin,bestV;
-		float *_means,*_data,*_fmeans,*d,*D,q,bestV;
+		double _isoD,isoDmin,bestV;
+		float *_means,*_data,*_fmeans,*d,*D,q;
 		NSData *vdata, *fdata;
         NSArray *candidates; 
 		NSEnumerator *clusterEnum;
@@ -2971,7 +2971,6 @@
         NSEnumerator *cluster_enumerator = [[candidates filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"valid==1"]] objectEnumerator];
         cid = 1;
 		_means = malloc(nclusters*cols*sizeof(float));
-		_fmeans = malloc(3*sizeof(double));
 		_npoints = malloc(nclusters*sizeof(unsigned int));
         while( cluster = [cluster_enumerator nextObject] )
         {
@@ -2982,7 +2981,7 @@
                 cluster_indices[clusteridx[i]+1] = cid;
             }
 			//copy the mean
-			memcpy(_means+(cid-1)*cols,(float*)[[cluster mean] bytes],cols);
+			memcpy(_means+(cid-1)*cols,(float*)[[cluster mean] bytes],cols*sizeof(float));
 			_npoints[cid-1] = [[cluster npoints] unsignedIntValue];
             cid+=1;
 
