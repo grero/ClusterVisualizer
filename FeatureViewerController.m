@@ -2963,8 +2963,8 @@
 		dims = malloc(3*sizeof(unsigned int));
 		candidates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"active == YES"]];
 		nclusters = [candidates count];
-		combis = malloc(3*sizeof(unsigned int));
-		bestV = -HUGE_VAL;
+		//combis = malloc(3*sizeof(unsigned int));
+		//bestV = -HUGE_VAL;
 		//gather cids for all selected clusters
         cluster_indices = calloc((params.rows+1),sizeof(int));    
         cluster_indices[0] = (unsigned int)[candidates count];
@@ -2987,93 +2987,24 @@
             cid+=1;
 
         }
-		d = malloc(3*sizeof(float));
-		for(i=0;i<cols-2;i++)
-		{
-			dims[0] = i;
-			for(l=0;l<nclusters;l++)
-			{
-				_fmeans[l*3] = _means[l*cols + i];
-			}
-			for(j=i+1;j<cols-1;j++)
-			{
-				dims[1] = j;
-				for(l=0;l<nclusters;l++)
-				{
-					_fmeans[l*3+1] = _means[l*cols + j];
-				}
-				for(k=j+1;k<cols;k++)
-				{
-					for(l=0;l<nclusters;l++)
-					{
-						_fmeans[l*3+2] = _means[l*cols + k];
-					}
-					NSAutoreleasePool *_localPool = [[NSAutoreleasePool alloc] init];
-					//get the relevant feature data
-					dims[2] = k;
-					fdata = [NSData dataWithBytes: dims length: 3*sizeof(unsigned int)];
-					vdata = [[self fw] getVertexDataForDims: fdata]; 
-					isoDmin = HUGE_VAL;
-					_data = (float*)[vdata bytes];
-					for(l=0;l<nclusters;l++)
-					{
-						D = malloc((rows-_npoints[l])*sizeof(float));
-						s = 0;
-						for(m=0;m<rows;m++)
-						{
-							//only use the points not in this cluster
-							if(cluster_indices[m]!=l+1)
-							{
-								vDSP_vsub(_fmeans+l*3,1,_data+m*3,1,d,1,3);
-								//sum of squares
-								vDSP_svesq(d,1,&q,3);
-								D[s] = sqrt(q);
-								s+=1;
-							}
-						}
-
-						vDSP_vsort(D,s,1);
-						isoDmin = MIN(isoDmin,D[_npoints[l]-1]);
-						free(D);
-					}
-					/*
-					clusterEnum = [candidates objectEnumerator];
-				    while( cl = [clusterEnum nextObject]) 
-					{
-						_isoD = [cl computeIsolationDistance: vdata withFeatures: fdata];
-						//get the minimum
-						isoDmin = MIN(isoDmin,_isoD);
-					}
-					*/
-					//store the minimum
-					if( isoDmin > bestV)
-					{
-						combis[0] = i;
-						combis[1] = j;
-						combis[2] = k;
-						bestV = isoDmin;
-					}
-					[_localPool drain];
-				}
-			}
-		}
-		//update dimensions
-		[dim1 selectItemAtIndex:combis[0]];
+		//compute isolation distance
+		_data = (float*)[[[self fw] getVertexData] bytes];
+		computeIsolationDistance(_data,_means,rows,cols,cluster_indices,nclusters,_npoints,dims);
+				//update dimensions
+		[dim1 selectItemAtIndex:dims[0]];
 		[dim1 setObjectValue:[dim1 objectValueOfSelectedItem]];
-		[self changeDim2:dim1];
+		[self changeDim1:dim1];
 
-		[dim2 selectItemAtIndex:combis[1]];
+		[dim2 selectItemAtIndex:dims[1]];
 		[dim2 setObjectValue:[dim2 objectValueOfSelectedItem]];
 		[self changeDim2:dim2];
 
-		[dim3 selectItemAtIndex:combis[2]];
+		[dim3 selectItemAtIndex:dims[2]];
 		[dim3 setObjectValue:[dim3 objectValueOfSelectedItem]];
-		[self changeDim2:dim3];
+		[self changeDim3:dim3];
 		free(_means);
-		free(_fmeans);
 		free(_npoints);
         free(dims);
-        free(combis);
 	}
     else if( [selection isEqualToString:@"Show cluster notes"] )
     {
