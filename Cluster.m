@@ -835,7 +835,7 @@
     name = [[coder decodeObjectForKey:@"ClusterName"] retain];
     points = [[coder decodeObjectForKey:@"ClusterPoints"] retain];
     npoints = [[coder decodeObjectForKey:@"ClusterNPoints"] retain];
-	totalNPoints = [[coder deocdeObjectForKey: @"ClusterTotalNPoints"] retain];
+	totalNPoints = [[coder decodeObjectForKey: @"ClusterTotalNPoints"] retain];
     indices = [[coder decodeObjectForKey:@"ClusterIndices"] retain];
     waveformsImage = [[coder decodeObjectForKey:@"ClusterWaveformsImage"] retain];
     clusterId = [[coder decodeObjectForKey:@"ClusterId"] retain];
