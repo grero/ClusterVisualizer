@@ -62,6 +62,7 @@ void computeIsolationDistance(float *data, float *means, unsigned int nrows, uns
 			isoDist[ii] = isoDmin;
 		});
 	//find the largest minimum isolation distance
+	bestV = -HUGE_VAL;
 	for(i=0;i<ncombis;i++)	
 	{
 		bestIdx = isoDist[i] > bestV ? i : bestIdx;
