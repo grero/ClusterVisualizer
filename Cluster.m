@@ -423,24 +423,24 @@
     free(_sq);
 
 }
--(void)computeIsolationDistance:(NSData*)data withFeatures: (NSData*)fdim
+-(double)computeIsolationDistance:(NSData*)data withFeatures: (NSData*)fdim
 {
 	//compute isolation distance using the feature points in data
 	if( fdim == nil )
 	{
 		[self computeIsolationDistance: data];
+		return (double)[[self isolationDistance] floatValue];
 	}
 	else
 	{
 		//fdim indicates a subset of dimensiosn to use
-		unsigned int *_fdim, _nfdim,i,ndim,n,*_points, _npoints,_ntpoints,j,k;
+		unsigned int *_fdim, _nfdim,i,ndim,n,_npoints,_ntpoints,j,k;
 		float *_data, *_mean,*_useMean;
-
+        double fd;
 		n = [npoints unsignedIntValue];
-		_points = (unsigned int*)[[self points] bytes];
 		//get the total number of points
 		_ntpoints = [[self totalNPoints] unsignedIntValue];
-		_fdim = (unsigned int*)[fdim data];
+		_fdim = (unsigned int*)[fdim bytes];
 		_nfdim = [fdim length]/sizeof(unsigned int);
 		_data = (float*)[data bytes];
     	_mean = (float*)[[self mean] bytes];
@@ -462,10 +462,10 @@
 			for(i=0;i<_nfdim;i++)
 			{
 				//check that we don't exceed
-				if( (_fdim[i] >= ndim ) || (_fdim[i]<0))
-				{
+				if(_fdim[i] >= ndim ) 				
+                {
 					free(_useMean);
-					return;
+					return -1.0;
 				}
 				_useMean[i] = _mean[_fdim[i]];
 			}
@@ -500,6 +500,13 @@
 		[self setIsolationDistance: [NSNumber numberWithFloat:D[n-1]]];
 		free(d);
 		free(D);
+        fd = (double)D[n-1];
+		if( (_useMean != NULL) && (_useMean != _mean))
+		{
+			//prevent leak
+			free(_useMean);
+		}
+		return fd;
 
 
 	}

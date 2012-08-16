@@ -82,7 +82,7 @@
 -(void)computeLRatio:(NSData*)data;
 -(NSData*)computeBelonginess:(NSData*)features;
 -(void)computeIsolationDistance:(NSData*)data;
--(void)computeIsolationDistance:(NSData*)data withFeatures: (NSData*)fdim;
+-(double)computeIsolationDistance:(NSData*)data withFeatures: (NSData*)fdim;
 -(void)computeIsolationInfo:(NSData*)data;
 -(NSDictionary*)computeXCorr:(Cluster*)cluster timepoints:(NSData*)timepts;
 -(void)computeFeatureRanges:(NSData*)data;

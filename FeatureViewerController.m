@@ -1068,7 +1068,7 @@
     
     
     //[selectClusterOption removeAllItems];
-    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Find correlated waverforms",@"Show cluster notes",@"Split among clusters",@"Screen waveforms",nil];
+    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Find correlated waverforms",@"Show cluster notes",@"Split among clusters",@"Screen waveforms",@"Find best projection",nil];
     
     //test
     //clusterOptionsMenu  = [[[NSMenu alloc] initWithTitle:@"Options"] autorelease];
@@ -2948,6 +2948,133 @@
 		}
 
     }
+	else if( [selection isEqualToString: @"Find best projection"])
+	{
+		//find the best 3d projection 
+		unsigned int i,j,k,*dims,*combis,nclusters,m,*_npoints,s,l;
+		int *cluster_indices,npoints,cid;
+		double _isoD,isoDmin,bestV;
+		float *_means,*_data,*_fmeans,*d,*D,q;
+		NSData *vdata, *fdata;
+        NSArray *candidates; 
+		NSEnumerator *clusterEnum;
+		Cluster *cluster;	
+
+		dims = malloc(3*sizeof(unsigned int));
+		candidates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"active == YES"]];
+		nclusters = [candidates count];
+		combis = malloc(3*sizeof(unsigned int));
+		bestV = -HUGE_VAL;
+		//gather cids for all selected clusters
+        cluster_indices = calloc((params.rows+1),sizeof(int));    
+        cluster_indices[0] = (unsigned int)[candidates count];
+        NSEnumerator *cluster_enumerator = [[candidates filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"valid==1"]] objectEnumerator];
+        cid = 1;
+		_means = malloc(nclusters*cols*sizeof(float));
+		_fmeans = malloc(3*sizeof(double));
+		_npoints = malloc(nclusters*sizeof(unsigned int));
+        while( cluster = [cluster_enumerator nextObject] )
+        {
+            unsigned int *clusteridx = (unsigned int*)[[cluster points] bytes];
+            npoints = [[cluster npoints] intValue];
+            for(i=0;i<npoints;i++)
+            {
+                cluster_indices[clusteridx[i]+1] = cid;
+            }
+			//copy the mean
+			memcpy(_means+(cid-1)*cols,(float*)[[cluster mean] bytes],cols);
+			_npoints[cid-1] = [[cluster npoints] unsignedIntValue];
+            cid+=1;
+
+        }
+		d = malloc(3*sizeof(float));
+		for(i=0;i<cols-2;i++)
+		{
+			dims[0] = i;
+			for(l=0;l<nclusters;l++)
+			{
+				_fmeans[l*3] = _means[l*cols + i];
+			}
+			for(j=i+1;j<cols-1;j++)
+			{
+				dims[1] = j;
+				for(l=0;l<nclusters;l++)
+				{
+					_fmeans[l*3+1] = _means[l*cols + j];
+				}
+				for(k=j+1;k<cols;k++)
+				{
+					for(l=0;l<nclusters;l++)
+					{
+						_fmeans[l*3+2] = _means[l*cols + k];
+					}
+					NSAutoreleasePool *_localPool = [[NSAutoreleasePool alloc] init];
+					//get the relevant feature data
+					dims[2] = k;
+					fdata = [NSData dataWithBytes: dims length: 3*sizeof(unsigned int)];
+					vdata = [[self fw] getVertexDataForDims: fdata]; 
+					isoDmin = HUGE_VAL;
+					_data = (float*)[vdata bytes];
+					for(l=0;l<nclusters;l++)
+					{
+						D = malloc((rows-_npoints[l])*sizeof(float));
+						s = 0;
+						for(m=0;m<rows;m++)
+						{
+							//only use the points not in this cluster
+							if(cluster_indices[m]!=l+1)
+							{
+								vDSP_vsub(_fmeans+l*3,1,_data+m*3,1,d,1,3);
+								//sum of squares
+								vDSP_svesq(d,1,&q,3);
+								D[s] = sqrt(q);
+								s+=1;
+							}
+						}
+
+						vDSP_vsort(D,s,1);
+						isoDmin = MIN(isoDmin,D[_npoints[l]-1]);
+						free(D);
+					}
+					/*
+					clusterEnum = [candidates objectEnumerator];
+				    while( cl = [clusterEnum nextObject]) 
+					{
+						_isoD = [cl computeIsolationDistance: vdata withFeatures: fdata];
+						//get the minimum
+						isoDmin = MIN(isoDmin,_isoD);
+					}
+					*/
+					//store the minimum
+					if( isoDmin > bestV)
+					{
+						combis[0] = i;
+						combis[1] = j;
+						combis[2] = k;
+						bestV = isoDmin;
+					}
+					[_localPool drain];
+				}
+			}
+		}
+		//update dimensions
+		[dim1 selectItemAtIndex:combis[0]];
+		[dim1 setObjectValue:[dim1 objectValueOfSelectedItem]];
+		[self changeDim2:dim1];
+
+		[dim2 selectItemAtIndex:combis[1]];
+		[dim2 setObjectValue:[dim2 objectValueOfSelectedItem]];
+		[self changeDim2:dim2];
+
+		[dim3 selectItemAtIndex:combis[2]];
+		[dim3 setObjectValue:[dim3 objectValueOfSelectedItem]];
+		[self changeDim2:dim3];
+		free(_means);
+		free(_fmeans);
+		free(_npoints);
+        free(dims);
+        free(combis);
+	}
     else if( [selection isEqualToString:@"Show cluster notes"] )
     {
         [[self clusterNotesPanel] orderFront:self];
