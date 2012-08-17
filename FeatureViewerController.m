@@ -445,7 +445,7 @@
 	//NSLog(@"Filebase: %@",filebase);
     //check for the presence of xml file
     
-	if (autoLoadWaveforms == YES)
+	if ( (autoLoadWaveforms == YES) && ([self waveformsFile] == NULL))
 	{
         //check for the presence of spk files; first we need to load some info
         NSString *xmlFile = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:1];
