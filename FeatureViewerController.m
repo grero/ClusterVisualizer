@@ -2776,14 +2776,19 @@
     {
         //load waveforms data for selected cluster
         NSData *waveforms;
-        float *fwaveforms;
-        float *sim;
-        float norm;
+        float *fwaveforms, *sim,norm,threshold;
         dispatch_queue_t _queue;
         Cluster *_newCluster;
         unsigned nclusters,nidx;
         unsigned int *idx;
-        
+       	//get threshold from userdefaults 
+		threshold = [[NSUserDefaults standardUserDefaults] floatForKey: @"waveformCorrelationThreshold"];
+		if( threshold == 0)
+		{
+			threshold = 0.8;
+			[[NSUserDefaults standardUserDefaults] setFloat: threshold forKey: @"waveformCorrelationThreshold"];
+
+		}
         idx = (unsigned int*)[[[self wfv] highlightWaves] bytes];
         if(idx==NULL)
         {
@@ -2835,27 +2840,30 @@
                 sim[i] = d/(norm*sqrt(_n));  
             });
             [correlatedIdx addIndexes:[[clu indices] indexesPassingTest:^BOOL(NSUInteger idx, BOOL *stop) {
-                return sim[idx] >= 0.95;
+                return sim[idx] >= threshold;
             }]];
              free(sim);
 
         }
-        //now we have a bunch of indices from which we can create a new cluster
-        _newCluster = [[Cluster alloc] init];
-                
-        nclusters = [[self Clusters] count];
-        [_newCluster setClusterId:[NSNumber numberWithUnsignedInt: nclusters]];
-        [_newCluster addIndices:correlatedIdx];
-        GLfloat *_color = malloc(3*sizeof(GLfloat));
-        _color[0] = ((float)random())/RAND_MAX;
-        _color[1] = ((float)random())/RAND_MAX;
-        _color[2] = ((float)random())/RAND_MAX;
-        [_newCluster setColor:[NSData dataWithBytes:_color length:3*sizeof(GLfloat)]];
-        free(_color);
-        [_newCluster makeValid];
-        
-        [self insertObject:_newCluster inClustersAtIndex:nclusters];
-        [_newCluster makeActive];
+		if( [correlatedIdx count] >= 2)
+		{
+			//now we have a bunch of indices from which we can create a new cluster
+			_newCluster = [[Cluster alloc] init];
+					
+			nclusters = [[self Clusters] count];
+			[_newCluster setClusterId:[NSNumber numberWithUnsignedInt: nclusters]];
+			[_newCluster addIndices:correlatedIdx];
+			GLfloat *_color = malloc(3*sizeof(GLfloat));
+			_color[0] = ((float)random())/RAND_MAX;
+			_color[1] = ((float)random())/RAND_MAX;
+			_color[2] = ((float)random())/RAND_MAX;
+			[_newCluster setColor:[NSData dataWithBytes:_color length:3*sizeof(GLfloat)]];
+			free(_color);
+			[_newCluster makeValid];
+			
+			[self insertObject:_newCluster inClustersAtIndex:nclusters];
+			[_newCluster makeActive];
+		}
     }
     else if( [selection isEqualToString:@"Split among clusters"] )
     {
