@@ -634,6 +634,8 @@
     [selectClusterOption addItemWithTitle:@"Add points to cluster"];
     [selectClusterOption addItemWithTitle:@"Delete"];
     [selectClusterOption addItemWithTitle:@"Compute ISOmap"];
+	[selectClusterOption addItemWithTitle: @"Find correlated waverforms"];
+	[selectClusterOption addItemWithTitle:@"Show cluster notes"];
     [clusterMenu addItemWithTitle:@"Create cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     [clusterMenu addItemWithTitle:@"Add points to cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     [clusterMenu addItemWithTitle:@"Move points to cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
@@ -1068,7 +1070,7 @@
     
     
     //[selectClusterOption removeAllItems];
-    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Find correlated waverforms",@"Show cluster notes",@"Split among clusters",@"Screen waveforms",@"Find best projection",nil];
+    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Split among clusters",@"Screen waveforms",@"Find best projection",nil];
     
     //test
     //clusterOptionsMenu  = [[[NSMenu alloc] initWithTitle:@"Options"] autorelease];
