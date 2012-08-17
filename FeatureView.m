@@ -410,6 +410,35 @@
     return vertices;
 }
 
+-(NSData*)getVertexDataForDims:(NSData*)dims
+{
+	//return vertices corresponding to the specified dimensions
+	float *_vdata,*_vertices;
+	unsigned int i,j,ndims,*_dims ;
+	_dims = (unsigned int*)[dims bytes];
+	ndims = [dims length]/sizeof(unsigned int);
+	//check that none of the dimensions are too large
+	for(i=0;i<ndims;i++)
+	{
+		if( (_dims[i] >= cols ) || (_dims[i] < 0) )
+		{
+			return NULL;
+		}
+	}
+	_vertices = (float*)[vertices bytes];
+	_vdata = malloc(rows*ndims*sizeof(float));
+	for(i=0;i<rows;i++)
+	{
+		for(j=0;j<ndims;j++)
+		{
+			_vdata[i*ndims+j] = _vertices[i*cols+_dims[j]];
+		}
+	}
+	NSData *vdata = [NSData dataWithBytes: _vdata length: rows*ndims*sizeof(float)];
+	free(_vdata);
+	return vdata;
+}
+
 -(void) selectDimensions:(NSDictionary*)dims
 {
     float *_vertices;

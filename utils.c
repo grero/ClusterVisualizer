@@ -1,5 +1,80 @@
 #include "utils.h"
 
+void computeIsolationDistance(float *data, float *means, unsigned int nrows, unsigned int ncols, unsigned int* cids, unsigned int nclusters, unsigned int *npoints, unsigned int* dims,double *minIsoDist)
+{
+
+	unsigned int i,j,k,l,bestIdx, ncombis,*combis;
+	double *isoDist,bestV;
+	dispatch_queue_t queue;
+	//we are doing triplets
+	ncombis = ncols*(ncols-1)*(ncols-2)/6;
+	//vector to hold the minimum isolation distances for each combination
+	isoDist = malloc(ncombis*sizeof(double));
+	//first construct the combinations
+	combis = malloc(ncombis*3*sizeof(unsigned int));
+	l = 0;
+	for(i=0;i<ncols-2;i++)
+	{
+		for(j=i+1;j<ncols-1;j++)
+		{
+			for(k=j+1;k<ncols;k++)
+			{
+				combis[3*l] = i;
+				combis[3*l+1] = j;
+				combis[3*l+2] = k;
+				l+=1;
+			}
+		}
+	}
+	//do this in parallel
+	queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0);
+	dispatch_apply(ncombis,queue,^(size_t ii)
+		{
+			double *D,d,dd,isoDmin;
+			unsigned int ll,kk,m,s;	
+			isoDmin = HUGE_VAL;
+			for(ll=0;ll<nclusters;ll++)	
+			{
+				D = malloc((nrows-npoints[ll])*sizeof(double));
+				s = 0;
+				for(kk=0;kk<nrows;kk++)
+				{
+					if(cids[kk]!=ll+1)
+					{
+						dd = 0;
+						//compute the euclidian distance from the mean for each data point not in this cluster
+						for(m=0;m<3;m++)	
+						{
+							d = means[ll*ncols+combis[3*ii+m]] - data[kk*ncols+combis[3*ii+m]];
+							dd += d*d;
+						}
+						D[s] = sqrt(dd);
+						s+=1;
+					}
+				}
+				//sort the distance
+				vDSP_vsortD(D,s,1);
+				//use this distance if it is smaller than what we have so far
+				isoDmin = MIN(isoDmin,D[npoints[ll]-1]);
+				free(D);
+				
+			}
+			isoDist[ii] = isoDmin;
+		});
+	//find the largest minimum isolation distance
+	bestV = -HUGE_VAL;
+	for(i=0;i<ncombis;i++)	
+	{
+		bestIdx = isoDist[i] > bestV ? i : bestIdx;
+		bestV = isoDist[i] > bestV ? isoDist[i] : bestV;
+	}
+	*minIsoDist = bestV;
+	free(isoDist);
+	dims[0] = combis[3*bestIdx];
+	dims[1] = combis[3*bestIdx+1];
+	dims[2] = combis[3*bestIdx+2];
+}
+
 unsigned int *histogram_sorted(float *data, int datal, float*bins, int binsl,unsigned int *counts)
 {
 	int i,j;

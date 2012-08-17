@@ -445,7 +445,7 @@
 	//NSLog(@"Filebase: %@",filebase);
     //check for the presence of xml file
     
-	if (autoLoadWaveforms == YES)
+	if ( (autoLoadWaveforms == YES) && ([self waveformsFile] == NULL))
 	{
         //check for the presence of spk files; first we need to load some info
         NSString *xmlFile = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:1];
@@ -900,6 +900,7 @@
 				
 				
 				cluster.npoints = [NSNumber numberWithUnsignedInt: npoints[i]];
+				[cluster setTotalNPoints: [NSNumber numberWithUnsignedInt:rows]];
 				//cluster.name = [[[[cluster clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[cluster npoints] stringValue]];
 				[cluster createName];
 				cluster.indices = [NSMutableIndexSet indexSet];
@@ -1067,7 +1068,7 @@
     
     
     //[selectClusterOption removeAllItems];
-    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Find correlated waverforms",@"Show cluster notes",@"Split among clusters",@"Screen waveforms",nil];
+    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Find correlated waverforms",@"Show cluster notes",@"Split among clusters",@"Screen waveforms",@"Find best projection",nil];
     
     //test
     //clusterOptionsMenu  = [[[NSMenu alloc] initWithTitle:@"Options"] autorelease];
@@ -2947,6 +2948,64 @@
 		}
 
     }
+	else if( [selection isEqualToString: @"Find best projection"])
+	{
+		//find the best 3d projection 
+		unsigned int i,j,k,*dims,*combis,nclusters,m,*_npoints,s,l;
+		int *cluster_indices,npoints,cid;
+		double _isoD,isoDmin,bestV;
+		float *_means,*_data,*_fmeans,*d,*D,q;
+		NSData *vdata, *fdata;
+        NSArray *candidates; 
+		NSEnumerator *clusterEnum;
+		Cluster *cluster;	
+
+		dims = malloc(3*sizeof(unsigned int));
+		candidates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"active == YES"]];
+		nclusters = [candidates count];
+		//combis = malloc(3*sizeof(unsigned int));
+		//bestV = -HUGE_VAL;
+		//gather cids for all selected clusters
+        cluster_indices = calloc((params.rows+1),sizeof(int));    
+        cluster_indices[0] = (unsigned int)[candidates count];
+        NSEnumerator *cluster_enumerator = [[candidates filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"valid==1"]] objectEnumerator];
+        cid = 1;
+		_means = malloc(nclusters*cols*sizeof(float));
+		_npoints = malloc(nclusters*sizeof(unsigned int));
+        while( cluster = [cluster_enumerator nextObject] )
+        {
+            unsigned int *clusteridx = (unsigned int*)[[cluster points] bytes];
+            npoints = [[cluster npoints] intValue];
+            for(i=0;i<npoints;i++)
+            {
+                cluster_indices[clusteridx[i]+1] = cid;
+            }
+			//copy the mean
+			memcpy(_means+(cid-1)*cols,(float*)[[cluster mean] bytes],cols*sizeof(float));
+			_npoints[cid-1] = [[cluster npoints] unsignedIntValue];
+            cid+=1;
+
+        }
+		//compute isolation distance
+		_data = (float*)[[[self fw] getVertexData] bytes];
+		computeIsolationDistance(_data,_means,rows,cols,cluster_indices,nclusters,_npoints,dims,&bestV);
+				//update dimensions
+		NSLog(@"Best isolation distance: %.3f", bestV);
+		[dim1 selectItemAtIndex:dims[0]];
+		[dim1 setObjectValue:[dim1 objectValueOfSelectedItem]];
+		[self changeDim1:dim1];
+
+		[dim2 selectItemAtIndex:dims[1]];
+		[dim2 setObjectValue:[dim2 objectValueOfSelectedItem]];
+		[self changeDim2:dim2];
+
+		[dim3 selectItemAtIndex:dims[2]];
+		[dim3 setObjectValue:[dim3 objectValueOfSelectedItem]];
+		[self changeDim3:dim3];
+		free(_means);
+		free(_npoints);
+        free(dims);
+	}
     else if( [selection isEqualToString:@"Show cluster notes"] )
     {
         [[self clusterNotesPanel] orderFront:self];
@@ -3096,6 +3155,7 @@
 	unsigned int i,_clnpoints;
     Cluster *new_cluster = [[Cluster alloc] init];
     new_cluster.clusterId = [NSNumber numberWithUnsignedInt:[Clusters count]];
+	[new_cluster setTotalNPoints: [NSNumber numberWithUnsignedInt:rows]];
 	//loop through clusters
 	NSEnumerator *clusterEnumerator = [clusters objectEnumerator];
 	Cluster *cl;

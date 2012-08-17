@@ -16,7 +16,7 @@
     NSString *name;
     NSNumber *clusterId;
     NSMutableData *points;
-    NSNumber *npoints;
+    NSNumber *npoints,*totalNPoints;
     NSInteger active,nchannels;
     NSInteger isTemplate;
     NSData *color;
@@ -44,7 +44,7 @@
 @property(retain,readwrite) NSMutableData *points;
 @property(assign, readwrite) NSInteger active;
 @property(assign,readwrite) NSInteger isTemplate;
-@property(retain,readwrite) NSNumber *npoints;
+@property(retain,readwrite) NSNumber *npoints,*totalNPoints;
 @property(retain,readwrite) NSMutableIndexSet *indices;
 @property(retain,readwrite) NSData *color;
 @property(assign,readwrite) NSInteger valid;
@@ -82,6 +82,7 @@
 -(void)computeLRatio:(NSData*)data;
 -(NSData*)computeBelonginess:(NSData*)features;
 -(void)computeIsolationDistance:(NSData*)data;
+-(double)computeIsolationDistance:(NSData*)data withFeatures: (NSData*)fdim;
 -(void)computeIsolationInfo:(NSData*)data;
 -(NSDictionary*)computeXCorr:(Cluster*)cluster timepoints:(NSData*)timepts;
 -(void)computeFeatureRanges:(NSData*)data;
