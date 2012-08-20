@@ -636,6 +636,7 @@
     [selectClusterOption addItemWithTitle:@"Compute ISOmap"];
 	[selectClusterOption addItemWithTitle: @"Find correlated waverforms"];
 	[selectClusterOption addItemWithTitle:@"Show cluster notes"];
+	[selectClusterOption addItemWithTitle: @"Find best projection"];
     [clusterMenu addItemWithTitle:@"Create cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     [clusterMenu addItemWithTitle:@"Add points to cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     [clusterMenu addItemWithTitle:@"Move points to cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
@@ -1070,7 +1071,7 @@
     
     
     //[selectClusterOption removeAllItems];
-    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Split among clusters",@"Screen waveforms",@"Find best projection",nil];
+    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Split among clusters",@"Screen waveforms",nil];
     
     //test
     //clusterOptionsMenu  = [[[NSMenu alloc] initWithTitle:@"Options"] autorelease];
@@ -2853,14 +2854,16 @@
 			nclusters = [[self Clusters] count];
 			[_newCluster setClusterId:[NSNumber numberWithUnsignedInt: nclusters]];
 			[_newCluster addIndices:correlatedIdx];
+			[_newCluster setTotalNPoints: [NSNumber numberWithUnsignedInt: rows]];
 			GLfloat *_color = malloc(3*sizeof(GLfloat));
 			_color[0] = ((float)random())/RAND_MAX;
 			_color[1] = ((float)random())/RAND_MAX;
 			_color[2] = ((float)random())/RAND_MAX;
 			[_newCluster setColor:[NSData dataWithBytes:_color length:3*sizeof(GLfloat)]];
 			free(_color);
+			[_newCluster setFeatureDims: cols];
+			[_newCluster computeFeatureMean:[[self fw] getVertexData]];
 			[_newCluster makeValid];
-			
 			[self insertObject:_newCluster inClustersAtIndex:nclusters];
 			[_newCluster makeActive];
 		}
