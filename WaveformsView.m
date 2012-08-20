@@ -657,6 +657,24 @@
     free(_mean);
     free(_std);
     glUnmapBuffer(GL_ARRAY_BUFFER);
+}
+
+-(void)computeWaveformCovariance
+{
+	unsigned int wavesize,i,j,k;	
+    NSUInteger *_indices;
+	float *_vertices,*_cov;
+	_vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
+	wavesize = channels*timepts;
+	_indices = malloc(num_spikes*sizeof(NSUInteger));
+	_cov = malloc(wavesize*wavesize*sizeof(float));
+	//get the indices
+    [waveformIndices getIndexes:_indices maxCount:num_spikes inIndexRange:nil];
+	for(i=0;i<num_spikes;i++)
+	{
+	}
+}
+	
 
 }
 
@@ -1181,6 +1199,7 @@
             //correct for the fact that the plot shows the 95% confidence interval
             d = d*1.96;
             //if the z-score exceeds 3, it's considered different
+			//this fails if any point is outside the confidence interval; perhaps a bit too strict
 			if( ( d < -3) || (d > 3) )
 			{
 				[idx appendBytes:&_index[i] length:sizeof(unsigned int)];
