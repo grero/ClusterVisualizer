@@ -1192,28 +1192,15 @@
 	//TODO: check first if we are highlighting a subset of the channels; if so, use only those channels
     //highlight the waveforms outside the 95% confidence interval
 	unsigned int *_channels,nchs,i,j,k,_wavesize,_offset,_offset2,stop;
+	//TODO: check if highl
+	//use xmin and xmax to determine channel range
 
-	if( highlightedChannels != nil )
+	nchs = (xmax-xmin)/(timepts + channelHop);
+	_channels = malloc(nchs*sizeof(unsigned int));
+	_offset = (unsigned int)(xmin/(timepts+channelHop));
+	for(i=0;i<nchs;i++)
 	{
-		nchs = [highlightedChannels count];
-		_channels = malloc(nchs*sizeof(unsigned int));
-		id ch;
-		i = 0;
-		NSEnumerator *e = [highlightedChannels objectEnumerator];
-		while( ch = [e nextObject])
-		{
-			_channels[i] = [ch unsignedIntValue];
-			i+=1;
-		}
-	}
-	else
-	{
-		nchs = channels;
-		_channels = malloc(nchs*sizeof(unsigned int));
-		for(i=0;i<nchs;i++)
-		{
-			_channels[i] = i;
-		}
+		_channels[i] = _offset + i;
 	}
     GLfloat *_vertices,d;
     [[self openGLContext] makeCurrentContext];
@@ -1224,7 +1211,7 @@
 	[waveformIndices getIndexes:_index maxCount:num_spikes inIndexRange:nil];
 
 	NSMutableData *idx = [NSMutableData dataWithCapacity:num_spikes];
-	_wavesize = timepts*nchs;
+	_wavesize = timepts*channels;
 	stop = 0;
 	for(i=0;i<num_spikes;i++)
 	{
@@ -1233,7 +1220,7 @@
 			for(k=0;k<timepts;k++)
 			{
 				//if we are current using a threshold
-				_offset = 3*(_index[i]*_wavesize + _channels[j]*timepts+k);
+				_offset = 3*(_index[i]*wavesize + _channels[j]*(timepts+2)+k+1);
 				if(drawThreshold == YES)
 				{
 					if(_vertices[_offset+1] < threshold )
@@ -1248,7 +1235,7 @@
 				else
 				{
 					//compute the distance from the mean, divided by the standard devation; essientially the Z-score
-					d = (_vertices[_offset+1] - _vertices[3*((orig_num_spikes+1)*_wavesize+_channels[j]*timepts+k)+1])/(_vertices[3*((orig_num_spikes+2)*_wavesize+_channels[j]*timepts+k)+1]-_vertices[3*((orig_num_spikes+1)*_wavesize+_channels[j]*timepts+k)+1]);
+					d = (_vertices[_offset+1] - _vertices[3*((orig_num_spikes+1)*wavesize+_channels[j]*(timepts+2)+k+1)+1])/(_vertices[3*((orig_num_spikes+2)*wavesize+_channels[j]*(timepts+2)+k+1)+1]-_vertices[3*((orig_num_spikes+1)*wavesize+_channels[j]*(timepts+2)+k+1)+1]);
 					//correct for the fact that the plot shows the 95% confidence interval
 					d = d*1.96;
 					//if the z-score exceeds 3, it's considered different
