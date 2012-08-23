@@ -96,6 +96,7 @@
     [waveformsMenu addItemWithTitle:@"Find correlated waveforms" action:@selector(correlateWaveforms:) keyEquivalent:@""];
     [waveformsMenu addItemWithTitle:@"Find outlier waveforms" action:@selector(hideOutlierWaveforms:) keyEquivalent:@"a"];
     [waveformsMenu addItemWithTitle:@"Screen waveforms" action:@selector(screenWaveforms) keyEquivalent:@"c"];
+	[waveformsMenu addItemWithTitle:@"Apply threshold" action:@selector(applyThreshold) keyEquivalent:@"t"];
     [[self wfv] setMenu:waveformsMenu];
     //disable autoenable
     [[NSApp mainMenu] setAutoenablesItems:NO];
@@ -2368,9 +2369,16 @@
     }
     else if( [selection isEqualToString:@"Shortest ISI"])
     {
-        unsigned int *tpts = (unsigned int*)[[activeCluster points] bytes];
-        unsigned int *pts = (unsigned int*)[[activeCluster isiIdx] bytes];
-        unsigned long long int* times = (unsigned long long int*)[timestamps bytes];
+		unsigned int _npoints;
+        unsigned int *pts;// = (unsigned int*)[[activeCluster points] bytes];
+		unsigned long long int*times;
+		NSUInteger *tpts;
+        pts = (unsigned int*)[[activeCluster isiIdx] bytes];
+        times = (unsigned long long int*)[timestamps bytes];
+		_npoints = [[activeCluster npoints] unsignedIntValue];
+		//get the indices
+		tpts = malloc(_npoints*sizeof(NSUInteger));
+		[[activeCluster indices] getIndexes: tpts maxCount: _npoints inIndexRange: nil];
         double timeScaleFactor;
         if( (pts == NULL) && (times != NULL))
         {
@@ -2383,7 +2391,7 @@
                 @"timeScaleFactor"];
         if( timeScaleFactor == 0 )
         {
-            timeScaleFactor = 100.0;
+            timeScaleFactor = 1000.0;
             [[NSUserDefaults standardUserDefaults] setDouble:timeScaleFactor forKey:@"timeScaleFactor"];
         }
         if(pts)
@@ -2402,12 +2410,12 @@
                 unsigned int *spts = malloc(2*sizeof(unsigned int));
                 spts[0] = pts[0];
                 spts[1] = pts[0]+1;
-                NSDictionary *_params = [NSDictionary dictionaryWithObjects: 
-                                        [NSArray arrayWithObjects:                                                                             [NSData dataWithBytes:spts length:2*sizeof(unsigned int)],[activeCluster color],nil] forKeys: [NSArray arrayWithObjects:@"points",@"color",nil]];
+                NSDictionary *_params = [NSDictionary dictionaryWithObjects: [NSArray arrayWithObjects: [NSData dataWithBytes:spts length:2*sizeof(unsigned int)],[activeCluster color],nil] forKeys: [NSArray arrayWithObjects:@"points",@"color",nil]];
                 [[NSNotificationCenter defaultCenter] postNotificationName: @"highlight" object: self userInfo: _params ];
                 free(spts);
             }
         }
+		free(tpts);
     }
     else if ( [selection isEqualToString:@"Remove waveforms"] )
     {
