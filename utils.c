@@ -174,5 +174,28 @@ void eigen(double *A, unsigned int n, double **S, double **V)
 	gsl_matrix_free(evec);
 
 }
+void random_sample(unsigned int N,unsigned int k, unsigned int *sample)
+{
+	//generate a unique random sample of k number from the sequence of numbers from 0 to N
+	unsigned int *_seq,i,r,s;
+	_seq = malloc(N*sizeof(unsigned int));
+
+	for(i=0;i<N;i++)
+	{
+		_seq[i] = i;
+	}
+	//shuffle 
+	for(i=0;i<k;i++)
+	{
+		//draw a random index
+		r = random() % N;
+		s = _seq[r];
+		_seq[i] = s;
+		_seq[r] = _seq[i];
+	}
+	memcpy(sample,_seq,k*sizeof(unsigned int));
+	free(_seq);
+}
+
 
 
