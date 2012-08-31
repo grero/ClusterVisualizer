@@ -168,14 +168,64 @@ unsigned long long int* getTimes(const char *fname, nptHeader *header, unsigned 
     return data;
 }
 
-/*void fillArray(int *array, int start, int end, int step)
+short int* getLargeWavesForChannels(const char *fname, nptHeader *header, unsigned int **index, unsigned int *index_length, unsigned int *channels, unsigned int nchannels,short int threshold,short int **data)
 {
-    int i;
-    int mstep = floor((end-start)/step);
-    for(i = 0; i < mstep; i = i++)
+    FILE *f;
+    int chs,pts,waveLength,i,j,k,status,offset,readSize,count;
+	unsigned int *idx;
+    short int *buffer,p;
+	nptHeader _header;
+	if( header == NULL)
+	{
+		_header = *getSpikeInfo(fname,&_header);
+		header = &_header;
+	}
+    f = fopen(fname, "r");
+    if(f==NULL)
+        return NULL;
+    chs = header->channels;
+    pts = header->timepts;
+    waveLength = chs*pts;
+	//allocate space for idx
+	idx = malloc(header->num_spikes*sizeof(unsigned int));
+	//offset to where we should start reading
+    offset = channels[0]*pts;
+	readSize = nchannels*pts; 
+    buffer = malloc(waveLength*sizeof(short int));
+	status = fseeko(f, header->headersize,SEEK_SET);
+	p = 0<<15;
+	if(status!=0)
+	{
+		fprintf(stderr,"fseek could not complete");
+	}
+	count = 0;
+    for(i = 0; i < header->num_spikes; i++)
     {
-        array[i] = start + i*step; 
+        fread(buffer,2,waveLength,f);
+        //copy the relevant channels
+        for(j = offset;j<offset+readSize;j++)
+        {
+			if(buffer[j] < threshold )
+			{
+				idx[count]=i;
+				count++;
+				break;
+			}
+        }
     }
-}*/
-
+    fclose(f);
+    free(buffer);
+	//allocate space for waveforms
+	if(data != NULL)
+	{
+		*data = malloc(readSize*count*sizeof(short int));
+		*data = getWavesForChannels(fname,header,idx,count,channels,nchannels,*data);
+		return *data;
+	}
+	*index = malloc(count*sizeof(unsigned int));
+	memcpy(*index,idx,count*sizeof(unsigned int));
+	free(idx);
+	*index_length = count;
+	return NULL;
+}
 
