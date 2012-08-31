@@ -341,10 +341,19 @@
             //{
 			for(j=0;j<channels;j++)
 			{
+                //add the first point
+                in_offset = (i*channels+reorder_index[j])*timepoints;
+                out_offset = (i*channels+j)*(_timepts+2);//+prevOffset;
+                //x
+                _vertices[3*out_offset] = j*(_timepts+channelHop) + channelHop;
+                //y
+                warp(tmp+in_offset,_timestep,_vertices+3*out_offset+1);
+                //z; the trick is to make this point invisible, so set it to a low value
+                _vertices[3*out_offset+2] = -50.0;
 				for(k=0;k<_timepts;k++)
 				{
                     in_offset = ((i*channels+reorder_index[j])*timepoints + k*_timestep);
-					out_offset = ((i*channels+reorder_index[j])*_timepts + k);// + prevOffset;
+					out_offset = ((i*channels+j)*(_timepts+2) + k+1);// + prevOffset;
 					//don't reorder mean and std
 					//moffset = ((nwaves*channels+j)*_timepts + k) + prevOffset;
 					//stdoffset = (((nwaves+1)*channels+j)*_timepts + k) + prevOffset;
@@ -368,6 +377,15 @@
 						chMinMax[2*j+1] = tmp[in_offset];
 					}
 				}
+                //add the last point
+                in_offset = ((i*channels+reorder_index[j])*timepoints+(timepoints-1)*_timestep);
+                out_offset = ((i*channels+j)*(_timepts+2) + _timepts+1);//+prevOffset;
+                //x
+                _vertices[3*out_offset] = j*(_timepts+channelHop)+_timepts-1+channelHop;
+                //y
+                warp(tmp+in_offset,_timestep,_vertices+3*out_offset+1);
+                //z; the trick is to make this point invisible, so set it to a low value
+                _vertices[3*out_offset+2] = -50.0;
 				
 			}
         });
@@ -1254,12 +1272,20 @@
 	//turn off drawing threshold
     glUnmapBuffer(GL_ARRAY_BUFFER);
 	free(_index);
-	free(_channels);
 	NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:idx,
                                                                 [NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects:                                                                                                                       @"points",@"color",nil]];
     [[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object: self userInfo: params];
 	//[self highlightWaveforms: idx];
 	//[self hideWaveforms:idx];
+	if( drawThreshold == YES)
+	{
+		NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithFloat: threshold],@"threshold",[NSData dataWithBytes: _channels length:nchs*sizeof(unsigned int)],@"channels",nil];
+		[[NSNotificationCenter defaultCenter] postNotificationName: @"loadLargeWaveforms" object:self userInfo: userInfo];
+	
+	}
+	else{
+	}
+	free(_channels);
 	
 }
 
