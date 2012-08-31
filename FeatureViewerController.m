@@ -43,6 +43,8 @@
 												 name:@"showInput" object: nil];
 	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
 												 name:@"highlight" object: nil];
+	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
+												 name:@"loadLargeWaveforms" object: nil];
 	
 	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
 												 name:@"performClusterOption" object: nil];
@@ -2114,6 +2116,39 @@
     {
         autoLoadWaveforms = [[NSUserDefaults standardUserDefaults] boolForKey:@"autoLoadWaveforms"];
     }
+	else if ([[notification name] isEqualToString:@"loadLargeWaveforms"])
+	{
+		unsigned int *_channels,*_idx,nidx,nchs,nclusters;
+		float threshold; 
+		short int _threshold;
+		const char *_fname;
+		_channels = (unsigned int*)[[[notification userInfo] objectForKey:@"channels"] bytes];
+		nchs = [[[notification userInfo] objectForKey:@"channels"] length]/sizeof(unsigned int);
+		threshold = [[[notification userInfo] objectForKey:@"threshold"] floatValue];
+		_threshold = (short int)threshold;
+		_fname = [[self waveformsFile] cStringUsingEncoding:NSASCIIStringEncoding];
+		//get the indices
+		getLargeWavesForChannels(_fname,NULL,&_idx,&nidx,_channels,nchs,_threshold,NULL);
+		if( Clusters == NULL)
+		{
+			nclusters = 0;
+		}
+		else
+		{
+			nclusters = [Clusters count];
+		}
+		//create a new cluster with these indices
+		Cluster *_newcluster = [[Cluster alloc] init];
+		[_newcluster setColor: nil];
+		[_newcluster setClusterId: [NSNumber numberWithInt: nclusters]];
+		[_newcluster addPoints: [NSData dataWithBytes: _idx length: nidx*sizeof(unsigned int)]];
+		free(_idx);
+		[self insertObject:_newcluster inClustersAtIndex:nclusters];
+        [self loadWaveforms:_newcluster];
+		[_newcluster release];
+
+
+	}
 	
 }
 
