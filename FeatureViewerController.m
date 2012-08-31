@@ -447,6 +447,8 @@
 	//NSLog(@"XYZF: Is this going to work?");
 	//NSLog(@"Filebase: %@",filebase);
     //check for the presence of xml file
+	//set the window title
+	[[[self fw] window] setTitle: [NSString stringWithFormat: @"FeatureViewer - %@",filebase]];
     
 	if ( (autoLoadWaveforms == YES) && ([self waveformsFile] == NULL))
 	{
