@@ -102,7 +102,18 @@
 
 -(void)setColor:(NSData*)new_color
 {
-    color = [[NSData dataWithData:new_color] retain];
+	if(new_color == nil)
+	{
+		float _newcolor[3];
+		_newcolor[0] = ((float)random())/RAND_MAX;
+		_newcolor[1] = ((float)random())/RAND_MAX;
+		_newcolor[2] = ((float)random())/RAND_MAX;
+		color = [[NSData dataWithBytes: _newcolor length: 3*sizeof(float)] retain];
+	}
+	else
+	{
+		color = [[NSData dataWithData:new_color] retain];
+	}
     float *buffer = (float*)[color bytes];
     textColor = [[NSColor colorWithCalibratedRed:buffer[0] green:buffer[1] blue:buffer[2] alpha:1.0] retain];
 }
