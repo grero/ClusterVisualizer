@@ -20,7 +20,7 @@
 //@synthesize filterClustersPredicate;
 @synthesize clustersSortDescriptor;
 @synthesize clustersSortDescriptors;
-@synthesize waveformsFile,currentDir,logFilePath;
+@synthesize waveformsFile,currentDir;
 @synthesize activeCluster,selectedCluster;
 //@synthesize selectedClusters;
 //@synthesize selectedWaveform;
@@ -662,9 +662,6 @@
     [[[NSApp mainMenu] itemWithTitle: @"Time slider"] setEnabled:YES];
     //register for slider notifications
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:@"AdvanceTime" object:nil];
-    //set the log file
-    [self setLogFilePath:[directory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.log", filebase]]];
-
 	[_pool drain];
 }
 
@@ -3238,7 +3235,7 @@
 			_mean[i]+=_clmean[i]*_clnpoints;
 		}
 		//add to clusterNames
-		[clusterNames appendFormat: @"%@ ", [cl clusterId]];
+		[clusterNames appendFormat: @"%@ ", [cl clusterId]]:
 		
 	}
 	_clnpoints = [[new_cluster npoints] unsignedIntValue];
@@ -3260,7 +3257,7 @@
     [new_cluster computeISIs: timestamps];
  	//set parents	
 	[new_cluster setParents: [NSMutableArray arrayWithArray: clusters]];
-    nclusters = [Clusters count];
+    int nclusters = [Clusters count];
 	
     [self insertObject:new_cluster inClustersAtIndex:nclusters];
 	if( dataloaded == YES)
@@ -3281,7 +3278,7 @@
     [self setSelectedClusters:[NSIndexSet indexSetWithIndex:nclusters]];
     selectedCluster = new_cluster;
 	//record in log
-	freopen([ logFilePath cStringUsingEncoding: NSASCIIStringEncoding],"a+",stderr);
+	freopen([ logFilePath cStringUsingEncoding: NSASCIIStringEncoding],'a+',stderr);
 	NSLog(@"merged clusters %@ to form cluster %@", clusterNames, [new_cluster clusterId]);
 
 }
@@ -3388,9 +3385,6 @@
     [fw hideCluster:cluster];
     //give the points back to the noise cluster
     [[Clusters objectAtIndex:0] addPoints:[cluster points]];
-	//record in log
-	freopen([ logFilePath cStringUsingEncoding: NSASCIIStringEncoding],"a+",stderr);
-	NSLog(@"deleted cluster %@", [cluster clusterId]);
     [self removeObjectFromClustersAtIndex: [Clusters indexOfObject:cluster]];
 }
 

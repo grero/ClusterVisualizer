@@ -54,6 +54,7 @@
 	NSAttributedString *releaseNotes;
     StimInfo *stimInfo;
 	NSUInteger currentTimeIndex;
+	NSString *logFilePath;
     
     NSMenu *waveformsMenu;
     
@@ -150,7 +151,7 @@
 @property (retain, readwrite) NSPredicate *filterClustersPredicate;
 @property (retain, readwrite) NSSortDescriptor *clustersSortDescriptor;
 @property (retain, readwrite) NSMutableArray *clustersSortDescriptors;
-@property (retain, readwrite) NSString *waveformsFile,*currentDir;
+@property (retain, readwrite) NSString *waveformsFile,*currentDir,*logFilePath;
 @property (assign,readwrite) Cluster *activeCluster, *selectedCluster;
 @property (assign,readwrite) NSIndexSet *selectedClusters;
 @property (retain,readwrite) NSString *selectedWaveform;

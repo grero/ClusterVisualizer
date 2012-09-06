@@ -20,7 +20,7 @@
 //@synthesize filterClustersPredicate;
 @synthesize clustersSortDescriptor;
 @synthesize clustersSortDescriptors;
-@synthesize waveformsFile,currentDir,logFilePath;
+@synthesize waveformsFile,currentDir;
 @synthesize activeCluster,selectedCluster;
 //@synthesize selectedClusters;
 //@synthesize selectedWaveform;
@@ -662,9 +662,6 @@
     [[[NSApp mainMenu] itemWithTitle: @"Time slider"] setEnabled:YES];
     //register for slider notifications
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:@"AdvanceTime" object:nil];
-    //set the log file
-    [self setLogFilePath:[directory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.log", filebase]]];
-
 	[_pool drain];
 }
 
@@ -3213,10 +3210,7 @@
 {
 	float color[3];
 	float *_mean,*_clmean;
-	unsigned int i,_clnpoints, nclusters;
-	NSMutableString *clusterNames;
-	nclusters = [clusters count];
-	clusterNames = [NSMutableString stringWithCapacity: 2*nclusters];
+	unsigned int i,_clnpoints;
     Cluster *new_cluster = [[Cluster alloc] init];
     new_cluster.clusterId = [NSNumber numberWithUnsignedInt:[Clusters count]];
 	[new_cluster setTotalNPoints: [NSNumber numberWithUnsignedInt:rows]];
@@ -3237,8 +3231,6 @@
 		{
 			_mean[i]+=_clmean[i]*_clnpoints;
 		}
-		//add to clusterNames
-		[clusterNames appendFormat: @"%@ ", [cl clusterId]];
 		
 	}
 	_clnpoints = [[new_cluster npoints] unsignedIntValue];
@@ -3260,7 +3252,7 @@
     [new_cluster computeISIs: timestamps];
  	//set parents	
 	[new_cluster setParents: [NSMutableArray arrayWithArray: clusters]];
-    nclusters = [Clusters count];
+    int nclusters = [Clusters count];
 	
     [self insertObject:new_cluster inClustersAtIndex:nclusters];
 	if( dataloaded == YES)
@@ -3281,8 +3273,10 @@
     [self setSelectedClusters:[NSIndexSet indexSetWithIndex:nclusters]];
     selectedCluster = new_cluster;
 	//record in log
-	freopen([ logFilePath cStringUsingEncoding: NSASCIIStringEncoding],"a+",stderr);
-	NSLog(@"merged clusters %@ to form cluster %@", clusterNames, [new_cluster clusterId]);
+	/*
+	NSString *clusterNames = [Clusters ]
+	[activityLog appendString: [NSString stringWithFormat: @"%s: merged clusters ]
+	*/
 
 }
 
@@ -3388,9 +3382,6 @@
     [fw hideCluster:cluster];
     //give the points back to the noise cluster
     [[Clusters objectAtIndex:0] addPoints:[cluster points]];
-	//record in log
-	freopen([ logFilePath cStringUsingEncoding: NSASCIIStringEncoding],"a+",stderr);
-	NSLog(@"deleted cluster %@", [cluster clusterId]);
     [self removeObjectFromClustersAtIndex: [Clusters indexOfObject:cluster]];
 }
 
