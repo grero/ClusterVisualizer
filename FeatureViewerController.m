@@ -3084,7 +3084,9 @@
     NSArray *candidates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"active == YES"]];
     if ([candidates count] > 0)
     {
-        int* cluster_indices = calloc((params.rows+1),sizeof(int));    
+        NSString *clusterDescriptionString;
+        NSMutableArray *clusterDescriptions = [NSMutableArray arrayWithCapacity:[candidates count]];
+        int* cluster_indices = calloc((params.rows+1),sizeof(int));
         cluster_indices[0] = (unsigned int)[candidates count];
         NSEnumerator *cluster_enumerator = [[candidates filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"valid==1"]] objectEnumerator];
         int i,npoints,cid;
@@ -3099,7 +3101,10 @@
                 cluster_indices[clusteridx[i]+1] = cid;
             }
             cid+=1;
+            //add the description of this cluster to the description array
+            [clusterDescriptions addObject:[cluster description]];
         }
+        clusterDescriptionString = [clusterDescriptions componentsJoinedByString:@"\n"];
         NSSavePanel *savePanel = [NSSavePanel savePanel];
 		[savePanel setNameFieldStringValue:[NSString stringWithFormat: @"%@.cut",currentBaseName]];
 		
@@ -3132,6 +3137,8 @@
 				[_alert release];
 
 			}
+            //save cluster info to string
+            [clusterDescriptionString writeToFile:[[[savePanel URL] path] stringByReplacingOccurrencesOfString:ext withString:@"info"] atomically:YES encoding:NSASCIIStringEncoding error:nil];
             
 		}
         free(cluster_indices);

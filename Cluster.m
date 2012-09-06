@@ -39,6 +39,15 @@
 @synthesize isolationInfo;
 @synthesize wfMean, wfCov,channels;
 
+-(id) init
+{
+	self = [super init];
+	if( self != nil)
+	{
+		shortISIs = [NSNumber numberWithInt: 0];
+	}
+}
+
 -(void)setActive:(NSInteger)value
 {
     active = value;
@@ -98,6 +107,7 @@
     {
         [self setName: [[[[self clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[self npoints] stringValue]]];
     }
+	[self updateDescription];
 }
 
 -(void)setColor:(NSData*)new_color
@@ -517,6 +527,8 @@
 			//prevent leak
 			free(_useMean);
 		}
+		//update description
+		[self updateDescription];
 		return fd;
 
 
@@ -575,6 +587,7 @@
 	//isolation distance is the distance to the n'th closest point not in this cluster,
 	//where n is the number of points in this cluster
 	[self setIsolationDistance: [NSNumber numberWithFloat:D[n-1]]];
+	[self updateDescription];
 	free(d);
 	free(D);
 }
@@ -838,6 +851,9 @@
 	[coder encodeObject: mean forKey:@"featureMean"];
 	[coder encodeObject: cov forKey:@"featureCov"];
 	[coder encodeObject: covi forKey:@"featureCovi"];
+	[coder encodeObject: isolationDistance forKey: @"isolationDistance"];
+	[coder encodeObject: shortISIs forKey: @"shortISIs"];
+	[coder encodeObject: lRatio forKey: @"lRatio"];
 }
 
 -(id)initWithCoder:(NSCoder*)coder
@@ -855,6 +871,21 @@
 	mean = [[coder decodeObjectForKey:@"featureMean"] retain];
 	cov = [[coder decodeObjectForKey:@"featureCov"] retain];
 	covi = [[coder decodeObjectForKey:@"featureCovi"] retain];
+	lRatio = [[coder decodeObjectForKey: @"lRatio"] retain];
+	shortISIs = [[coder decodeObjectForKey: @"shortISIs"] retain];
+	isolationDistance = [[coder decodeObjectForKey: @"isolationDistance"] retain];
+	if( isolationDistance == nil)
+	{
+		isolationDistance = [[NSNumber numberWithFloat: 0.0] retain];
+	}
+	if( shortISIs == nil )
+	{
+		shortISIs = [[NSNumber numberWithInt: 0] retain];
+	}
+	if( lRatio == nil )
+	{
+		lRatio = [[NSNumber numberWithFloat: 0.0] retain];
+	}
     //set the textcolor
     float *buffer = (float*)[color bytes];
     textColor = [[NSColor colorWithCalibratedRed:buffer[0] green:buffer[1] blue:buffer[2] alpha:1.0] retain];
@@ -870,8 +901,8 @@
 
 -(void)updateDescription
 {
-	NSArray *components = [NSArray arrayWithObjects:[npoints stringValue],[shortISIs stringValue],[lRatio stringValue],[isolationDistance stringValue],nil];
-	NSArray *keys = [NSArray arrayWithObjects:@"#points", @"shortISI",@"L-ratio",@"IsoDist",nil];
+	NSArray *components = [NSArray arrayWithObjects:[npoints stringValue],[shortISIs stringValue],[lRatio stringValue],[isolationDistance stringValue],[clusterId stringValue],nil];
+	NSArray *keys = [NSArray arrayWithObjects:@"#points", @"shortISI",@"L-ratio",@"IsoDist",@"clusterId",nil];
 	NSDictionary *descr = [NSDictionary dictionaryWithObjects: components forKeys: keys];
 	[self setDescription:[descr description]];
 }
