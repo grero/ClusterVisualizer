@@ -1222,7 +1222,7 @@ static void drawFrame()
     //glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
     //glDepthRange(minmax[4],minmax[5]);
     //}
-    glClearColor(0.,0.,0.,1.0);
+    glClearColor(0,0,0,0);
     glClear(GL_COLOR_BUFFER_BIT);
 	
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -1342,7 +1342,7 @@ static void drawFrame()
     [context makeCurrentContext];
     
 
-    glClearColor(0,0, 0, 1.0);
+    glClearColor(0,0, 0, 0);
     glClearDepth(1.0);
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);

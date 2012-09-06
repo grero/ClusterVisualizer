@@ -33,6 +33,9 @@
 	originx = 0.0;
 	originy = 0.0;
 	originz = -2.0;
+    CM[0] = 0;
+    CM[1] = 0;
+    CM[2] = 0;
 	scale = 1.0;
     base_color[0] = 1.0f;
 	base_color[1] = 0.85f;
@@ -70,7 +73,7 @@
     {
         return nil;
     }
-    [self setOpenGLContext: [[NSOpenGLContext alloc] initWithFormat:[NSOpenGLView defaultPixelFormat] shareContext:nil]];
+    /*[self setOpenGLContext: [[NSOpenGLContext alloc] initWithFormat:[NSOpenGLView defaultPixelFormat] shareContext:nil]];
     [[self openGLContext] makeCurrentContext];*/
     
     return [self initWithFrame:frameRect pixelFormat: [FeatureView defaultPixelFormat]];
@@ -176,7 +179,7 @@
     float *use_vertices,*colors,*_vertices;
     int i,j;
     GLuint *indices;
-    const char *path = [[url path] cStringUsingEncoding:NSASCIIStringEncoding];
+    char *path = [[url path] cStringUsingEncoding:NSASCIIStringEncoding];
     header H;
     //H = *readFeatureHeader("../../test2.hdf5", &H);
     H = *readFeatureHeader(path, &H);
@@ -281,8 +284,6 @@
     float *use_vertices, *colors,*indices;
     rows = r;
     cols = c;
-	//allocate space for cluster centroid
-	CM = calloc(cols,sizeof(float));
     nindices = rows;
 	//create an indexset
 	NSRange rng;
@@ -304,9 +305,7 @@
         [vertices release];
 
     }
-    //vertices = [[NSData dataWithData:vertex_data] retain];
-	//make a copy of vertex data and retain it
-	vertices = [[vertex_data copy] retain];
+    vertices = [[NSData dataWithData:vertex_data] retain];
     
     //[vertex_data getBytes:vertices length: rows*cols*sizeof(float)];
     float *_vertices = (float*)[vertices bytes];
@@ -325,36 +324,16 @@
     ndraw_dims = 3;
     //I don't really need a separate variable for this; just use whatever is on the GPU
     use_vertices = malloc(rows*ndraw_dims*sizeof(GLfloat));
-    int i,l,nbatches,batchsize,rem;
-    dispatch_queue_t queue;
-    batchsize = 1000;
-    nbatches = rows/batchsize;
-    rem = rows - nbatches*batchsize;
-    //for(i=0;i<rows;i++)
-    queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-    dispatch_apply(nbatches, queue, ^(size_t i) 
+    int i,j;
+    for(i=0;i<rows;i++)
     {
         //indices[i] = i;
-        int j,k;
-        for(k=i*batchsize;k<(i+1)*batchsize;k++)
-        {
-            for(j=0;j<ndraw_dims;j++)
-            {
-                //indices[i*ndraw_dims+j] = i*ndraw_dims +j;
-                use_vertices[k*ndraw_dims+j] = _vertices[k*cols+draw_dims[j]];
-            }
-        }
-    });
-    //do the remainder
-    for(i=nbatches*batchsize;i<rows;i++)
-    {
-        for(l=0;l<ndraw_dims;l++)
+        for(j=0;j<ndraw_dims;j++)
         {
             //indices[i*ndraw_dims+j] = i*ndraw_dims +j;
-            use_vertices[i*ndraw_dims+l] = _vertices[i*cols+draw_dims[l]];
+            use_vertices[i*ndraw_dims+j] = _vertices[i*cols+draw_dims[j]];
         }
     }
-               
     [[self openGLContext] makeCurrentContext];
     //push the data to the GPU
     if(vertexBuffer==0)
@@ -408,35 +387,6 @@
 -(NSData*)getVertexData
 {
     return vertices;
-}
-
--(NSData*)getVertexDataForDims:(NSData*)dims
-{
-	//return vertices corresponding to the specified dimensions
-	float *_vdata,*_vertices;
-	unsigned int i,j,ndims,*_dims ;
-	_dims = (unsigned int*)[dims bytes];
-	ndims = [dims length]/sizeof(unsigned int);
-	//check that none of the dimensions are too large
-	for(i=0;i<ndims;i++)
-	{
-		if( (_dims[i] >= cols ) || (_dims[i] < 0) )
-		{
-			return NULL;
-		}
-	}
-	_vertices = (float*)[vertices bytes];
-	_vdata = malloc(rows*ndims*sizeof(float));
-	for(i=0;i<rows;i++)
-	{
-		for(j=0;j<ndims;j++)
-		{
-			_vdata[i*ndims+j] = _vertices[i*cols+_dims[j]];
-		}
-	}
-	NSData *vdata = [NSData dataWithBytes: _vdata length: rows*ndims*sizeof(float)];
-	free(_vdata);
-	return vdata;
 }
 
 -(void) selectDimensions:(NSDictionary*)dims
@@ -493,35 +443,6 @@
     }
 }
 
--(void) showIndices: (NSIndexSet*)indices
-{   
-	unsigned int _nindices,i;
-	//get the intersection of the requested indices with the currently shown indices
-	NSIndexSet *sIndices = [indexset indexesPassingTest: ^(NSUInteger idx, BOOL *stop){
-								return [indices containsIndex: idx];
-	}]; 
-	_nindices = [sIndices count];
-	NSUInteger *_index = malloc([sIndices count]*sizeof(NSUInteger));
-	[sIndices getIndexes: _index maxCount: _nindices inIndexRange: nil];
-
-	[[self openGLContext] makeCurrentContext];
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-    GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
-	if(tmp_indices != NULL)
-	{
-		//copy to tmp_indices
-		//memcpy(tmp_indices, _index,_nindices*sizeof(unsigned int));
-		for(i=0;i<_nindices;i++)
-        {
-            tmp_indices[i] = (GLuint)_index[i];
-        }
-        glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-		nindices = _nindices;
-		[self setNeedsDisplay: YES];
-	}
-
-}
-
 -(void) showCluster: (Cluster *)cluster
 {
     float *_vertices = (float*)[vertices bytes];
@@ -543,7 +464,7 @@
     GLuint *tmp_indices = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
 	//
     GLuint error = glGetError();
-	const GLubyte *errstr = gluErrorString(error);
+	const GLbyte *errstr = gluErrorString(error);
 	//
     if(tmp_indices!=NULL)
     {
@@ -568,6 +489,7 @@
                 j+=1;
             }
         }*/
+		float *centroid = NSZoneCalloc([self zone], 3,sizeof(float));
         unsigned int *points = (unsigned int*)[[cluster points] bytes];
 		float *cluster_minmax = NSZoneCalloc([self zone], 6,sizeof(float));
         //originx = 0;
@@ -616,17 +538,16 @@
       	//only do this of nidinces > 0  
 		if(nindices > 0)
 		{
-			int i;
 			float *clusterMean = (float*)[[cluster mean] bytes];
-            if(clusterMean != NULL )
-            {
-                for(i=0;i<cols;i++)
-                {
-                    CM[i] = ((nindices-new_size)*CM[i] + new_size*clusterMean[i])/nindices;
-                }
-            }
+			CM[0] = ((nindices-new_size)*CM[0] + new_size*clusterMean[draw_dims[0]])/nindices;
+			//CM[0] = ((nindices-new_size)*CM[0] + centroid[0])/nindices;
+			CM[1] = ((nindices-new_size)*CM[1] + new_size*clusterMean[draw_dims[1]])/nindices;
+			//CM[1] = ((nindices-new_size)*CM[1] + centroid[1])/nindices;
+			CM[2] = ((nindices-new_size)*CM[2] + new_size*clusterMean[draw_dims[2]])/nindices;
+			//CM[2] = ((nindices-new_size)*CM[2] + centroid[2])/nindices;
 		}
-
+        NSZoneFree([self zone], centroid);
+				//calculate the centroid of the cluster in the current space
         //do colors
         [self setClusterColors:_color forIndices:(unsigned int*)[[cluster points] bytes] length:[[cluster npoints] unsignedIntValue]];
         //
@@ -676,19 +597,44 @@
         if( tmp_indices != NULL)
         {
 			//update the centroid
-            int i,j,found;
 			float *clusterMean = (float*)[[cluster mean] bytes];
-            if(clusterMean != NULL )
-            {
-                for(i=0;i<cols;i++)
-                {
-                    CM[i] = (nindices*CM[i] - _npoints*clusterMean[i])/(nindices-_npoints);
-                }
-            }
+			CM[0] = (nindices*CM[0] - _npoints*clusterMean[draw_dims[0]])/(nindices-_npoints);
+			CM[1] = (nindices*CM[1] - _npoints*clusterMean[draw_dims[1]])/(nindices-_npoints);
+			CM[2] = (nindices*CM[2] - _npoints*clusterMean[draw_dims[2]])/(nindices -_npoints);
             //unsigned int *_points = (unsigned int*)malloc((nindices-new_size)*sizeof(unsigned int));
             //new_size = [[cluster indices] count];
+            int i,j,found;
             i = 0;
-           
+            //TODO: The following is a very naiv way of doing intersection. Should fix this 
+            //      One way to fix make it more efficient is to make sure the indices are sorted. This can
+            //      be done by maintaining a heap, for instance. 
+            //dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+            //dispatch_apply(nindices, queue, ^(size_t j)
+            /*
+            for(j=0;j<nindices;j++)
+            {
+                //int i,k,found;
+
+                found = 0;
+                //i = 0;
+                for(k=0;k<new_size;k++)
+                {
+                    if(tmp_indices[j]==points[k])
+                    {
+                        found=1;
+                        //once we've found a match, abort
+                        break;
+                    }
+                }
+                if(found==0)
+                {
+                    indices[i] = tmp_indices[j];
+                    i+=1;
+                }
+            }//);
+             */
+            //alternative to the above: Use IndexSets
+            //NSMutableIndexSet *tmp = [NSMutableIndexSet 
             [indexset removeIndexes: [cluster indices]];
             
             j = 0;
@@ -747,11 +693,9 @@
     [selectedClusters removeAllObjects];
     nindices = 0;
 	//reset center of mass to zero
-	int i;
-	for(i=0;i<cols;i++)
-	{
-		CM[i] = 0;
-	}
+	CM[0] = 0;
+	CM[1] = 0;
+	CM[2] = 0;
 	[indexset removeAllIndexes];
     [self setNeedsDisplay:YES];
 }
@@ -1222,7 +1166,7 @@ static void drawFrame()
     //glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
     //glDepthRange(minmax[4],minmax[5]);
     //}
-    glClearColor(0.,0.,0.,1.0);
+    glClearColor(0,0,0,0);
     glClear(GL_COLOR_BUFFER_BIT);
 	
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -1240,6 +1184,28 @@ static void drawFrame()
     //use look at to define our viewing transform. Eye is positioned 4 units in the NEGATIVE z-direction (towards the viewer), and the origin is 2 units into the screen (z-0 is in the viewing plane, i.e. the screen
     gluLookAt(0, 0, 4.0, originx, originy, originz, 0, 1, 0);
 	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+    //draw lines to indicate the centroid; this should be removed
+    glBegin(GL_LINES);
+    glVertex3f(CM[0], -2, CM[2]);
+    glColor3f(1.0, 0.0, 0.0);
+    glVertex3f(CM[0], 2, CM[2]);
+    glColor3f(1.0, 0.0, 0.0);
+    glEnd();
+
+    glTranslatef(CM[0], CM[1], CM[2]);
+
+	glRotatef(rotatey,0, 1, 0);
+	glRotatef(rotatez, 0, 0,1);
+    glTranslatef(-CM[0],-CM[1] , -CM[2]);
+    //glTranslatef(originx, originy, originz);
+    //test; draw a line parallel to the y-axis through the origin
+    glBegin(GL_LINES);
+    glVertex3f(CM[0], -2, CM[2]);
+    glColor3f(1.0, 0.0, 0.0);
+    glVertex3f(CM[0], 2, CM[2]);
+    glColor3f(1.0, 0.0, 0.0);
+    glEnd();
     if ([self showFrame] )
     {
         drawFrame();
@@ -1260,28 +1226,6 @@ static void drawFrame()
 	*/
 	if(dataloaded)
     {
-		glLoadIdentity();
-		//draw lines to indicate the centroid; this should be removed
-		glBegin(GL_LINES);
-		glVertex3f(CM[draw_dims[0]], -2, CM[draw_dims[2]]);
-		glColor3f(1.0, 0.0, 0.0);
-		glVertex3f(CM[draw_dims[0]], 2, CM[draw_dims[2]]);
-		glColor3f(1.0, 0.0, 0.0);
-		glEnd();
-
-		glTranslatef(CM[draw_dims[0]], CM[draw_dims[1]], CM[draw_dims[2]]);
-
-		glRotatef(rotatey,0, 1, 0);
-		glRotatef(rotatez, 0, 0,1);
-		glTranslatef(-CM[draw_dims[0]], -CM[draw_dims[1]], -CM[draw_dims[2]]);
-		//glTranslatef(originx, originy, originz);
-		//test; draw a line parallel to the y-axis through the origin
-		glBegin(GL_LINES);
-		glVertex3f(CM[draw_dims[0]], -2, CM[draw_dims[2]]);
-		glColor3f(1.0, 0.0, 0.0);
-		glVertex3f(CM[draw_dims[0]], 2, CM[draw_dims[2]]);
-		glColor3f(1.0, 0.0, 0.0);
-		glEnd();
 		[self drawAnObject];
 		//drawAnObject();
 
@@ -1342,7 +1286,7 @@ static void drawFrame()
     [context makeCurrentContext];
     
 
-    glClearColor(0,0, 0, 1.0);
+    glClearColor(0,0, 0, 0);
     glClearDepth(1.0);
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
@@ -1829,33 +1773,16 @@ static void drawFrame()
 {
     NSString *option = [sender title];
     NSMenuItem *item = [sender parentItem];
-    NSDictionary *params = NULL;
-	if( item != nil )
-	{
-		if([[item title] isEqualToString:@"Add points to cluster"] )
-		{
-			params = [NSDictionary dictionaryWithObjectsAndKeys:[item title], @"option", option, @"clusters",nil];
-		}
-        else if([[item title] isEqualToString:@"Move points to cluster"] ) 
-        {
-            params = [NSDictionary dictionaryWithObjectsAndKeys:[item title], @"option", option, @"clusters",nil];
-        }
-	}
-	else if([[sender title] isEqualToString:@"Remove points from cluster"] )
-	{
-        //params = [NSDictionary dictionaryWithObjectsAndKeys:@"Remove waveforms", @"option",nil];
-        params = [NSDictionary dictionaryWithObjectsAndKeys:@"Remove points from cluster", @"option", nil];
-
-	}
-
+    NSDictionary *params;
+    if([[item title] isEqualToString:@"Add points to cluster"] )
+    {
+        params = [NSDictionary dictionaryWithObjectsAndKeys:[item title], @"option", option, @"clusters",nil];
+    }
     else
     {
         params = [NSDictionary dictionaryWithObjectsAndKeys:option, @"option", nil];
     }
-    if(params != NULL)
-    {
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"performClusterOption" object:self userInfo:params];
-    }
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"performClusterOption" object:self userInfo:params];
 }
 
 -(void)dealloc
@@ -1864,7 +1791,6 @@ static void drawFrame()
     //free(use_vertices);
     //free(indices);
     free(minmax);
-	free(CM);
     //free(colors);
     //free(cids);
     free(use_colors);
