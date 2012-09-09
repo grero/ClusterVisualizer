@@ -102,3 +102,14 @@ int writeCutFile(const char* fname, int *cids, uint64_t n)
     fclose(fid);
 	return 0;
 }
+
+int writeClusters(const char *fname, ClusteInfo *clusters, unsigned int nclusters)
+{
+    hid_t file;
+    herr_t status;
+    unsigned int i;
+    for(i=0;i<nclusters;i++)
+    {
+        
+    }
+}
