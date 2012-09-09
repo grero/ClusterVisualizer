@@ -51,6 +51,7 @@
     
     [[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
 												 name:NSUserDefaultsDidChangeNotification object: nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:@"AdvanceTime" object:nil];
 	//load the nibs
 	//setup defaults
 	/*NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -661,7 +662,7 @@
     //enable the time slider on the main menu
     [[[NSApp mainMenu] itemWithTitle: @"Time slider"] setEnabled:YES];
     //register for slider notifications
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:@"AdvanceTime" object:nil];
+    
     //set the log file
     [self setLogFilePath:[directory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.log", filebase]]];
 
@@ -1400,9 +1401,14 @@
         NSIndexSet *_indices;
         unsigned int *uindex;
         
-        irange =  NSMakeRange(startIndex, MIN(endIndex-startIndex,maxWaveformsDrawn));
+        irange =  NSMakeRange(startIndex, endIndex-startIndex);
         //get the number of remaining indices
         nindexes = [[cluster indices] countOfIndexesInRange:irange];
+        if(nindexes == 0)
+        {
+            return;
+        }
+        nindexes = MIN(nindexes,maxWaveformsDrawn);
         uindex = malloc(nindexes*sizeof(unsigned int));
         _index = malloc(nindexes*sizeof(NSUInteger));
         [[cluster indices] getIndexes:_index maxCount:nindexes inIndexRange:&irange];
@@ -1412,7 +1418,7 @@
             uindex[i] = (unsigned int)_index[i];
         }
         NSMutableIndexSet *tidx = [NSMutableIndexSet alloc];
-        [tidx initWithIndexSet:[[cluster indices] indexesInRange:NSMakeRange(_index[0], _index[nindexes-1]-_index[0]) options:NSEnumerationConcurrent passingTest:^BOOL(NSUInteger idx, BOOL *stop) {
+        [tidx initWithIndexSet:[[cluster indices] indexesInRange:NSMakeRange(_index[0], _index[nindexes-1]-_index[0]+1) options:NSEnumerationConcurrent passingTest:^BOOL(NSUInteger idx, BOOL *stop) {
             return YES;
         }]];
         //locate the first index
@@ -1421,7 +1427,7 @@
         sidx = [[cluster indices] firstIndex];
         while(sidx != NSNotFound )
         {
-            sidx = [[cluster indices] indexGreaterThanIndex:sidx];
+            sidx = [tidx indexGreaterThanIndex:sidx];
             fidx+=1;
         }
         [[self wfv] setGlobalIndices:tidx];
@@ -2073,6 +2079,8 @@
             //also update the waveforms
             //we cheat for now, i.e.
             [self updateWaveformsFromCluster:selectedCluster fromIndex:startIdx toIndex:endIdx];
+            //a bit of a hack; we don't want to use firstinde here
+            [wfv setFirstIndex: 0];
         }
 
 	}
@@ -2464,7 +2472,8 @@
         {
             //remove the currently selected waveforms
             unsigned int *selected = (unsigned int*)[[fw highlightedPoints] bytes];
-			unsigned int nselected = ([[fw highlightedPoints] length])/sizeof(unsigned int);
+			unsigned int nselected,i;
+			nselected = ([[fw highlightedPoints] length])/sizeof(unsigned int);
 			if (nselected == 0) {
 				return;
 			}
@@ -2477,7 +2486,7 @@
 			//{
 			//	[selectedCluster setActive:0];
 			//	toggleActive = YES;
-				[fw hideCluster:selectedCluster];
+				//[fw hideCluster:selectedCluster];
 
 			//}
 			//[[Clusters objectAtIndex:0] setActive: 0];
@@ -2495,7 +2504,19 @@
             //GLuint _length = nselected/sizeof(unsigned int);
             [[fw highlightedPoints] setLength:0];
 			[fw setHighlightedPoints:NULL];
-            [fw showCluster:selectedCluster];
+            //TODO: this doesnt' work if we are not drawing the full cluster. In that case, we need to remove the point from the index set. Should I then just convert everything to indexset?
+            //[[fw indexset]
+           	NSMutableIndexSet *_rindices = [NSMutableIndexSet indexSet]; 
+			//copy the indices drawn in FeatureView
+			[_rindices addIndexes: [fw indexset]];
+			//remove the indices
+			for(i=0;i<nselected;i++)
+			{
+				[_rindices removeIndex: selected[i]];
+			}
+			//now draw the indices
+			[fw showIndices: _rindices];
+            //[fw showCluster:selectedCluster];
 			if([[wfv window] isVisible])
 			{
 				
@@ -3520,12 +3541,13 @@
     [progressPanel setTitle:operationTitle];
     [progressPanel orderFront:self];
     [progressPanel startProgressIndicator];
-    int i;
-    int nclusters = [Clusters count];
-    for(i=0;i<nclusters;i++)
+	NSArray *candidates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"active == YES"]];
+	Cluster *cl;
+	NSEnumerator *clusterEnumerator = [candidates objectEnumerator]; 
+	while( cl = [clusterEnumerator nextObject])
     {
         //Use NSInvocationOperation here
-        NSInvocationOperation *operation = [[[NSInvocationOperation alloc] initWithTarget:[Clusters objectAtIndex:i] selector:operationSelector object:[fw getVertexData]] autorelease];
+		NSInvocationOperation *operation = [[[NSInvocationOperation alloc] initWithTarget:cl selector:operationSelector object:[fw getVertexData]] autorelease];
         [allFinished addDependency:operation];
         [queue addOperation:operation];
         /*[queue addOperationWithBlock:^{

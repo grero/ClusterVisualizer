@@ -497,7 +497,8 @@
 {   
 	unsigned int _nindices,i;
 	//get the intersection of the requested indices with the currently shown indices
-	NSIndexSet *sIndices = [indexset indexesPassingTest: ^(NSUInteger idx, BOOL *stop){
+    NSIndexSet *cIndices = [currentCluster indices];
+	NSIndexSet *sIndices = [cIndices indexesPassingTest: ^(NSUInteger idx, BOOL *stop){
 								return [indices containsIndex: idx];
 	}]; 
 	_nindices = [sIndices count];
@@ -519,6 +520,11 @@
 		nindices = _nindices;
 		[self setNeedsDisplay: YES];
 	}
+    //update the index
+    [indexset removeAllIndexes];
+    [indexset addIndexes:sIndices];
+    nindices = [indexset count];
+    
 
 }
 
@@ -795,14 +801,27 @@
     //NSData *color = [params objectForKey:@"color"];
 	//need to make this work when cluster is nil
 	NSData *color;
-	unsigned int* _clusterPoints;
+	NSUInteger* _clusterPoints;
     unsigned int _nclusterPoints = 0;
     unsigned int offset = 0;
 	if( cluster != nil )
 	{
 		color = [cluster color];
-		_clusterPoints = (unsigned int*)[[cluster points] bytes];
-		_nclusterPoints = [[cluster npoints] unsignedIntValue];
+        _nclusterPoints = [[cluster npoints] unsignedIntValue];
+        if( nindices < _nclusterPoints)
+        {
+            _nclusterPoints = nindices;
+            _clusterPoints = malloc(_nclusterPoints*sizeof(NSUInteger));
+            [indexset getIndexes: _clusterPoints maxCount:_nclusterPoints inIndexRange:nil];
+
+        }
+        else
+        {
+            _clusterPoints = malloc(_nclusterPoints*sizeof(NSUInteger));
+            [[cluster indices] getIndexes: _clusterPoints maxCount:_nclusterPoints inIndexRange:nil];
+        }
+		//_clusterPoints = (unsigned int*)[[cluster points] bytes];
+		
         if(_nclusterPoints == 0)
             _clusterPoints = NULL;
         //we have to determine the offset of the wfidx by finding the index of the cluster in the array of currently selected clusters
@@ -827,6 +846,7 @@
     GLuint *idx = malloc(_npoints*sizeof(GLuint));
 	if( _clusterPoints != NULL )
 	{
+        //TODO: Also check if we are drawing all points or just a subset; if the latter, the number of drawn indices, nindices, should be smaller than the number of points in the cluster
 		for(i=0;i<_npoints;i++)
 		{
 			//idx[i] = tmp_idx[_clusterPoints[_points[i]]];
@@ -881,6 +901,11 @@
 
     }
 	free(idx);
+    //free _clusterPoints if we have declared it
+    if( _clusterPoints != NULL)
+    {
+        free(_clusterPoints);
+    }
     //update the menu
     [[[self menu] itemWithTitle:@"Add points to cluster"] setEnabled:YES];
     [[[self menu] itemWithTitle:@"Remove points from cluster"] setEnabled:YES];
