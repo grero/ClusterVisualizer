@@ -44,8 +44,11 @@
 	self = [super init];
 	if( self != nil)
 	{
-		shortISIs = [NSNumber numberWithInt: 0];
+		shortISIs = [[NSNumber numberWithInt: 0] retain];
+        lRatio = [[NSNumber numberWithFloat:0.0] retain];
+        isolationDistance = [[NSNumber numberWithFloat:0.0] retain];
 	}
+	return self;
 }
 
 -(void)setActive:(NSInteger)value
@@ -436,8 +439,8 @@
         for(l=0;l<cols;l++)
         {
             //unbiased
-            _sq[i*cols+l]/=([[self indices] count]-1);
             _sq[i*cols+l]-=_mean[i]*_mean[l];
+            _sq[i*cols+l]/=([[self indices] count]-1);
         }
     }
     [self setCov:[NSData dataWithBytes:_sq length:cols*cols*sizeof(double)]];
@@ -549,11 +552,17 @@
     }
     float *_data = (float*)[data bytes];
     float *_mean = (float*)[[self mean] bytes];
+	double *_covi = (double*)[[self covi] bytes];
 	if( _mean == NULL )
 	{
 		[self computeFeatureMean:data];
 		_mean = (float*)[[self mean] bytes];
 
+	}
+	if( _covi == NULL)
+	{
+		[self computeFeatureCovariance: data];
+		_covi = (double*)[[self covi] bytes];
 	}
 				
 	unsigned int ndim = (unsigned int)([[self mean] length]/sizeof(float));
@@ -563,13 +572,13 @@
     unsigned int N = [idx count];
 
     NSUInteger *_idx = malloc(N*sizeof(NSUInteger));
-    [idx getIndexes:_idx maxCount:_ntpoints inIndexRange:nil];
+    [idx getIndexes:_idx maxCount:N inIndexRange:nil];
     
 	float *d = malloc(ndim*sizeof(float));
-  
-	float *D = malloc(N*sizeof(float));
-	float q;
-	NSUInteger i,k,j;
+	double *q = malloc(ndim*sizeof(double));
+	double *D = malloc(N*sizeof(double));
+	double x;
+	NSUInteger i,k,j,m,l;
 	k = 0;
 	j = 0;
 	for(i=0;i<N;i++)
@@ -577,18 +586,36 @@
         k = _idx[i];
         //compute the distance
         vDSP_vsub(_mean,1,_data+k*ndim,1,d,1,ndim);
+		//multiply by the inverse covariance matrix
+        for(m=0;m<ndim;m++)
+        {
+            q[m] = 0;
+            for(l=0;l<ndim;l++)
+            {
+                q[m]+=(_covi[m*ndim+l])*d[l];
+            }
+        }
+        //compute mahalanobis distance
+        //x = cblas_dsdot(cols, d, 1, q, 1);
+		//do it manually
+		x = 0;
+		for(m=0;m<ndim;m++)
+		{
+			x+=d[m]*q[m];
+		}
         //sum of squares
-        vDSP_svesq(d,1,&q,ndim);
-        D[i] = sqrt(q);
+        //vDSP_svesq(d,1,&q,ndim);
+        D[i] = x;//sqrt(q);
 	}
     free(_idx);
 	//sort
-	vDSP_vsort(D,N,1);
+	vDSP_vsortD(D,N,1);
 	//isolation distance is the distance to the n'th closest point not in this cluster,
 	//where n is the number of points in this cluster
 	[self setIsolationDistance: [NSNumber numberWithFloat:D[n-1]]];
 	[self updateDescription];
 	free(d);
+	free(q);
 	free(D);
 }
 
