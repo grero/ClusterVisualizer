@@ -2614,6 +2614,8 @@
 		NSUInteger oidx = [selectClusterOption indexOfItemWithTitle: @"Hide raster"];
 		[selectClusterOption removeItemAtIndex: oidx];
 		[selectClusterOption insertItemWithTitle: @"Show raster" atIndex: oidx];
+		//make sure we also prevent raster view from receiveing notifications about highlights
+		[[NSNotificationCenter defaultCenter] removeObserver:[self rasterView]];
 		shouldShowRaster = NO;
 	}
     else if ([selection isEqualToString: @"Save clusters"] )
