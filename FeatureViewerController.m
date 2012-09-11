@@ -3791,7 +3791,9 @@
 		//[selectClusterOption insertItemWithTitle:new_selection atIndex:idx];
 		//make sure the waveforms view receives notification of highlights
 		[[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
-		selectedClusters = [[[NSIndexSet alloc] initWithIndexSet:indexes] retain];
+		NSMutableIndexSet *_index = [NSMutableIndexSet indexSet];
+		[_index addIndexes: indexes];
+		selectedClusters = [[[NSIndexSet alloc] initWithIndexSet: _index] retain];
         [self setSelectedCluster:firstCluster];
 	}
 	
