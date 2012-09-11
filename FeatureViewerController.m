@@ -2602,8 +2602,20 @@
             }
             [[rasterView window] makeKeyAndOrderFront:self];
         }
+		//replace with Hide raster
+		NSUInteger oidx = [selectClusterOption indexOfItemWithTitle: @"Show raster"];
+		[selectClusterOption removeItemAtIndex: oidx];
+		[selectClusterOption insertItemWithTitle: @"Hide raster" atIndex: oidx];
         shouldShowRaster = YES;
     }
+    else if ([selection isEqualToString: @"Hide raster"] )
+	{
+		[[rasterView window] orderOut: self];
+		NSUInteger oidx = [selectClusterOption indexOfItemWithTitle: @"Hide raster"];
+		[selectClusterOption removeItemAtIndex: oidx];
+		[selectClusterOption insertItemWithTitle: @"Show raster" atIndex: oidx];
+		shouldShowRaster = NO;
+	}
     else if ([selection isEqualToString: @"Save clusters"] )
     {
         //check to see if the proper hierarchy exists
