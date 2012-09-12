@@ -1975,8 +1975,9 @@
 	{
 		//show the input panel
 		NSNumber *number = [[notification userInfo] objectForKey:@"selected"];
-		
+		//TODO: this causes a double-trigger of highlight waveforms	
 		[self setSelectedWaveform: [number stringValue]];
+		//
 		//[inputPanel makeKeyAndOrderFront:self];
 		[inputPanel orderFront:self];
 	}

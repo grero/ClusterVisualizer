@@ -53,9 +53,10 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color,unsigned int n);
     NSMutableData *wfMean, *wfStd;
     NSUInteger firstIndex;
     //variable to indicate whehter to overlay
-    BOOL overlay,drawThreshold;
+    BOOL overlay,drawThreshold,isDragging;
     GLuint wfVertexBuffer, wfIndexBuffer, wfColorBuffer, wfPixelBuffer;
 	GLfloat threshold;
+	NSPoint currentPoint;
 	unsigned int channels,timepts;
 }
 
