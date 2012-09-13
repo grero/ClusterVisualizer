@@ -2030,27 +2030,32 @@
 
 -(IBAction)moveDown:(id)sender
 {
-	unsigned int startIdx,endIdx;
+	unsigned int startIdx,endIdx,maxDrawn;
+	maxDrawn = [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"];
+	maxDrawn = MAX(maxDrawn,num_spikes);
 	startIdx = firstIndex; 
-	if( startIdx > num_spikes)
+	if( startIdx > maxDrawn)
 	{
-		startIdx -= num_spikes;
+		startIdx -= maxDrawn;
 	}
 	else
 	{
 		startIdx = 0;
 	}
-	endIdx = startIdx + num_spikes;
+	endIdx = startIdx + maxDrawn;
 	[[NSNotificationCenter defaultCenter] postNotificationName: @"loadWaveforms" object: self userInfo: [NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithInt: startIdx],@"startIdx",[NSNumber numberWithInt: endIdx], @"endIdx",nil]];
 }
 
 -(IBAction)moveUp:(id)sender
 {
-	unsigned int startIdx,endIdx;
+	unsigned int startIdx,endIdx,maxDrawn;
+	maxDrawn = [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"];
+	//num_spikes should always be smaller than or equal to maxDrawn
+	maxDrawn = MAX(maxDrawn,num_spikes);
 	startIdx = firstIndex;
-	endIdx = startIdx + num_spikes;
-	startIdx+=num_spikes;
-	endIdx+=num_spikes;
+	endIdx = startIdx + maxDrawn;
+	startIdx+=maxDrawn;
+	endIdx+=maxDrawn;
 	[[NSNotificationCenter defaultCenter] postNotificationName: @"loadWaveforms" object: self userInfo: [NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithInt: startIdx],@"startIdx",[NSNumber numberWithInt: endIdx], @"endIdx",nil]];
 }
 
