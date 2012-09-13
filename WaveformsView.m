@@ -1519,6 +1519,11 @@
 			[[self openGLContext] makeCurrentContext];
 			glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
 			_vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+			//check if vertices was mapped
+			if( _vertices == NULL )
+			{
+				return;
+			}
 			for(i=0;i<n;i++)
 			{
 				_sidx = sIdx[i]-firstIndex;
@@ -1559,16 +1564,23 @@
 			//get only the relevant vertices
 			//need to restrict ourselves to those vertices which are actually drawn
 			NSUInteger *_indexes = malloc(num_spikes*sizeof(NSUInteger));
+			NSUInteger _nspikes;
 			//copy the indexes
 			[waveformIndices getIndexes:_indexes maxCount:num_spikes inIndexRange:nil];
+			_nspikes = MIN(num_spikes, [waveformIndices count]);
+			[[self openGLContext] makeCurrentContext];
 			glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
 			_vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+			//check if we were able to map the buffer
+			if( _vertices == NULL)
+			{
+				return;
+			}
 			if (isDragging == NO )
 			{
 				float *d = malloc(nWfVertices*sizeof(float));
 				float *D = malloc(2*nWfVertices*sizeof(float));
 				//substract the point
-				[[self openGLContext] makeCurrentContext];
 				vDSP_vsadd(_vertices,3,p,D,2,nWfVertices);
 				vDSP_vsadd(_vertices+1,3,p+1,D+1,2,nWfVertices);
 				glUnmapBuffer(GL_ARRAY_BUFFER);
@@ -1596,7 +1608,7 @@
 					}
 				}
 					//we need to offset appropriately, since imin referes to the current drawn waveforms, not the full index set
-				*wfidx = imin + firstIndex;//(wfLength);
+				*wfidx = _indexes[imin] + firstIndex;//(wfLength);
 				free(d);
 				free(D);
 			}
@@ -1618,7 +1630,7 @@
 						//check if the point is within the selection range
 						if((q[0] < mxpt[0] ) && (q[0]>=minpt[0]) && (q[1] < mxpt[1]) && (q[1]>=minpt[1]))
 						{
-							wfidx[k] = i + firstIndex;
+							wfidx[k] = _indexes[i] + firstIndex;
 							k+=1;
 							break;
 
