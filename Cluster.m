@@ -323,7 +323,15 @@
 		}
 		//use chi-square cdf instead
 		//we want the probabilty for a distnace larger than the one measured to be as large as possible, i.e. the given point is close to the center
-		p[i] = 1-chi2_cdf(x,cols);
+		//TODO: this check is necessary if the covariance matrix is not positive definite
+		if( x >0 )
+		{
+			p[i] = 1-chi2_cdf(x,cols);
+		}
+		else
+		{
+			p[i] = 1.0;
+		}
         //p[i] = -0.5*x + f;
         k = [[self indices] indexGreaterThanIndex:k];
         i+=1;
