@@ -1423,14 +1423,20 @@
             return YES;
         }]];
         //locate the first index
-        NSUInteger fidx,sidx;
+        NSUInteger fidx,sidx,qidx;
         fidx = 0;
         sidx = [[cluster indices] firstIndex];
+		qidx = [tidx firstIndex];
+		//the purpose of this is to establish the index of the first drawn wave in the global cluster index
+		fidx = [[cluster indices] countOfIndexesInRange: NSMakeRange(sidx,qidx-sidx)];
+		//now fidx is the number of indices in [cluster indices] prior to the first index in tidx, in other words, fidx is the desired index
+		/*
         while(sidx != NSNotFound )
         {
             sidx = [tidx indexGreaterThanIndex:sidx];
             fidx+=1;
         }
+		*/
         [[self wfv] setGlobalIndices:tidx];
         [[self wfv] setFirstIndex:fidx];
         [tidx release];
