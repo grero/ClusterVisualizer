@@ -2028,6 +2028,32 @@
 													@"selected",nil]];
 }	
 
+-(IBAction)moveDown:(id)sender
+{
+	unsigned int startIdx,endIdx;
+	startIdx = firstIndex; 
+	if( startIdx > num_spikes)
+	{
+		startIdx -= num_spikes;
+	}
+	else
+	{
+		startIdx = 0;
+	}
+	endIdx = startIdx + num_spikes;
+	[[NSNotificationCenter defaultCenter] postNotificationName: @"loadWaveforms" object: self userInfo: [NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithInt: startIdx],@"startIdx",[NSNumber numberWithInt: endIdx], @"endIdx",nil]];
+}
+
+-(IBAction)moveUp:(id)sender
+{
+	unsigned int startIdx,endIdx;
+	startIdx = firstIndex;
+	endIdx = startIdx + num_spikes;
+	startIdx+=num_spikes;
+	endIdx+=num_spikes;
+	[[NSNotificationCenter defaultCenter] postNotificationName: @"loadWaveforms" object: self userInfo: [NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithInt: startIdx],@"startIdx",[NSNumber numberWithInt: endIdx], @"endIdx",nil]];
+}
+
 -(void)setDrawMean:(BOOL)_drawMean
 {
     if(wfDataloaded)

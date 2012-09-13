@@ -52,6 +52,7 @@
     [[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
 												 name:NSUserDefaultsDidChangeNotification object: nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:@"AdvanceTime" object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:@"loadWaveforms" object:nil];
 	//load the nibs
 	//setup defaults
 	/*NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -2083,6 +2084,36 @@
             //a bit of a hack; we don't want to use firstinde here
             [wfv setFirstIndex: 0];
         }
+
+	}
+	else if ([[notification name] isEqualToString:@"loadWaveforms"])
+	{
+		NSUInteger startIdx,endIdx,i,k;
+		NSIndexSet *_indexes;
+		startIdx = [[[notification userInfo] objectForKey:@"startIdx"] unsignedIntValue];
+		endIdx = [[[notification userInfo] objectForKey:@"endIdx"] unsignedIntValue];
+		//these refer to the local cluster coordinates; convert to global coordinates
+	    _indexes = [selectedCluster indices]; 	
+		k = [_indexes firstIndex];
+		i = 0;
+		while( (k != NSNotFound ) && (i <= startIdx))
+		{
+			k = [_indexes indexGreaterThanIndex: k];
+			i+=1;
+		}
+		startIdx = k;
+		while( (k != NSNotFound ) && (i <= endIdx))
+		{
+			k = [_indexes indexGreaterThanIndex: k];
+			i+=1;
+		}
+		if(k== NSNotFound)
+		{
+			k = [_indexes lastIndex];
+		}
+	    endIdx = k;	
+		//now update the waveforms
+		[self updateWaveformsFromCluster: [self selectedCluster] fromIndex: startIdx toIndex: endIdx];
 
 	}
     else if ([[notification name] isEqualToString:@"performClusterOption"] )
