@@ -1971,7 +1971,8 @@
 		{
 			if( idx[i] > firstIndex )
 			{
-				idx[i]--;
+				//idx[i]--;
+				idx[i] = [waveformIndices indexLessThanIndex: idx[i]];
 				//move one index back
 			//k = [waveformIndices indexLessThanIndex:idx[i]];
 			//if( k != NSNotFound )
@@ -2014,7 +2015,8 @@
 		{
 			if( idx[i] - firstIndex < num_spikes -1 )
 			{
-				idx[i]++;
+				//idx[i]++;
+				idx[i] = [waveformIndices indexGreaterThanIndex: idx[i]];
 				//advance one index
 			//k = [waveformIndices indexGreaterThanIndex:idx[i]];
 			//if(k != NSNotFound )
