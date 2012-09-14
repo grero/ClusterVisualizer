@@ -1964,15 +1964,17 @@
 		hdata = [NSMutableData dataWithData:[self highlightWaves]];		
 		//get the indices and increment by one
 		unsigned int *idx = (unsigned int*)([hdata bytes]);
-		unsigned int len = [hdata length]/sizeof(unsigned int);
+		unsigned int len,_firstIndex; 
+		len = [hdata length]/sizeof(unsigned int);
+		_firstIndex = [waveformIndices firstIndex]	;
 		//NSUInteger k;
 		int i;
 		for(i=0;i<len;i++)
 		{
-			if( idx[i] > firstIndex )
+			if( idx[i] - firstIndex > _firstIndex )
 			{
 				//idx[i]--;
-				idx[i] = [waveformIndices indexLessThanIndex: idx[i]];
+				idx[i] = [waveformIndices indexLessThanIndex: idx[i]-firstIndex] + firstIndex;
 				//move one index back
 			//k = [waveformIndices indexLessThanIndex:idx[i]];
 			//if( k != NSNotFound )
@@ -1983,7 +1985,7 @@
 	else
 	{
 		//no highlighted waves, so set highlight to the first wave
-		unsigned int idx = 0;//(unsigned int)[waveformIndices firstIndex];
+		unsigned int idx = firstIndex;//(unsigned int)[waveformIndices firstIndex];
 		hdata = [NSMutableData dataWithBytes:&idx length:sizeof(unsigned int)];
 
 	}
@@ -2008,15 +2010,18 @@
 		hdata = [NSMutableData dataWithData:[self highlightWaves]];		
 		//get the indices and increment by one
 		unsigned int *idx = (unsigned int*)([hdata bytes]);
-		unsigned int len = [hdata length]/sizeof(unsigned int);
+		unsigned int len,_lastIndex; 		
+		len = [hdata length]/sizeof(unsigned int);
+		_lastIndex = [waveformIndices lastIndex];
 		int i;
 		//NSUInteger  k;
 		for(i=0;i<len;i++)
 		{
-			if( idx[i] - firstIndex < num_spikes -1 )
+			//if( idx[i] - firstIndex < num_spikes -1 )
+			if(idx[i] - firstIndex < _lastIndex )
 			{
 				//idx[i]++;
-				idx[i] = [waveformIndices indexGreaterThanIndex: idx[i]];
+				idx[i] = [waveformIndices indexGreaterThanIndex: idx[i]-firstIndex] + firstIndex;
 				//advance one index
 			//k = [waveformIndices indexGreaterThanIndex:idx[i]];
 			//if(k != NSNotFound )
