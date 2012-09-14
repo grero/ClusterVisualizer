@@ -20,7 +20,7 @@
 //@synthesize filterClustersPredicate;
 @synthesize clustersSortDescriptor;
 @synthesize clustersSortDescriptors;
-@synthesize waveformsFile,currentDir,logFilePath;
+@synthesize waveformsFile,currentDir,logFilePath,lastOperation;
 @synthesize activeCluster,selectedCluster;
 //@synthesize selectedClusters;
 //@synthesize selectedWaveform;
@@ -728,6 +728,8 @@
 
 - (IBAction) loadClusterIds: (id)sender
 {
+	//first check whether there is a single file to load
+	//NSString *clusterFname = [currentDir stringByAppendingPathComponent: currentBaseName];
      
     NSOpenPanel *openPanel = [NSOpenPanel openPanel];
     //set a delegate for openPanel so that we can control which files can be opened
@@ -2489,7 +2491,7 @@
                 if( (tpts[pts[0]+1] > [[[self wfv] globalIndices] lastIndex]) || (tpts[pts[0]] < [[[self wfv] globalIndices] firstIndex]) )
                 {
                     //update the waveformsview first
-                    [self updateWaveformsFromCluster:[self selectedCluster] fromIndex:tpts[pts[0]] toIndex:tpts[MIN(pts[0]+maxWaveformsDrawn,rows-1)]];
+                    [self updateWaveformsFromCluster:[self selectedCluster] fromIndex:tpts[pts[0]] toIndex:tpts[MIN(pts[0]+maxWaveformsDrawn,_npoints-1)]];
                     //reset the index
                     [[self wfv] setFirstIndex:pts[0]];
                 }
@@ -2502,6 +2504,8 @@
             }
         }
 		free(tpts);
+		//update the last operation
+		[self setLastOperation: @"Shortest ISI"];
     }
     else if ( [selection isEqualToString:@"Remove waveforms"] )
     {
@@ -2574,6 +2578,12 @@
         
         [[[[self fw] menu] itemWithTitle:@"Remove points from cluster"] setEnabled:NO];
 		[fw setNeedsDisplay:YES];
+		if([lastOperation isEqualToString: @"Shortest ISI"])
+		{
+			//recompute shortest ISI
+			[sender selectItemWithTitle: lastOperation];
+			[self performClusterOption: sender];
+		}
 		
     }
     else if( [selection isEqualToString:@"Make Template"] )
@@ -3363,6 +3373,12 @@
 	//record in log
 	freopen([ logFilePath cStringUsingEncoding: NSASCIIStringEncoding],"a+",stderr);
 	NSLog(@"merged clusters %@ to form cluster %@", clusterNames, [new_cluster clusterId]);
+	//update the cluster menus
+	NSMenu *addToClustersMenu, *moveToClustersMenu;
+    addToClustersMenu = [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] submenu];
+    moveToClustersMenu = [[[self clusterMenu] itemWithTitle:@"Move points to cluster"] submenu];
+	[addToClustersMenu addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[new_cluster clusterId] intValue] ] action:@selector(performClusterOption:) keyEquivalent:@""];
+	[moveToClustersMenu addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[new_cluster clusterId] intValue] ] action:@selector(performClusterOption:) keyEquivalent:@""];
 
 }
 
@@ -3468,6 +3484,15 @@
     [fw hideCluster:cluster];
     //give the points back to the noise cluster
     [[Clusters objectAtIndex:0] addPoints:[cluster points]];
+	//update the cluster menu
+	NSMenu *addToClustersMenu, *moveToClustersMenu;
+    addToClustersMenu = [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] submenu];
+    moveToClustersMenu = [[[self clusterMenu] itemWithTitle:@"Move points to cluster"] submenu];
+	NSString *menuTitle = [NSString stringWithFormat:@"Cluster %d", [[cluster clusterId] intValue] ];
+	NSMenuItem *menuItem = [addToClustersMenu itemWithTitle: menuTitle];
+	[addToClustersMenu removeItem: menuItem];
+	menuItem = [moveToClustersMenu itemWithTitle: menuTitle];
+	[moveToClustersMenu removeItem: menuItem];
 	//record in log
 	freopen([ logFilePath cStringUsingEncoding: NSASCIIStringEncoding],"a+",stderr);
 	NSLog(@"deleted cluster %@", [cluster clusterId]);
