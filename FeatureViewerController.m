@@ -30,7 +30,7 @@
 @synthesize histView;
 @synthesize stimInfo;
 @synthesize clusterMenu,waveformsMenu,clusterNotesPanel;
-
+@synthesize descriptor;
 -(void)awakeFromNib
 {
     //[self setClusters:[NSMutableArray array]];
@@ -1391,6 +1391,11 @@
 			{
 				T = [[reorder objectAtIndex:i] integerValue]-1;
 				[reorder_index appendBytes:&T length:sizeof(T)]; 
+			}
+			//should check whether we are loading only a subset of the channels
+			if(nchannels != count)
+			{
+
 			}
             reorderIndex = [[NSData dataWithData:reorder_index] retain];
 		}
@@ -3942,6 +3947,56 @@
         [[[[self fw] menu] itemWithTitle:@"Remove points from cluster"] setEnabled:NO];
 		[fw setNeedsDisplay:YES];
 
+}
+
+-(void)readDescriptor:(NSString*)filename
+{
+	NSArray *fileContents,*words;
+	NSMutableArray *_group,*_channel,*_state,*_type;
+	NSEnumerator *lineEnumerator;
+	NSString *line,*word;
+	NSMutableDictionary *_descriptor;
+	NSRange range;
+
+	fileContents = [[NSString stringWithContentsOfFile: filename] componentsSeparatedByCharactersInSet: [NSCharacterSet newlineCharacterset]];
+	lineEnumerator = [fileContents objectEnumerator];
+	//loop through
+	while( (line = [lineEnumerator nextObject]))
+	{
+		word = [[line componentsSeparatedByCharactersInSet: [NSCharacterSet whitespaceCharacterSet]] lastObject];
+		if( [[line lowercaseString] hasPrefix: @"number of channels"])
+		{
+			[_descriptor setObject: [NSNumber numberWithIint: [word intValue]] forKey:@"numChannels"];
+		}
+		else if( [[line lowercaseString] hasPrefix: @"sample rate"])
+		{
+			[_descriptor setObject: [NSNumber numberWithIint: [word floatValue]] forKey:@"sampleRate"];
+		}
+		else if( [[line lowercaseString] hasPrefix: @"gain"])
+		{
+			[_descriptor setObject: [NSNumber numberWithIint: [word floatValue]] forKey:@"gain"];
+		}
+		else
+		{
+			words = [line componentsSeparatedByCharactersInSet: [NSCharacterSet whitespaceCharacterSet]];
+			range = [[word firstObject] rangeOfCharactersFromSet: [NSCharacterSet decimalDigitCharacterSet]];
+			if (range.location == 0)
+			{
+				//line begins with anumber
+				[_channel addObject: [NSNumber numberWithInt: [[words objectAtIndex: 0] integerValue]]];
+				[_type addObject: [[words objectAtIndex: 1] lowercaseString]];
+				[_group addObject: [NSNumber numberWithInt: [[words objectAtIndex: 2] integerValue]]];
+				[_state addObject: [[words objectAtIndex: 3] lowercaseString]];
+
+			}
+		}
+
+	}
+	[_descriptor setObject: _channel forKey: @"channel"];
+	[_descriptor setObject: _group forKey: @"group"];
+	[_descriptor setObject: _type forKey: @"type"];
+	[_descriptor setObject: _state forKey: @"state"];
+	[self setDescriptor: _descriptor];
 }
 
 

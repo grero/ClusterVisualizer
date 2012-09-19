@@ -54,7 +54,8 @@
 	NSAttributedString *releaseNotes;
     StimInfo *stimInfo;
 	NSUInteger currentTimeIndex;
-	NSString *logFilePath;
+	NSString *logFilePath,*lastOperation;
+	NSDictionary *descriptor;
     
     NSMenu *waveformsMenu;
     
@@ -132,6 +133,7 @@
 - (IBAction)saveFeatureSpace:(id)sender;
 -(void)cycleDimensionsUsingTimer:(NSTimer*)timer;
 -(void)movePointsFromCluster:(Cluster*)fromCluster toCluster: (Cluster*)toCluster;
+-(void)readDescriptor:(NSString*)filename;
 
 
 //@property (assign) IBOutlet NSWindow *window;
@@ -151,7 +153,7 @@
 @property (retain, readwrite) NSPredicate *filterClustersPredicate;
 @property (retain, readwrite) NSSortDescriptor *clustersSortDescriptor;
 @property (retain, readwrite) NSMutableArray *clustersSortDescriptors;
-@property (retain, readwrite) NSString *waveformsFile,*currentDir,*logFilePath;
+@property (retain, readwrite) NSString *waveformsFile,*currentDir,*logFilePath,*lastOperation;
 @property (assign,readwrite) Cluster *activeCluster, *selectedCluster;
 @property (assign,readwrite) NSIndexSet *selectedClusters;
 @property (retain,readwrite) NSString *selectedWaveform;
@@ -159,4 +161,5 @@
 @property (retain,readwrite) NSAttributedString *releasenotes;
 @property (retain,readwrite) StimInfo *stimInfo;
 @property (retain,readwrite) NSMenu *waveformsMenu;
+@property (retain, readwrite) NSDictionary *descriptor;
 @end
