@@ -828,15 +828,18 @@
         NSEnumerator *_clustersEnumerator = [tempArray objectEnumerator];
         while( _cluster = [_clustersEnumerator nextObject] )
         {
-            unsigned int *_points = (unsigned int*)[[_cluster points] bytes];
-            unsigned int _npoints = [[_cluster npoints] intValue];
+			NSUInteger _idx;
+			NSIndexSet *_indexSet;
             float *_color = (float*)[[_cluster color] bytes];
-            for(i=0;i<_npoints;i++)
-            {
-                cluster_colors[3*_points[i]] = _color[0];
-                cluster_colors[3*_points[i]+1] = _color[1];
-                cluster_colors[3*_points[i]+2] = _color[2];
-            }
+			_indexSet = [_cluster indices];
+			_idx = [_indexSet firstIndex];
+			while( _idx != NSNotFound )
+			{
+				cluster_colors[3*_idx] = _color[0];
+				cluster_colors[3*_idx+1] = _color[1];
+				cluster_colors[3*_idx+2] = _color[2];
+				_idx = [_indexSet indexGreaterThanIndex: _idx];
+			}
         }
         [tempArray makeObjectsPerformSelector:@selector(makeValid)];
         
