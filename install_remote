@@ -1,0 +1,4 @@
+#!/bin/bash
+
+rsync -ruvzDtpE build/Release/FeatureViewer.app grogee@work21.neuralc:'~/Applications/'
+
