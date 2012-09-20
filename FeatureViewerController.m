@@ -158,6 +158,15 @@
 {
 	NSAutoreleasePool *_pool;
 	_pool = [[NSAutoreleasePool alloc] init];
+	//if there is a timer running, we want to stop it, such that we don't overwrite the new clusters before they have had  chance to get loaded
+	if ( archiveTimer != nil )
+	{
+		if( [archiveTimer isValid] )
+		{
+			[archiveTimer inValidate];
+		}
+	}
+
 	//data object to hold the feature data
 	NSString *directory = [path stringByDeletingLastPathComponent];
     [self setCurrentDir: directory];
