@@ -1909,6 +1909,10 @@
         {
             
         }
+        else if( [[theEvent characters] isEqualToString:@"i"] )
+		{
+			[self invertSelection:self];
+		}
 		else if ([ theEvent modifierFlags] & NSControlKeyMask )
 		{
 			unsigned int minChannel = [[highlightedChannels objectAtIndex:0] unsignedIntValue];
@@ -2210,6 +2214,54 @@
 -(void)correlateWaveforms:(id)sender
 {
     [[NSNotificationCenter defaultCenter] postNotificationName:@"performClusterOption" object:self userInfo:[NSDictionary dictionaryWithObjectsAndKeys:@"Find correlated waverforms", @"option",nil]];
+}
+
+
+-(void)invertSelection:(id)sender
+{
+	//invert the selection, i.e. select all those waveforms not currently selected
+	if(highlightWaves == nil )
+	{
+		return;
+	}
+	unsigned int *_hpoints,_nhpoints,_npoints,nnpoints,i;
+	_nhpoints = [highlightWaves length]/sizeof(unsigned int);
+	NSMutableIndexSet *newIndex;
+	NSUInteger *_index;
+	unsigned int *wfidx;
+	if(_nhpoints == 0 )
+	{
+		return;
+	}
+	_npoints = [waveformIndices count];
+	if( _npoints == _nhpoints )
+	{
+		//deselect all
+	}
+	nnpoints = _npoints - _nhpoints;
+	newIndex = [NSMutableIndexSet indexSet];
+	[newIndex addIndexes: waveformIndices];
+	wfidx = malloc(nnpoints*sizeof(unsigned int));
+	_index = malloc(nnpoints*sizeof(NSUInteger));
+	_hpoints = (unsigned int*)[highlightWaves bytes];
+	//remove the currently selected waveforms
+	for(i=0;i<_nhpoints;i++)	
+	{
+		[newIndex removeIndex: _hpoints[i]];
+	}
+	//a big backward; 
+	[newIndex getIndexes: _index maxCount: _npoints-_nhpoints inIndexRange: nil];
+	//add firstIndex
+	for(i=0;i<nnpoints;i++)
+	{
+		wfidx[i] = _index[i] + firstIndex;
+	}
+	free(_index);
+	NSData *hdata = [NSData dataWithBytes:wfidx length: nnpoints*sizeof(unsigned int)];
+	free(wfidx);
+	NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
+																[NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects:                                                                                                                     @"points",@"color",nil]];
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object: self userInfo: params];
 }
 
 -(void)dealloc
