@@ -35,7 +35,7 @@
 @synthesize mask;
 @synthesize waveformsImage;
 @synthesize featureDims,det;
-@synthesize description,notes;
+@synthesize notes;
 @synthesize isolationInfo;
 @synthesize wfMean, wfCov,channels;
 
@@ -1066,6 +1066,21 @@
         waveformsData = [NSData dataWithBytes:fwaveforms length:nwaves*wavesize*sizeof(float)];
     }
     return waveformsData;
+}
+
+-(void)setDescription:(NSString*)descr
+{
+	description = [[NSString stringWithString: descr] retain];
+}
+
+
+-(NSString*)description
+{
+	if( description == nil)
+	{
+		description = @"";
+	}
+	return description;
 }
 
 -(void) dealloc
