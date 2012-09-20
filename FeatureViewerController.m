@@ -3979,7 +3979,7 @@
 		else
 		{
 			words = [line componentsSeparatedByCharactersInSet: [NSCharacterSet whitespaceCharacterSet]];
-			range = [[word firstObject] rangeOfCharactersFromSet: [NSCharacterSet decimalDigitCharacterSet]];
+			range = [[words firstObject] rangeOfCharacterFromSet: [NSCharacterSet decimalDigitCharacterSet]];
 			if (range.location == 0)
 			{
 				//line begins with anumber
