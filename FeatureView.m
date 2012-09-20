@@ -844,13 +844,17 @@
         //get the indices to redraw
     [[self openGLContext] makeCurrentContext];
     GLuint *idx = malloc(_npoints*sizeof(GLuint));
+	unsigned int qidx;
 	if( _clusterPoints != NULL )
 	{
         //TODO: Also check if we are drawing all points or just a subset; if the latter, the number of drawn indices, nindices, should be smaller than the number of points in the cluster
 		for(i=0;i<_npoints;i++)
 		{
 			//idx[i] = tmp_idx[_clusterPoints[_points[i]]];
-			idx[i] = _clusterPoints[_points[i]-offset];
+			//need to check that this does not cause a negative inded
+			//
+			qidx = _points[i] >= offset ? _points[i]-offset : _points[i];
+			idx[i] = _clusterPoints[qidx];
 			//idx[i] = _points[i];
 		}
 	}
