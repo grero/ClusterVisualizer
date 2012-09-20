@@ -2247,7 +2247,7 @@
 	//remove the currently selected waveforms
 	for(i=0;i<_nhpoints;i++)	
 	{
-		[newIndex removeIndex: _hpoints[i]];
+		[newIndex removeIndex: _hpoints[i] - firstIndex];
 	}
 	//a big backward; 
 	[newIndex getIndexes: _index maxCount: _npoints-_nhpoints inIndexRange: nil];
