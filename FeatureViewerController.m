@@ -163,7 +163,7 @@
 	{
 		if( [archiveTimer isValid] )
 		{
-			[archiveTimer inValidate];
+			[archiveTimer invalidate];
 		}
 	}
 
@@ -1438,6 +1438,7 @@
             uindex[i] = (unsigned int)_index[i];
         }
         NSMutableIndexSet *tidx = [NSMutableIndexSet alloc];
+		//tidx holds the indices that we want to draw
         [tidx initWithIndexSet:[[cluster indices] indexesInRange:NSMakeRange(_index[0], _index[nindexes-1]-_index[0]+1) options:NSEnumerationConcurrent passingTest:^BOOL(NSUInteger idx, BOOL *stop) {
             return YES;
         }]];
@@ -1448,7 +1449,7 @@
 		qidx = [tidx firstIndex];
 		//the purpose of this is to establish the index of the first drawn wave in the global cluster index
 		fidx = [[cluster indices] countOfIndexesInRange: NSMakeRange(sidx,qidx-sidx)];
-		//now fidx is the number of indices in [cluster indices] prior to the first index in tidx, in other words, fidx is the desired index
+		//now fidx is the number of indices in [cluster indices] prior to the first index in tidx, in other words, fidx is the index of the first index in tidx relative to all cluster indices
 		/*
         while(sidx != NSNotFound )
         {
@@ -2121,13 +2122,13 @@
 	    _indexes = [selectedCluster indices]; 	
 		k = [_indexes firstIndex];
 		i = 0;
-		while( (k != NSNotFound ) && (i <= startIdx))
+		while( (k != NSNotFound ) && (i < startIdx))
 		{
 			k = [_indexes indexGreaterThanIndex: k];
 			i+=1;
 		}
 		startIdx = k;
-		while( (k != NSNotFound ) && (i <= endIdx))
+		while( (k != NSNotFound ) && (i < endIdx))
 		{
 			k = [_indexes indexGreaterThanIndex: k];
 			i+=1;
