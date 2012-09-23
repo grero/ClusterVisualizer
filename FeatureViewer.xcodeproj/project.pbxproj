@@ -535,7 +535,7 @@
 					"-L/usr/local/hdf5/lib",
 					"-lhdf5",
 				);
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx10.7;
 			};
 			name = Debug;
 		};
@@ -563,7 +563,7 @@
 					"-L/usr/local/hdf5/lib",
 					"-lhdf5",
 				);
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx10.7;
 			};
 			name = Release;
 		};

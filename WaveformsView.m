@@ -1414,21 +1414,21 @@
 }
     
 //event handlers
-/*-(void)mouseDown:(NSEvent*)theEvent
-//{
-//	NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
+-(void)mouseDown:(NSEvent*)theEvent
+{
+	NSPoint _currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
     //now we will have to figure out which waveform(s) contains this point
     //scale to data coorindates
     NSPoint dataPoint;
     NSRect viewBounds = [self bounds];
     //scale to data coordinates
-    dataPoint.x = (currentPoint.x*1.1*(wfMinmax[1]-wfMinmax[0]))/viewBounds.size.width+1.1*wfMinmax[0];
-    dataPoint.y = (currentPoint.y*1.1*(wfMinmax[3]-wfMinmax[2]))/viewBounds.size.height+1.1*wfMinmax[2];
+    dataPoint.x = (_currentPoint.x*(xmax-xmin))/viewBounds.size.width+xmin;
+    dataPoint.y = (_currentPoint.y*(1.1*ymax-1.1*ymin))/viewBounds.size.height+1.1*ymin;
 	
 	//get the channel corresponding to the point
-	NSNumber *channel = [NSNumber numberWithUnsignedInt:dataPoint.x/(channelHop+timepts)];
-	[highlightedChannels addObject: channel];
-}*/
+	//NSNumber *channel = [NSNumber numberWithUnsignedInt:dataPoint.x/(channelHop+timepts)];
+	currentPoint = dataPoint;
+}
 /*
 -(void)keyUp:(NSEvent *)theEvent
 {
@@ -1458,14 +1458,28 @@
 	//TODO: modify this to incorproate the new index
     //get current point in view coordinates
     GLfloat *_vertices;
-    NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
+    NSPoint _currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
     //now we will have to figure out which waveform(s) contains this point
     //scale to data coorindates
     NSPoint dataPoint;
     NSRect viewBounds = [self bounds];
     //scale to data coordinates
-    dataPoint.x = (currentPoint.x*(xmax-xmin))/viewBounds.size.width+xmin;
-    dataPoint.y = (currentPoint.y*(1.1*ymax-1.1*ymin))/viewBounds.size.height+1.1*ymin;
+    dataPoint.x = (_currentPoint.x*(xmax-xmin))/viewBounds.size.width+xmin;
+    dataPoint.y = (_currentPoint.y*(1.1*ymax-1.1*ymin))/viewBounds.size.height+1.1*ymin;
+	//check if we dragged
+	float d1,d2;
+	d1 = dataPoint.x-currentPoint.x;
+	d2 = dataPoint.y-currentPoint.y;
+	d1 = sqrt(d1*d1+d2*d2);
+	if(d1 > 10)
+	{
+		//dragging operation
+		isDragging = YES;
+	}
+	else
+	{
+		isDragging = NO;
+	}
     //here, we can simply figure out the smallest distance between the vector defined by
     //(dataPoint.x,dataPoint.y) and the waveforms vectors
     
@@ -1485,7 +1499,9 @@
 		p[1] = -dataPoint.y;
 		//if we have pressed the option key, only the currently highlighted waveforms are
 		//eligible for selection
-		unsigned int wfidx;
+		unsigned int *wfidx,k;
+		//k keeps track of the number of indices we ultimately want o highlight
+		k = 0;
 		if( ([theEvent modifierFlags] & NSAlternateKeyMask) && ([self highlightWaves] != NULL) )
 		{
 			float *d = malloc(wfLength*sizeof(float));
@@ -1496,11 +1512,18 @@
 			//use a for loop for now
 			unsigned int i,s;
 			float d_o;
+			k = 1;
+			wfidx =malloc(k*sizeof(unsigned int));
 			d_o = INFINITY;
 			s = 0;
 			[[self openGLContext] makeCurrentContext];
 			glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
 			_vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+			//check if vertices was mapped
+			if( _vertices == NULL )
+			{
+				return;
+			}
 			for(i=0;i<n;i++)
 			{
 				_sidx = sIdx[i]-firstIndex;
@@ -1519,7 +1542,7 @@
 			glUnmapBuffer(GL_ARRAY_BUFFER);
 			free(d);
 			free(D);
-			wfidx = sIdx[s];
+			*wfidx = sIdx[s];
 		}
 		else if ([ theEvent modifierFlags] & NSCommandKeyMask )
 		{
@@ -1541,46 +1564,86 @@
 			//get only the relevant vertices
 			//need to restrict ourselves to those vertices which are actually drawn
 			NSUInteger *_indexes = malloc(num_spikes*sizeof(NSUInteger));
+			NSUInteger _nspikes;
 			//copy the indexes
 			[waveformIndices getIndexes:_indexes maxCount:num_spikes inIndexRange:nil];
-			float *d = malloc(nWfVertices*sizeof(float));
-			float *D = malloc(2*nWfVertices*sizeof(float));
-			//substract the point
+			_nspikes = MIN(num_spikes, [waveformIndices count]);
 			[[self openGLContext] makeCurrentContext];
 			glBindBuffer(GL_ARRAY_BUFFER, wfVertexBuffer);
 			_vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
-			vDSP_vsadd(_vertices,3,p,D,2,nWfVertices);
-			vDSP_vsadd(_vertices+1,3,p+1,D+1,2,nWfVertices);
-			glUnmapBuffer(GL_ARRAY_BUFFER);
-			//sum of squares
-			vDSP_vdist(D,2,D+1,2,d,1,nWfVertices);
-			//find the index of the minimu distance
-			//vDSP_minvi(d,1,&fmin,&imin,nWfVertices);
-			int i,j;
-			float q;
-			fmin = INFINITY;
-			imin = 0;
-			//only search among the shown waveforms
-			for(i=0;i<num_spikes;i++)
+			//check if we were able to map the buffer
+			if( _vertices == NULL)
 			{
-				for(j=0;j<wavesize;j++)
+				return;
+			}
+			if (isDragging == NO )
+			{
+				float *d = malloc(nWfVertices*sizeof(float));
+				float *D = malloc(2*nWfVertices*sizeof(float));
+				//substract the point
+				vDSP_vsadd(_vertices,3,p,D,2,nWfVertices);
+				vDSP_vsadd(_vertices+1,3,p+1,D+1,2,nWfVertices);
+				glUnmapBuffer(GL_ARRAY_BUFFER);
+				//sum of squares
+				vDSP_vdist(D,2,D+1,2,d,1,nWfVertices);
+				//find the index of the minimu distance
+				//vDSP_minvi(d,1,&fmin,&imin,nWfVertices);
+				int i,j;
+				float q;
+				fmin = INFINITY;
+				imin = 0;
+				//only search among the shown waveforms
+				k = 1;
+				wfidx =malloc(k*sizeof(unsigned int));
+				for(i=0;i<num_spikes;i++)
 				{
-					q = d[_indexes[i]*wavesize+j];
-					if (q < fmin) {
-						fmin = q;
-						//imin = _indexes[i];
-						imin = i;
+					for(j=0;j<wavesize;j++)
+					{
+						q = d[_indexes[i]*wavesize+j];
+						if (q < fmin) {
+							fmin = q;
+							//imin = _indexes[i];
+							imin = i;
+						}
 					}
 				}
+					//we need to offset appropriately, since imin referes to the current drawn waveforms, not the full index set
+				*wfidx = _indexes[imin] + firstIndex;//(wfLength);
+				free(d);
+				free(D);
+			}
+			else
+			{
+				int i,j;
+				float *q,minpt[2],mxpt[2];
+				minpt[0] = MIN(dataPoint.x,currentPoint.x);
+				minpt[1] = MIN(dataPoint.y,currentPoint.y);
+				mxpt[0] = MAX(dataPoint.x,currentPoint.x);
+				mxpt[1] = MAX(dataPoint.y,currentPoint.y);
+				wfidx = malloc(num_spikes*sizeof(unsigned int));
+				k = 0;
+				for(i=0;i<num_spikes;i++)
+				{
+					for(j=0;j<wavesize;j++)
+					{
+						q = _vertices+3*(_indexes[i]*wavesize+j);
+						//check if the point is within the selection range
+						if((q[0] < mxpt[0] ) && (q[0]>=minpt[0]) && (q[1] < mxpt[1]) && (q[1]>=minpt[1]))
+						{
+							wfidx[k] = _indexes[i] + firstIndex;
+							k+=1;
+							break;
+
+						}
+					}
+				}
+				glUnmapBuffer(GL_ARRAY_BUFFER);
+
 			}
 			free(_indexes);
 			//imin now holds the index of the vertex closest to the point
 			//find the number of wfVertices per waveform
 			
-			free(d);
-			free(D);
-			//we need to offset appropriately, since imin referes to the current drawn waveforms, not the full index set
-			wfidx = imin + firstIndex;//(wfLength);
 		}
 		free(p);
 		//if command key is pressed, we want to add this wavform to the currently drawn waveforms
@@ -1591,20 +1654,25 @@
 		}
 		else
 		{
-			hdata = [NSMutableData dataWithCapacity:sizeof(unsigned int)];
+			hdata = [NSMutableData dataWithCapacity:k*sizeof(unsigned int)];
 		}
-		[hdata appendBytes:&wfidx length:sizeof(unsigned int)];
-		/*NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
-																	[NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects:                                                                                                                      @"points",@"color",nil]];
-		[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:params];*/
-		NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
-																	[NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects:                                                                                                                     @"points",@"color",nil]];
-		[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object: self userInfo: params];
-		unsigned int *idx = (unsigned int*)[hdata bytes];
-		
-		[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:self userInfo: [NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithUnsignedInt:idx[0]],
-														@"selected",nil]];
-		
+		[hdata appendBytes:wfidx length:k*sizeof(unsigned int)];
+		//check if we need to free wfidx
+		if(k>0)
+		{
+			free(wfidx);
+			NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
+																		[NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects:                                                                                                                     @"points",@"color",nil]];
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object: self userInfo: params];
+			//TODO: this is a HACK. Only send setInput if we are selecting a single waveform, i.e. if k==1
+			if(k==1)
+			{
+				unsigned int *idx = (unsigned int*)[hdata bytes];
+				
+				[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:self userInfo: [NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithUnsignedInt:idx[0]],
+															@"selected",nil]];
+			}
+		}	
 		//[self highlightWaveform:wfidx];
 	}
     
@@ -1841,6 +1909,10 @@
         {
             
         }
+        else if( [[theEvent characters] isEqualToString:@"i"] )
+		{
+			[self invertSelection:self];
+		}
 		else if ([ theEvent modifierFlags] & NSControlKeyMask )
 		{
 			unsigned int minChannel = [[highlightedChannels objectAtIndex:0] unsignedIntValue];
@@ -1896,14 +1968,17 @@
 		hdata = [NSMutableData dataWithData:[self highlightWaves]];		
 		//get the indices and increment by one
 		unsigned int *idx = (unsigned int*)([hdata bytes]);
-		unsigned int len = [hdata length]/sizeof(unsigned int);
+		unsigned int len,_firstIndex; 
+		len = [hdata length]/sizeof(unsigned int);
+		_firstIndex = [waveformIndices firstIndex]	;
 		//NSUInteger k;
 		int i;
 		for(i=0;i<len;i++)
 		{
-			if( idx[i] > firstIndex )
+			if( idx[i] - firstIndex > _firstIndex )
 			{
-				idx[i]--;
+				//idx[i]--;
+				idx[i] = [waveformIndices indexLessThanIndex: idx[i]-firstIndex] + firstIndex;
 				//move one index back
 			//k = [waveformIndices indexLessThanIndex:idx[i]];
 			//if( k != NSNotFound )
@@ -1914,7 +1989,7 @@
 	else
 	{
 		//no highlighted waves, so set highlight to the first wave
-		unsigned int idx = 0;//(unsigned int)[waveformIndices firstIndex];
+		unsigned int idx = firstIndex;//(unsigned int)[waveformIndices firstIndex];
 		hdata = [NSMutableData dataWithBytes:&idx length:sizeof(unsigned int)];
 
 	}
@@ -1939,14 +2014,18 @@
 		hdata = [NSMutableData dataWithData:[self highlightWaves]];		
 		//get the indices and increment by one
 		unsigned int *idx = (unsigned int*)([hdata bytes]);
-		unsigned int len = [hdata length]/sizeof(unsigned int);
+		unsigned int len,_lastIndex; 		
+		len = [hdata length]/sizeof(unsigned int);
+		_lastIndex = [waveformIndices lastIndex];
 		int i;
 		//NSUInteger  k;
 		for(i=0;i<len;i++)
 		{
-			if( idx[i] - firstIndex < num_spikes -1 )
+			//if( idx[i] - firstIndex < num_spikes -1 )
+			if(idx[i] - firstIndex < _lastIndex )
 			{
-				idx[i]++;
+				//idx[i]++;
+				idx[i] = [waveformIndices indexGreaterThanIndex: idx[i]-firstIndex] + firstIndex;
 				//advance one index
 			//k = [waveformIndices indexGreaterThanIndex:idx[i]];
 			//if(k != NSNotFound )
@@ -1971,6 +2050,37 @@
 	[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:self userInfo: [NSDictionary dictionaryWithObjectsAndKeys:																							   [NSNumber numberWithUnsignedInt:idx[0]],
 													@"selected",nil]];
 }	
+
+-(IBAction)moveDown:(id)sender
+{
+	unsigned int startIdx,endIdx,maxDrawn;
+	maxDrawn = [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"];
+	maxDrawn = MAX(maxDrawn,num_spikes);
+	startIdx = firstIndex; 
+	if( startIdx > maxDrawn)
+	{
+		startIdx -= maxDrawn;
+	}
+	else
+	{
+		startIdx = 0;
+	}
+	endIdx = startIdx + maxDrawn;
+	[[NSNotificationCenter defaultCenter] postNotificationName: @"loadWaveforms" object: self userInfo: [NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithInt: startIdx],@"startIdx",[NSNumber numberWithInt: endIdx], @"endIdx",nil]];
+}
+
+-(IBAction)moveUp:(id)sender
+{
+	unsigned int startIdx,endIdx,maxDrawn;
+	maxDrawn = [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"];
+	//num_spikes should always be smaller than or equal to maxDrawn
+	maxDrawn = MAX(maxDrawn,num_spikes);
+	startIdx = firstIndex;
+	endIdx = startIdx + maxDrawn;
+	startIdx+=maxDrawn;
+	endIdx+=maxDrawn;
+	[[NSNotificationCenter defaultCenter] postNotificationName: @"loadWaveforms" object: self userInfo: [NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithInt: startIdx],@"startIdx",[NSNumber numberWithInt: endIdx], @"endIdx",nil]];
+}
 
 -(void)setDrawMean:(BOOL)_drawMean
 {
@@ -2104,6 +2214,54 @@
 -(void)correlateWaveforms:(id)sender
 {
     [[NSNotificationCenter defaultCenter] postNotificationName:@"performClusterOption" object:self userInfo:[NSDictionary dictionaryWithObjectsAndKeys:@"Find correlated waverforms", @"option",nil]];
+}
+
+
+-(void)invertSelection:(id)sender
+{
+	//invert the selection, i.e. select all those waveforms not currently selected
+	if(highlightWaves == nil )
+	{
+		return;
+	}
+	unsigned int *_hpoints,_nhpoints,_npoints,nnpoints,i;
+	_nhpoints = [highlightWaves length]/sizeof(unsigned int);
+	NSMutableIndexSet *newIndex;
+	NSUInteger *_index;
+	unsigned int *wfidx;
+	if(_nhpoints == 0 )
+	{
+		return;
+	}
+	_npoints = [waveformIndices count];
+	if( _npoints == _nhpoints )
+	{
+		//deselect all
+	}
+	nnpoints = _npoints - _nhpoints;
+	newIndex = [NSMutableIndexSet indexSet];
+	[newIndex addIndexes: waveformIndices];
+	wfidx = malloc(nnpoints*sizeof(unsigned int));
+	_index = malloc(nnpoints*sizeof(NSUInteger));
+	_hpoints = (unsigned int*)[highlightWaves bytes];
+	//remove the currently selected waveforms
+	for(i=0;i<_nhpoints;i++)	
+	{
+		[newIndex removeIndex: _hpoints[i] - firstIndex];
+	}
+	//a big backward; 
+	[newIndex getIndexes: _index maxCount: _npoints-_nhpoints inIndexRange: nil];
+	//add firstIndex
+	for(i=0;i<nnpoints;i++)
+	{
+		wfidx[i] = _index[i] + firstIndex;
+	}
+	free(_index);
+	NSData *hdata = [NSData dataWithBytes:wfidx length: nnpoints*sizeof(unsigned int)];
+	free(wfidx);
+	NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:hdata,
+																[NSData dataWithData: [self getColor]],nil] forKeys: [NSArray arrayWithObjects:                                                                                                                     @"points",@"color",nil]];
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object: self userInfo: params];
 }
 
 -(void)dealloc

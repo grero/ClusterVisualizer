@@ -35,9 +35,21 @@
 @synthesize mask;
 @synthesize waveformsImage;
 @synthesize featureDims,det;
-@synthesize description,notes;
+@synthesize notes;
 @synthesize isolationInfo;
 @synthesize wfMean, wfCov,channels;
+
+-(id) init
+{
+	self = [super init];
+	if( self != nil)
+	{
+		shortISIs = [[NSNumber numberWithInt: 0] retain];
+        lRatio = [[NSNumber numberWithFloat:0.0] retain];
+        isolationDistance = [[NSNumber numberWithFloat:0.0] retain];
+	}
+	return self;
+}
 
 -(void)setActive:(NSInteger)value
 {
@@ -98,6 +110,7 @@
     {
         [self setName: [[[[self clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[self npoints] stringValue]]];
     }
+	[self updateDescription];
 }
 
 -(void)setColor:(NSData*)new_color
@@ -310,7 +323,15 @@
 		}
 		//use chi-square cdf instead
 		//we want the probabilty for a distnace larger than the one measured to be as large as possible, i.e. the given point is close to the center
-		p[i] = 1-chi2_cdf(x,cols);
+		//TODO: this check is necessary if the covariance matrix is not positive definite
+		if( x >0 )
+		{
+			p[i] = 1-chi2_cdf(x,cols);
+		}
+		else
+		{
+			p[i] = 1.0;
+		}
         //p[i] = -0.5*x + f;
         k = [[self indices] indexGreaterThanIndex:k];
         i+=1;
@@ -426,8 +447,8 @@
         for(l=0;l<cols;l++)
         {
             //unbiased
-            _sq[i*cols+l]/=([[self indices] count]-1);
             _sq[i*cols+l]-=_mean[i]*_mean[l];
+            _sq[i*cols+l]/=([[self indices] count]-1);
         }
     }
     [self setCov:[NSData dataWithBytes:_sq length:cols*cols*sizeof(double)]];
@@ -517,6 +538,8 @@
 			//prevent leak
 			free(_useMean);
 		}
+		//update description
+		[self updateDescription];
 		return fd;
 
 
@@ -537,11 +560,17 @@
     }
     float *_data = (float*)[data bytes];
     float *_mean = (float*)[[self mean] bytes];
+	double *_covi = (double*)[[self covi] bytes];
 	if( _mean == NULL )
 	{
 		[self computeFeatureMean:data];
 		_mean = (float*)[[self mean] bytes];
 
+	}
+	if( _covi == NULL)
+	{
+		[self computeFeatureCovariance: data];
+		_covi = (double*)[[self covi] bytes];
 	}
 				
 	unsigned int ndim = (unsigned int)([[self mean] length]/sizeof(float));
@@ -551,13 +580,13 @@
     unsigned int N = [idx count];
 
     NSUInteger *_idx = malloc(N*sizeof(NSUInteger));
-    [idx getIndexes:_idx maxCount:_ntpoints inIndexRange:nil];
+    [idx getIndexes:_idx maxCount:N inIndexRange:nil];
     
 	float *d = malloc(ndim*sizeof(float));
-  
-	float *D = malloc(N*sizeof(float));
-	float q;
-	NSUInteger i,k,j;
+	double *q = malloc(ndim*sizeof(double));
+	double *D = malloc(N*sizeof(double));
+	double x;
+	NSUInteger i,k,j,m,l;
 	k = 0;
 	j = 0;
 	for(i=0;i<N;i++)
@@ -565,17 +594,36 @@
         k = _idx[i];
         //compute the distance
         vDSP_vsub(_mean,1,_data+k*ndim,1,d,1,ndim);
+		//multiply by the inverse covariance matrix
+        for(m=0;m<ndim;m++)
+        {
+            q[m] = 0;
+            for(l=0;l<ndim;l++)
+            {
+                q[m]+=(_covi[m*ndim+l])*d[l];
+            }
+        }
+        //compute mahalanobis distance
+        //x = cblas_dsdot(cols, d, 1, q, 1);
+		//do it manually
+		x = 0;
+		for(m=0;m<ndim;m++)
+		{
+			x+=d[m]*q[m];
+		}
         //sum of squares
-        vDSP_svesq(d,1,&q,ndim);
-        D[i] = sqrt(q);
+        //vDSP_svesq(d,1,&q,ndim);
+        D[i] = x;//sqrt(q);
 	}
     free(_idx);
 	//sort
-	vDSP_vsort(D,N,1);
+	vDSP_vsortD(D,N,1);
 	//isolation distance is the distance to the n'th closest point not in this cluster,
 	//where n is the number of points in this cluster
 	[self setIsolationDistance: [NSNumber numberWithFloat:D[n-1]]];
+	[self updateDescription];
 	free(d);
+	free(q);
 	free(D);
 }
 
@@ -838,6 +886,9 @@
 	[coder encodeObject: mean forKey:@"featureMean"];
 	[coder encodeObject: cov forKey:@"featureCov"];
 	[coder encodeObject: covi forKey:@"featureCovi"];
+	[coder encodeObject: isolationDistance forKey: @"isolationDistance"];
+	[coder encodeObject: shortISIs forKey: @"shortISIs"];
+	[coder encodeObject: lRatio forKey: @"lRatio"];
 }
 
 -(id)initWithCoder:(NSCoder*)coder
@@ -855,6 +906,21 @@
 	mean = [[coder decodeObjectForKey:@"featureMean"] retain];
 	cov = [[coder decodeObjectForKey:@"featureCov"] retain];
 	covi = [[coder decodeObjectForKey:@"featureCovi"] retain];
+	lRatio = [[coder decodeObjectForKey: @"lRatio"] retain];
+	shortISIs = [[coder decodeObjectForKey: @"shortISIs"] retain];
+	isolationDistance = [[coder decodeObjectForKey: @"isolationDistance"] retain];
+	if( isolationDistance == nil)
+	{
+		isolationDistance = [[NSNumber numberWithFloat: 0.0] retain];
+	}
+	if( shortISIs == nil )
+	{
+		shortISIs = [[NSNumber numberWithInt: 0] retain];
+	}
+	if( lRatio == nil )
+	{
+		lRatio = [[NSNumber numberWithFloat: 0.0] retain];
+	}
     //set the textcolor
     float *buffer = (float*)[color bytes];
     textColor = [[NSColor colorWithCalibratedRed:buffer[0] green:buffer[1] blue:buffer[2] alpha:1.0] retain];
@@ -870,8 +936,8 @@
 
 -(void)updateDescription
 {
-	NSArray *components = [NSArray arrayWithObjects:[npoints stringValue],[shortISIs stringValue],[lRatio stringValue],[isolationDistance stringValue],nil];
-	NSArray *keys = [NSArray arrayWithObjects:@"#points", @"shortISI",@"L-ratio",@"IsoDist",nil];
+	NSArray *components = [NSArray arrayWithObjects:[npoints stringValue],[shortISIs stringValue],[lRatio stringValue],[isolationDistance stringValue],[clusterId stringValue],nil];
+	NSArray *keys = [NSArray arrayWithObjects:@"#points", @"shortISI",@"L-ratio",@"IsoDist",@"clusterId",nil];
 	NSDictionary *descr = [NSDictionary dictionaryWithObjects: components forKeys: keys];
 	[self setDescription:[descr description]];
 }
@@ -1000,6 +1066,21 @@
         waveformsData = [NSData dataWithBytes:fwaveforms length:nwaves*wavesize*sizeof(float)];
     }
     return waveformsData;
+}
+
+-(void)setDescription:(NSString*)descr
+{
+	description = [[NSString stringWithString: descr] retain];
+}
+
+
+-(NSString*)description
+{
+	if( description == nil)
+	{
+		description = @"";
+	}
+	return description;
 }
 
 -(void) dealloc

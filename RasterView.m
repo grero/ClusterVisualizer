@@ -229,7 +229,7 @@ static void drawCircle(GLfloat r, GLuint n)
         {
             tidx = (unsigned int)(_vertices[3*i]/30000.0);
             _vertices[3*i] -= tidx*30000.0;
-            NSLog(@"No stimulus frame information found. Assuming 30 second repetitions");
+            //NSLog(@"No stimulus frame information found. Assuming 30 second repetitions");
         }
         else
         {

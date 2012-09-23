@@ -497,8 +497,7 @@
 {   
 	unsigned int _nindices,i;
 	//get the intersection of the requested indices with the currently shown indices
-    NSIndexSet *cIndices = [currentCluster indices];
-	NSIndexSet *sIndices = [cIndices indexesPassingTest: ^(NSUInteger idx, BOOL *stop){
+	NSIndexSet *sIndices = [indexset indexesPassingTest: ^(NSUInteger idx, BOOL *stop){
 								return [indices containsIndex: idx];
 	}]; 
 	_nindices = [sIndices count];
@@ -520,11 +519,6 @@
 		nindices = _nindices;
 		[self setNeedsDisplay: YES];
 	}
-    //update the index
-    [indexset removeAllIndexes];
-    [indexset addIndexes:sIndices];
-    nindices = [indexset count];
-    
 
 }
 
@@ -801,27 +795,14 @@
     //NSData *color = [params objectForKey:@"color"];
 	//need to make this work when cluster is nil
 	NSData *color;
-	NSUInteger* _clusterPoints;
+	unsigned int* _clusterPoints;
     unsigned int _nclusterPoints = 0;
     unsigned int offset = 0;
 	if( cluster != nil )
 	{
 		color = [cluster color];
-        _nclusterPoints = [[cluster npoints] unsignedIntValue];
-        if( nindices < _nclusterPoints)
-        {
-            _nclusterPoints = nindices;
-            _clusterPoints = malloc(_nclusterPoints*sizeof(NSUInteger));
-            [indexset getIndexes: _clusterPoints maxCount:_nclusterPoints inIndexRange:nil];
-
-        }
-        else
-        {
-            _clusterPoints = malloc(_nclusterPoints*sizeof(NSUInteger));
-            [[cluster indices] getIndexes: _clusterPoints maxCount:_nclusterPoints inIndexRange:nil];
-        }
-		//_clusterPoints = (unsigned int*)[[cluster points] bytes];
-		
+		_clusterPoints = (unsigned int*)[[cluster points] bytes];
+		_nclusterPoints = [[cluster npoints] unsignedIntValue];
         if(_nclusterPoints == 0)
             _clusterPoints = NULL;
         //we have to determine the offset of the wfidx by finding the index of the cluster in the array of currently selected clusters
@@ -844,17 +825,12 @@
         //get the indices to redraw
     [[self openGLContext] makeCurrentContext];
     GLuint *idx = malloc(_npoints*sizeof(GLuint));
-	unsigned int qidx;
 	if( _clusterPoints != NULL )
 	{
-        //TODO: Also check if we are drawing all points or just a subset; if the latter, the number of drawn indices, nindices, should be smaller than the number of points in the cluster
 		for(i=0;i<_npoints;i++)
 		{
 			//idx[i] = tmp_idx[_clusterPoints[_points[i]]];
-			//need to check that this does not cause a negative inded
-			//
-			qidx = _points[i] >= offset ? _points[i]-offset : _points[i];
-			idx[i] = _clusterPoints[qidx];
+			idx[i] = _clusterPoints[_points[i]-offset];
 			//idx[i] = _points[i];
 		}
 	}
@@ -905,11 +881,6 @@
 
     }
 	free(idx);
-    //free _clusterPoints if we have declared it
-    if( _clusterPoints != NULL)
-    {
-        free(_clusterPoints);
-    }
     //update the menu
     [[[self menu] itemWithTitle:@"Add points to cluster"] setEnabled:YES];
     [[[self menu] itemWithTitle:@"Remove points from cluster"] setEnabled:YES];
@@ -1251,7 +1222,7 @@ static void drawFrame()
     //glViewport(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
     //glDepthRange(minmax[4],minmax[5]);
     //}
-    glClearColor(0.,0.,0.,1.0);
+    glClearColor(0,0,0,0);
     glClear(GL_COLOR_BUFFER_BIT);
 	
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -1371,7 +1342,7 @@ static void drawFrame()
     [context makeCurrentContext];
     
 
-    glClearColor(0,0, 0, 1.0);
+    glClearColor(0,0, 0, 0);
     glClearDepth(1.0);
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);

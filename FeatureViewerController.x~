@@ -20,7 +20,7 @@
 //@synthesize filterClustersPredicate;
 @synthesize clustersSortDescriptor;
 @synthesize clustersSortDescriptors;
-@synthesize waveformsFile,currentDir,logFilePath,lastOperation;
+@synthesize waveformsFile,currentDir;
 @synthesize activeCluster,selectedCluster;
 //@synthesize selectedClusters;
 //@synthesize selectedWaveform;
@@ -30,7 +30,7 @@
 @synthesize histView;
 @synthesize stimInfo;
 @synthesize clusterMenu,waveformsMenu,clusterNotesPanel;
-@synthesize descriptor;
+
 -(void)awakeFromNib
 {
     //[self setClusters:[NSMutableArray array]];
@@ -51,8 +51,6 @@
     
     [[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
 												 name:NSUserDefaultsDidChangeNotification object: nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:@"AdvanceTime" object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:@"loadWaveforms" object:nil];
 	//load the nibs
 	//setup defaults
 	/*NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -158,15 +156,6 @@
 {
 	NSAutoreleasePool *_pool;
 	_pool = [[NSAutoreleasePool alloc] init];
-	//if there is a timer running, we want to stop it, such that we don't overwrite the new clusters before they have had  chance to get loaded
-	if ( archiveTimer != nil )
-	{
-		if( [archiveTimer isValid] )
-		{
-			[archiveTimer invalidate];
-		}
-	}
-
 	//data object to hold the feature data
 	NSString *directory = [path stringByDeletingLastPathComponent];
     [self setCurrentDir: directory];
@@ -672,10 +661,7 @@
     //enable the time slider on the main menu
     [[[NSApp mainMenu] itemWithTitle: @"Time slider"] setEnabled:YES];
     //register for slider notifications
-    
-    //set the log file
-    [self setLogFilePath:[directory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.log", filebase]]];
-
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:@"AdvanceTime" object:nil];
 	[_pool drain];
 }
 
@@ -737,8 +723,6 @@
 
 - (IBAction) loadClusterIds: (id)sender
 {
-	//first check whether there is a single file to load
-	//NSString *clusterFname = [currentDir stringByAppendingPathComponent: currentBaseName];
      
     NSOpenPanel *openPanel = [NSOpenPanel openPanel];
     //set a delegate for openPanel so that we can control which files can be opened
@@ -837,18 +821,15 @@
         NSEnumerator *_clustersEnumerator = [tempArray objectEnumerator];
         while( _cluster = [_clustersEnumerator nextObject] )
         {
-			NSUInteger _idx;
-			NSIndexSet *_indexSet;
+            unsigned int *_points = (unsigned int*)[[_cluster points] bytes];
+            unsigned int _npoints = [[_cluster npoints] intValue];
             float *_color = (float*)[[_cluster color] bytes];
-			_indexSet = [_cluster indices];
-			_idx = [_indexSet firstIndex];
-			while( _idx != NSNotFound )
-			{
-				cluster_colors[3*_idx] = _color[0];
-				cluster_colors[3*_idx+1] = _color[1];
-				cluster_colors[3*_idx+2] = _color[2];
-				_idx = [_indexSet indexGreaterThanIndex: _idx];
-			}
+            for(i=0;i<_npoints;i++)
+            {
+                cluster_colors[3*_points[i]] = _color[0];
+                cluster_colors[3*_points[i]+1] = _color[1];
+                cluster_colors[3*_points[i]+2] = _color[2];
+            }
         }
         [tempArray makeObjectsPerformSelector:@selector(makeValid)];
         
@@ -1404,11 +1385,6 @@
 				T = [[reorder objectAtIndex:i] integerValue]-1;
 				[reorder_index appendBytes:&T length:sizeof(T)]; 
 			}
-			//should check whether we are loading only a subset of the channels
-			if(nchannels != count)
-			{
-
-			}
             reorderIndex = [[NSData dataWithData:reorder_index] retain];
 		}
 
@@ -1421,14 +1397,9 @@
         NSIndexSet *_indices;
         unsigned int *uindex;
         
-        irange =  NSMakeRange(startIndex, endIndex-startIndex);
+        irange =  NSMakeRange(startIndex, MIN(endIndex-startIndex,maxWaveformsDrawn));
         //get the number of remaining indices
         nindexes = [[cluster indices] countOfIndexesInRange:irange];
-        if(nindexes == 0)
-        {
-            return;
-        }
-        nindexes = MIN(nindexes,maxWaveformsDrawn);
         uindex = malloc(nindexes*sizeof(unsigned int));
         _index = malloc(nindexes*sizeof(NSUInteger));
         [[cluster indices] getIndexes:_index maxCount:nindexes inIndexRange:&irange];
@@ -1438,25 +1409,18 @@
             uindex[i] = (unsigned int)_index[i];
         }
         NSMutableIndexSet *tidx = [NSMutableIndexSet alloc];
-		//tidx holds the indices that we want to draw
-        [tidx initWithIndexSet:[[cluster indices] indexesInRange:NSMakeRange(_index[0], _index[nindexes-1]-_index[0]+1) options:NSEnumerationConcurrent passingTest:^BOOL(NSUInteger idx, BOOL *stop) {
+        [tidx initWithIndexSet:[[cluster indices] indexesInRange:NSMakeRange(_index[0], _index[nindexes-1]-_index[0]) options:NSEnumerationConcurrent passingTest:^BOOL(NSUInteger idx, BOOL *stop) {
             return YES;
         }]];
         //locate the first index
-        NSUInteger fidx,sidx,qidx;
+        NSUInteger fidx,sidx;
         fidx = 0;
         sidx = [[cluster indices] firstIndex];
-		qidx = [tidx firstIndex];
-		//the purpose of this is to establish the index of the first drawn wave in the global cluster index
-		fidx = [[cluster indices] countOfIndexesInRange: NSMakeRange(sidx,qidx-sidx)];
-		//now fidx is the number of indices in [cluster indices] prior to the first index in tidx, in other words, fidx is the index of the first index in tidx relative to all cluster indices
-		/*
         while(sidx != NSNotFound )
         {
-            sidx = [tidx indexGreaterThanIndex:sidx];
+            sidx = [[cluster indices] indexGreaterThanIndex:sidx];
             fidx+=1;
         }
-		*/
         [[self wfv] setGlobalIndices:tidx];
         [[self wfv] setFirstIndex:fidx];
         [tidx release];
@@ -2002,9 +1966,8 @@
 	{
 		//show the input panel
 		NSNumber *number = [[notification userInfo] objectForKey:@"selected"];
-		//TODO: this causes a double-trigger of highlight waveforms	
+		
 		[self setSelectedWaveform: [number stringValue]];
-		//
 		//[inputPanel makeKeyAndOrderFront:self];
 		[inputPanel orderFront:self];
 	}
@@ -2107,39 +2070,7 @@
             //also update the waveforms
             //we cheat for now, i.e.
             [self updateWaveformsFromCluster:selectedCluster fromIndex:startIdx toIndex:endIdx];
-            //a bit of a hack; we don't want to use firstinde here
-            [wfv setFirstIndex: 0];
         }
-
-	}
-	else if ([[notification name] isEqualToString:@"loadWaveforms"])
-	{
-		NSUInteger startIdx,endIdx,i,k;
-		NSIndexSet *_indexes;
-		startIdx = [[[notification userInfo] objectForKey:@"startIdx"] unsignedIntValue];
-		endIdx = [[[notification userInfo] objectForKey:@"endIdx"] unsignedIntValue];
-		//these refer to the local cluster coordinates; convert to global coordinates
-	    _indexes = [selectedCluster indices]; 	
-		k = [_indexes firstIndex];
-		i = 0;
-		while( (k != NSNotFound ) && (i < startIdx))
-		{
-			k = [_indexes indexGreaterThanIndex: k];
-			i+=1;
-		}
-		startIdx = k;
-		while( (k != NSNotFound ) && (i < endIdx))
-		{
-			k = [_indexes indexGreaterThanIndex: k];
-			i+=1;
-		}
-		if(k== NSNotFound)
-		{
-			k = [_indexes lastIndex];
-		}
-	    endIdx = k;	
-		//now update the waveforms
-		[self updateWaveformsFromCluster: [self selectedCluster] fromIndex: startIdx toIndex: endIdx];
 
 	}
     else if ([[notification name] isEqualToString:@"performClusterOption"] )
@@ -2509,7 +2440,7 @@
                 if( (tpts[pts[0]+1] > [[[self wfv] globalIndices] lastIndex]) || (tpts[pts[0]] < [[[self wfv] globalIndices] firstIndex]) )
                 {
                     //update the waveformsview first
-                    [self updateWaveformsFromCluster:[self selectedCluster] fromIndex:tpts[pts[0]] toIndex:tpts[MIN(pts[0]+maxWaveformsDrawn,_npoints-1)]];
+                    [self updateWaveformsFromCluster:[self selectedCluster] fromIndex:tpts[pts[0]] toIndex:tpts[MIN(pts[0]+maxWaveformsDrawn,rows-1)]];
                     //reset the index
                     [[self wfv] setFirstIndex:pts[0]];
                 }
@@ -2522,8 +2453,6 @@
             }
         }
 		free(tpts);
-		//update the last operation
-		[self setLastOperation: @"Shortest ISI"];
     }
     else if ( [selection isEqualToString:@"Remove waveforms"] )
     {
@@ -2532,8 +2461,7 @@
         {
             //remove the currently selected waveforms
             unsigned int *selected = (unsigned int*)[[fw highlightedPoints] bytes];
-			unsigned int nselected,i;
-			nselected = ([[fw highlightedPoints] length])/sizeof(unsigned int);
+			unsigned int nselected = ([[fw highlightedPoints] length])/sizeof(unsigned int);
 			if (nselected == 0) {
 				return;
 			}
@@ -2546,7 +2474,7 @@
 			//{
 			//	[selectedCluster setActive:0];
 			//	toggleActive = YES;
-				//[fw hideCluster:selectedCluster];
+				[fw hideCluster:selectedCluster];
 
 			//}
 			//[[Clusters objectAtIndex:0] setActive: 0];
@@ -2564,19 +2492,7 @@
             //GLuint _length = nselected/sizeof(unsigned int);
             [[fw highlightedPoints] setLength:0];
 			[fw setHighlightedPoints:NULL];
-            //TODO: this doesnt' work if we are not drawing the full cluster. In that case, we need to remove the point from the index set. Should I then just convert everything to indexset?
-            //[[fw indexset]
-           	NSMutableIndexSet *_rindices = [NSMutableIndexSet indexSet]; 
-			//copy the indices drawn in FeatureView
-			[_rindices addIndexes: [fw indexset]];
-			//remove the indices
-			for(i=0;i<nselected;i++)
-			{
-				[_rindices removeIndex: selected[i]];
-			}
-			//now draw the indices
-			[fw showIndices: _rindices];
-            //[fw showCluster:selectedCluster];
+            [fw showCluster:selectedCluster];
 			if([[wfv window] isVisible])
 			{
 				
@@ -2596,12 +2512,6 @@
         
         [[[[self fw] menu] itemWithTitle:@"Remove points from cluster"] setEnabled:NO];
 		[fw setNeedsDisplay:YES];
-		if([lastOperation isEqualToString: @"Shortest ISI"])
-		{
-			//recompute shortest ISI
-			[sender selectItemWithTitle: lastOperation];
-			[self performClusterOption: sender];
-		}
 		
     }
     else if( [selection isEqualToString:@"Make Template"] )
@@ -2668,22 +2578,8 @@
             }
             [[rasterView window] makeKeyAndOrderFront:self];
         }
-		//replace with Hide raster
-		NSUInteger oidx = [selectClusterOption indexOfItemWithTitle: @"Show raster"];
-		[selectClusterOption removeItemAtIndex: oidx];
-		[selectClusterOption insertItemWithTitle: @"Hide raster" atIndex: oidx];
         shouldShowRaster = YES;
     }
-    else if ([selection isEqualToString: @"Hide raster"] )
-	{
-		[[rasterView window] orderOut: self];
-		NSUInteger oidx = [selectClusterOption indexOfItemWithTitle: @"Hide raster"];
-		[selectClusterOption removeItemAtIndex: oidx];
-		[selectClusterOption insertItemWithTitle: @"Show raster" atIndex: oidx];
-		//make sure we also prevent raster view from receiveing notifications about highlights
-		[[NSNotificationCenter defaultCenter] removeObserver:[self rasterView]];
-		shouldShowRaster = NO;
-	}
     else if ([selection isEqualToString: @"Save clusters"] )
     {
         //check to see if the proper hierarchy exists
@@ -3185,9 +3081,7 @@
     NSArray *candidates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"active == YES"]];
     if ([candidates count] > 0)
     {
-        NSString *clusterDescriptionString;
-        NSMutableArray *clusterDescriptions = [NSMutableArray arrayWithCapacity:[candidates count]];
-        int* cluster_indices = calloc((params.rows+1),sizeof(int));
+        int* cluster_indices = calloc((params.rows+1),sizeof(int));    
         cluster_indices[0] = (unsigned int)[candidates count];
         NSEnumerator *cluster_enumerator = [[candidates filteredArrayUsingPredicate:[NSPredicate predicateWithFormat: @"valid==1"]] objectEnumerator];
         int i,npoints,cid;
@@ -3202,10 +3096,7 @@
                 cluster_indices[clusteridx[i]+1] = cid;
             }
             cid+=1;
-            //add the description of this cluster to the description array
-            [clusterDescriptions addObject:[cluster description]];
         }
-        clusterDescriptionString = [clusterDescriptions componentsJoinedByString:@"\n"];
         NSSavePanel *savePanel = [NSSavePanel savePanel];
 		[savePanel setNameFieldStringValue:[NSString stringWithFormat: @"%@.cut",currentBaseName]];
 		
@@ -3238,8 +3129,6 @@
 				[_alert release];
 
 			}
-            //save cluster info to string
-            [clusterDescriptionString writeToFile:[[[savePanel URL] path] stringByReplacingOccurrencesOfString:ext withString:@"info"] atomically:YES encoding:NSASCIIStringEncoding error:nil];
             
 		}
         free(cluster_indices);
@@ -3346,7 +3235,7 @@
 			_mean[i]+=_clmean[i]*_clnpoints;
 		}
 		//add to clusterNames
-		[clusterNames appendFormat: @"%@ ", [cl clusterId]];
+		[clusterNames appendFormat: @"%@ ", [cl clusterId]]:
 		
 	}
 	_clnpoints = [[new_cluster npoints] unsignedIntValue];
@@ -3368,7 +3257,7 @@
     [new_cluster computeISIs: timestamps];
  	//set parents	
 	[new_cluster setParents: [NSMutableArray arrayWithArray: clusters]];
-    nclusters = [Clusters count];
+    int nclusters = [Clusters count];
 	
     [self insertObject:new_cluster inClustersAtIndex:nclusters];
 	if( dataloaded == YES)
@@ -3389,14 +3278,8 @@
     [self setSelectedClusters:[NSIndexSet indexSetWithIndex:nclusters]];
     selectedCluster = new_cluster;
 	//record in log
-	freopen([ logFilePath cStringUsingEncoding: NSASCIIStringEncoding],"a+",stderr);
+	freopen([ logFilePath cStringUsingEncoding: NSASCIIStringEncoding],'a+',stderr);
 	NSLog(@"merged clusters %@ to form cluster %@", clusterNames, [new_cluster clusterId]);
-	//update the cluster menus
-	NSMenu *addToClustersMenu, *moveToClustersMenu;
-    addToClustersMenu = [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] submenu];
-    moveToClustersMenu = [[[self clusterMenu] itemWithTitle:@"Move points to cluster"] submenu];
-	[addToClustersMenu addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[new_cluster clusterId] intValue] ] action:@selector(performClusterOption:) keyEquivalent:@""];
-	[moveToClustersMenu addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[new_cluster clusterId] intValue] ] action:@selector(performClusterOption:) keyEquivalent:@""];
 
 }
 
@@ -3502,18 +3385,6 @@
     [fw hideCluster:cluster];
     //give the points back to the noise cluster
     [[Clusters objectAtIndex:0] addPoints:[cluster points]];
-	//update the cluster menu
-	NSMenu *addToClustersMenu, *moveToClustersMenu;
-    addToClustersMenu = [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] submenu];
-    moveToClustersMenu = [[[self clusterMenu] itemWithTitle:@"Move points to cluster"] submenu];
-	NSString *menuTitle = [NSString stringWithFormat:@"Cluster %d", [[cluster clusterId] intValue] ];
-	NSMenuItem *menuItem = [addToClustersMenu itemWithTitle: menuTitle];
-	[addToClustersMenu removeItem: menuItem];
-	menuItem = [moveToClustersMenu itemWithTitle: menuTitle];
-	[moveToClustersMenu removeItem: menuItem];
-	//record in log
-	freopen([ logFilePath cStringUsingEncoding: NSASCIIStringEncoding],"a+",stderr);
-	NSLog(@"deleted cluster %@", [cluster clusterId]);
     [self removeObjectFromClustersAtIndex: [Clusters indexOfObject:cluster]];
 }
 
@@ -3636,13 +3507,12 @@
     [progressPanel setTitle:operationTitle];
     [progressPanel orderFront:self];
     [progressPanel startProgressIndicator];
-	NSArray *candidates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"active == YES"]];
-	Cluster *cl;
-	NSEnumerator *clusterEnumerator = [candidates objectEnumerator]; 
-	while( cl = [clusterEnumerator nextObject])
+    int i;
+    int nclusters = [Clusters count];
+    for(i=0;i<nclusters;i++)
     {
         //Use NSInvocationOperation here
-		NSInvocationOperation *operation = [[[NSInvocationOperation alloc] initWithTarget:cl selector:operationSelector object:[fw getVertexData]] autorelease];
+        NSInvocationOperation *operation = [[[NSInvocationOperation alloc] initWithTarget:[Clusters objectAtIndex:i] selector:operationSelector object:[fw getVertexData]] autorelease];
         [allFinished addDependency:operation];
         [queue addOperation:operation];
         /*[queue addOperationWithBlock:^{
@@ -3886,9 +3756,7 @@
 		//[selectClusterOption insertItemWithTitle:new_selection atIndex:idx];
 		//make sure the waveforms view receives notification of highlights
 		[[NSNotificationCenter defaultCenter] addObserver:[self wfv] selector:@selector(receiveNotification:) name:@"highlight" object:nil];
-		NSMutableIndexSet *_index = [NSMutableIndexSet indexSet];
-		[_index addIndexes: indexes];
-		selectedClusters = [[[NSIndexSet alloc] initWithIndexSet: _index] retain];
+		selectedClusters = [[[NSIndexSet alloc] initWithIndexSet:indexes] retain];
         [self setSelectedCluster:firstCluster];
 	}
 	
@@ -3960,56 +3828,6 @@
         [[[[self fw] menu] itemWithTitle:@"Remove points from cluster"] setEnabled:NO];
 		[fw setNeedsDisplay:YES];
 
-}
-
--(void)readDescriptor:(NSString*)filename
-{
-	NSArray *fileContents,*words;
-	NSMutableArray *_group,*_channel,*_state,*_type;
-	NSEnumerator *lineEnumerator;
-	NSString *line,*word;
-	NSMutableDictionary *_descriptor;
-	NSRange range;
-
-	fileContents = [[NSString stringWithContentsOfFile: filename] componentsSeparatedByCharactersInSet: [NSCharacterSet newlineCharacterset]];
-	lineEnumerator = [fileContents objectEnumerator];
-	//loop through
-	while( (line = [lineEnumerator nextObject]))
-	{
-		word = [[line componentsSeparatedByCharactersInSet: [NSCharacterSet whitespaceCharacterSet]] lastObject];
-		if( [[line lowercaseString] hasPrefix: @"number of channels"])
-		{
-			[_descriptor setObject: [NSNumber numberWithIint: [word intValue]] forKey:@"numChannels"];
-		}
-		else if( [[line lowercaseString] hasPrefix: @"sample rate"])
-		{
-			[_descriptor setObject: [NSNumber numberWithIint: [word floatValue]] forKey:@"sampleRate"];
-		}
-		else if( [[line lowercaseString] hasPrefix: @"gain"])
-		{
-			[_descriptor setObject: [NSNumber numberWithIint: [word floatValue]] forKey:@"gain"];
-		}
-		else
-		{
-			words = [line componentsSeparatedByCharactersInSet: [NSCharacterSet whitespaceCharacterSet]];
-			range = [[words firstObject] rangeOfCharacterFromSet: [NSCharacterSet decimalDigitCharacterSet]];
-			if (range.location == 0)
-			{
-				//line begins with anumber
-				[_channel addObject: [NSNumber numberWithInt: [[words objectAtIndex: 0] integerValue]]];
-				[_type addObject: [[words objectAtIndex: 1] lowercaseString]];
-				[_group addObject: [NSNumber numberWithInt: [[words objectAtIndex: 2] integerValue]]];
-				[_state addObject: [[words objectAtIndex: 3] lowercaseString]];
-
-			}
-		}
-
-	}
-	[_descriptor setObject: _channel forKey: @"channel"];
-	[_descriptor setObject: _group forKey: @"group"];
-	[_descriptor setObject: _type forKey: @"type"];
-	[_descriptor setObject: _state forKey: @"state"];
-	[self setDescriptor: _descriptor];
 }
 
 
