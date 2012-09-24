@@ -1411,6 +1411,15 @@
 			}
             reorderIndex = [[NSData dataWithData:reorder_index] retain];
 		}
+		if( reorderIndex != nil)
+		{
+			if( [reorderIndex length]/sizeof(unsigned int) > nchannels)
+			{
+				//don't use it
+				[reorderIndex release];
+				reorderIndex = nil;
+			}
+		}
 
         maxWaveformsDrawn = [[NSUserDefaults standardUserDefaults] integerForKey:@"maxWaveformsDrawn"]; 
         lastIndex = [[cluster indices] lastIndex];
@@ -1443,6 +1452,7 @@
             return YES;
         }]];
         //locate the first index
+		//something fishy is going on here...
         NSUInteger fidx,sidx,qidx;
         fidx = 0;
         sidx = [[cluster indices] firstIndex];
@@ -1579,6 +1589,16 @@
 			}
             reorderIndex = [[NSData dataWithData:reorder_index] retain];
 		}
+		if( reorderIndex != nil)
+		{
+			if( [reorderIndex length]/sizeof(unsigned int) > nchannels)
+			{
+				//don't use it
+				[reorderIndex release];
+				reorderIndex = nil;
+			}
+		}
+			
 		
         path = [[self waveformsFile] cStringUsingEncoding:NSASCIIStringEncoding];         
         npoints = [[cluster npoints] unsignedIntValue];
