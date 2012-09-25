@@ -1927,7 +1927,12 @@
 			NSDictionary *params  = [NSDictionary dictionaryWithObjectsAndKeys:wf,@"selected",nil];
 			[[NSNotificationCenter defaultCenter] postNotificationName:@"showInput" object:params];
 		}
-		
+		else if ([theEvent keyCode] == 51)	
+		{
+			//backspace
+			NSDictionary *userInfo = [NSDictionary dictionaryWithObject:@"Remove waveforms" forKey:@"option"];
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"performClusterOption" object:self userInfo: userInfo];
+		}
 		else {
 			[self interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
 		}
