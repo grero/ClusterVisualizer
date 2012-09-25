@@ -1781,6 +1781,8 @@
     }
     if( [[notification object] active] )
     {
+		//reset the last operation
+		[self setLastOperation: @"None"];
         [fw showCluster:[notification object]];
         [self setActiveCluster:[notification object]];
 		
@@ -2040,10 +2042,11 @@
 			[inputPanel makeKeyAndOrderFront:self];
 		}*/
 		//A highlight was received from waveformsview; this needs to be passed onto featureView
+		/*
         if( [[notification object] isKindOfClass:[Cluster class]] )
         {
             [[self fw] highlightPoints:[notification userInfo] inCluster: [notification object]];
-        }
+        }*/
         /*
 		else if (([self selectedClusters] != nil) && ([[self selectedClusters] count] >= 1 ) ) 
 		{
@@ -2052,9 +2055,8 @@
         
 		}*/
         
-		else
-		
-        {
+		//else
+        //{
 			//no cluster selected
             if([[[self fw] window] isVisible] )
             {
@@ -2078,7 +2080,7 @@
                     [[self fw] highlightPoints:[notification userInfo] inCluster:[self selectedCluster]];
                 }
             }
-		}	
+	//	}	
     }
 	else if ([[notification name] isEqualToString:@"Remove points from cluster"])	
 	{
@@ -2182,6 +2184,7 @@
             {
                 [self addPointsToCluster: [candidates objectAtIndex:0]];
             }
+			[self setLastOperation: @"Add points to cluster"];
         }
 		else if ([[[notification userInfo] objectForKey:@"option"] isEqualToString:@"Remove points from cluster"])
 		{
@@ -2379,6 +2382,7 @@
 		{
 			[self mergeClusters: candidates];
 		}
+		[self setLastOperation: @"Merge"];
     }
     else if ( [selection isEqualToString:@"Delete"] )
     {
@@ -2397,6 +2401,7 @@
                                                      name:@"ClusterStateChanged" object:nil];
         //[candidates makeObjectsPerformSelector:@selector(makeInactive)];
         //[candidates makeObjectsPerformSelector:@selector(makeInvalid)];
+		[self setLastOperation: @"Delete"];
         
     }
 	else if( [selection isEqualToString: @"Hide all"])
@@ -2410,6 +2415,7 @@
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(ClusterStateChanged:)
                                                      name:@"ClusterStateChanged" object:nil];
+		[self setLastOperation: @"Hide all"];
 	}
 	else if( [selection isEqualToString: @"Show all"])
 	{
@@ -2551,11 +2557,21 @@
         if([fw highlightedPoints] != NULL)
         {
             //remove the currently selected waveforms
+			//TODO: this could be a problem if the cluster which is selected is not the same as the one shown in the WaveformsView
             unsigned int *selected = (unsigned int*)[[fw highlightedPoints] bytes];
 			unsigned int nselected,i;
 			nselected = ([[fw highlightedPoints] length])/sizeof(unsigned int);
 			if (nselected == 0) {
 				return;
+			}
+			//check that the point is actually in the cluster
+			for(i = 0;i < nselected;i++)
+			{
+				if( [[selectedCluster indices] containsIndex: selected[i]] == NO)
+				{
+					//if not, don't do anything:bail out
+					return;
+				}
 			}
             //[[self activeCluster] setActive:0];
             //Cluster *_selectedCluster = [[clusterController selectedObjects] objectAtIndex:0];
@@ -2621,6 +2637,10 @@
 			//recompute shortest ISI
 			[sender selectItemWithTitle: lastOperation];
 			[self performClusterOption: sender];
+		}
+		else
+		{
+			//
 		}
 		
     }
