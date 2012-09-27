@@ -3529,6 +3529,8 @@
     [candidates enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         NSUInteger cid = [[obj clusterId] unsignedIntValue];
         [obj setClusterId:[NSNumber numberWithUnsignedInt: cid-1]];
+		//update the name as well
+		[obj createName];
     }];
     
     NSEnumerator *parentsEnumerator = [[cluster parents] objectEnumerator];
@@ -3542,19 +3544,24 @@
     [fw hideCluster:cluster];
     //give the points back to the noise cluster
     [[Clusters objectAtIndex:0] addPoints:[cluster points]];
+    [self removeObjectFromClustersAtIndex: [Clusters indexOfObject:cluster]];
+	NSLog(@"deleted cluster %@", [cluster clusterId]);
 	//update the cluster menu
 	NSMenu *addToClustersMenu, *moveToClustersMenu;
     addToClustersMenu = [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] submenu];
     moveToClustersMenu = [[[self clusterMenu] itemWithTitle:@"Move points to cluster"] submenu];
-	NSString *menuTitle = [NSString stringWithFormat:@"Cluster %d", [[cluster clusterId] intValue] ];
-	NSMenuItem *menuItem = [addToClustersMenu itemWithTitle: menuTitle];
-	[addToClustersMenu removeItem: menuItem];
-	menuItem = [moveToClustersMenu itemWithTitle: menuTitle];
-	[moveToClustersMenu removeItem: menuItem];
+	//rebuild the menus
+	[addToClustersMenu removeAllItems];
+	[Clusters enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop){
+        [addToClustersMenu addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[obj clusterId] intValue] ] action:@selector(performClusterOption:) keyEquivalent:@""];
+	}];
+	[moveToClustersMenu removeAllItems];
+	[Clusters enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop){
+        [moveToClustersMenu addItemWithTitle:[NSString stringWithFormat:@"Cluster %d", [[obj clusterId] intValue] ] action:@selector(performClusterOption:) keyEquivalent:@""];
+	}];
+
 	//record in log
 	freopen([ logFilePath cStringUsingEncoding: NSASCIIStringEncoding],"a+",stderr);
-	NSLog(@"deleted cluster %@", [cluster clusterId]);
-    [self removeObjectFromClustersAtIndex: [Clusters indexOfObject:cluster]];
 }
 
 - (void)keyDown:(NSEvent *)theEvent
