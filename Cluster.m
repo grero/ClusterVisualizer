@@ -100,16 +100,7 @@
 
 -(void)createName
 {
-    if([ self name] != NULL )
-    {
-        NSString *_name = [self name];
-        NSRange _range = [_name rangeOfString:@":"];
-        [self setName:[_name stringByReplacingCharactersInRange:NSMakeRange(_range.location+1,[_name length]-_range.location-1) withString:[[self npoints] stringValue]]];
-    }
-    else
-    {
-        [self setName: [[[[self clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[self npoints] stringValue]]];
-    }
+	[self setName: [[[[self clusterId] stringValue] stringByAppendingString:@": "] stringByAppendingString:[[self npoints] stringValue]]];
 	[self updateDescription];
 }
 
