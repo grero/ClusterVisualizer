@@ -2535,7 +2535,7 @@
                 if( (tpts[pts[0]+1] > [[[self wfv] globalIndices] lastIndex]) || (tpts[pts[0]] < [[[self wfv] globalIndices] firstIndex]) )
                 {
                     //update the waveformsview first
-                    [self updateWaveformsFromCluster:[self selectedCluster] fromIndex:tpts[pts[0]] toIndex:tpts[MIN(pts[0]+maxWaveformsDrawn,_npoints-1)]];
+                    [self updateWaveformsFromCluster:activeCluster fromIndex:tpts[pts[0]] toIndex:tpts[MIN(pts[0]+maxWaveformsDrawn,_npoints-1)]];
                     //reset the index
                     [[self wfv] setFirstIndex:pts[0]];
                 }
