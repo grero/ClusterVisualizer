@@ -3969,10 +3969,22 @@
         if([fw highlightedPoints] != NULL)
         {
             //remove the currently selected waveforms
+			NSIndexSet *_indexSet;
             unsigned int *selected = (unsigned int*)[[fw highlightedPoints] bytes];
-			unsigned int nselected = ([[fw highlightedPoints] length])/sizeof(unsigned int);
+			unsigned int nselected,i; 
+			nselected = ([[fw highlightedPoints] length])/sizeof(unsigned int);
+			
 			if (nselected == 0) {
 				return;
+			}
+			//check that all the points are in the cluster
+			_indexSet = [fromCluster indices];
+			for(i=0;i<nselected;i++)
+			{
+				if( [_indexSet containsIndex: selected[i]] == NO)
+				{
+					return;
+				}
 			}
 			[fw hideCluster:fromCluster];
 
