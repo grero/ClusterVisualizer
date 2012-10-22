@@ -31,6 +31,14 @@
     [theMenu insertItemWithTitle:@"Beep" action:@selector(beep:) keyEquivalent:@"" atIndex:0];
     [theMenu insertItemWithTitle:@"Honk" action:@selector(honk:) keyEquivalent:@"" atIndex:1];
     
-    [NSMenu popUpContextMenu:theMenu withEvent:theEvent forView:self];}
-
+    [NSMenu popUpContextMenu:theMenu withEvent:theEvent forView:self];
+}
+-(void)mouseUp:(NSEvent *)theEvent
+{
+	if( [theEvent clickCount] == 2)
+	{
+		//double click
+		[[NSNotificationCenter defaultCenter] postNotificationName:@"updateClusterImage" object: self];
+	}
+}
 @end
