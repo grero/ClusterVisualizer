@@ -1171,7 +1171,7 @@
     
     [selectClusterOption addItemsWithTitles:options];
     //once we have loaded the clusters, start up a timer that will ensure that data gets arhived automatically every 5 minutes
-    archiveTimer = [[NSTimer scheduledTimerWithTimeInterval:300 target:self selector:@selector(archiveClusters:) userInfo:nil repeats: YES] retain];
+    archiveTimer = [[NSTimer scheduledTimerWithTimeInterval:120 target:self selector:@selector(archiveClusters:) userInfo:nil repeats: YES] retain];
 	[_pool drain];
 }
 
@@ -1179,6 +1179,8 @@
 {
     //since we do not, in general want to load the entire waveforms file, we load instead a random subset
     //hide the feature view since we dont need it
+	//indicate that we want to show waveforms
+	shouldShowWaveforms = YES;
     [[fw window ] orderOut: self];
     //we also dont' want the FeatureView to receive any notifications
     [[NSNotificationCenter defaultCenter] removeObserver: fw];
@@ -1195,6 +1197,7 @@
     unsigned int *_points = malloc(_npoints*sizeof(unsigned int));
     int i;
     Cluster *cluster = [[Cluster alloc] init];
+	[cluster setClusterId: [NSNumber numberWithInt:0]];
     //create an index
     NSMutableIndexSet *_index = [NSMutableIndexSet indexSet];
     //[cluster setIndices:[NSMutableIndexSet indexSet]];
