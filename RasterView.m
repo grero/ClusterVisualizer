@@ -198,6 +198,16 @@ static void drawCircle(GLfloat r, GLuint n)
     unsigned int tidx,j;
     double *_boundaries = NULL;
     unsigned int _nboundaries = 0;
+    double repDuration = [[NSUserDefaults standardUserDefaults] doubleForKey:@"stimulusRepetitionDuration"];
+    double tscale = [[NSUserDefaults standardUserDefaults] doubleForKey:@"timeScaleFactor"];
+    if(tscale == 0)
+    {
+        tscale = 1000.0;
+    }
+    if( repDuration == 0)
+    {
+        repDuration = 30000.0;
+    }
     if(boundaries != nil )
     {
         _boundaries = (double*)[boundaries bytes];
@@ -213,6 +223,8 @@ static void drawCircle(GLfloat r, GLuint n)
 
     //xmax
     xmax = -INFINITY;
+	ymax = -INFINITY;
+	ymin = 0;
     j = 0;
 	for(i=0;i<npoints;i++)
 	{
@@ -222,13 +234,13 @@ static void drawCircle(GLfloat r, GLuint n)
 		_colors[4*i+2] = _color[2];
 		_colors[4*i+3] = 1.0;
 		
-		_vertices[3*i] = (GLfloat)((double)(_points[i])/1000);
+		_vertices[3*i] = (GLfloat)((double)(_points[i])/tscale);
         
 		//_vertices[3*i+1] = 50.0;
         if (_boundaries == NULL )
         {
-            tidx = (unsigned int)(_vertices[3*i]/30000.0);
-            _vertices[3*i] -= tidx*30000.0;
+            tidx = (unsigned int)(_vertices[3*i]/repDuration);
+            _vertices[3*i] -= tidx*repDuration;
             //NSLog(@"No stimulus frame information found. Assuming 30 second repetitions");
         }
         else
