@@ -52,13 +52,14 @@ static BOOL picked;
     NSOpenGLContext* _oglContext;
     NSOpenGLPixelFormat* _pixelFormat;
 	GLString *glabelX,*glabelY,*glabelZ;
-    BOOL drawAxesLabels,appendHighlights,showFrame;
+    BOOL drawAxesLabels,appendHighlights,showFrame,drawRect;
     Cluster *currentCluster;
     NSMutableArray *selectedClusters;
     NSData *vertices;
     GLuint vertexBuffer,indexBuffer,colorBuffer;
     //current cluster centroid
     float *CM;
+	NSRect selectionRec;
     
 }
 

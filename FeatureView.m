@@ -21,6 +21,8 @@
 -(void) awakeFromNib
 {
     minmax = calloc(6,sizeof(float));
+	selectionRec = NSMakeRect(0,0,-1,-1);
+	drawRect = NO;
     minmax[0] = -1;
     minmax[1] = 1;
     minmax[2] = -1;
@@ -1166,6 +1168,23 @@ static void drawFrame()
     //Draw nindices elements of type GL_POINTS, use the loaded indexBuffer
     glDrawElements(GL_POINTS, nindices, GL_UNSIGNED_INT,(void*)0);
     //glDrawRangeElement
+	//allow drawing of square
+	if(drawRect)
+	{
+		glBegin(GL_LINE_STRIP);
+		glColor3f(1.0,0.0,0.0);
+		glVertex3f(selectionRec.origin.x,selectionRec.origin.y, 1.0);
+		glColor3f(1.0,0.0,0.0);
+		glVertex3f(selectionRec.origin.x+selectionRec.size.width,selectionRec.origin.y, 1.0);
+		glColor3f(1.0,0.0,0.0);
+		glVertex3f(selectionRec.origin.x+selectionRec.size.width,selectionRec.origin.y+selectionRec.size.height, 1.0);
+		glColor3f(1.0,0.0,0.0);
+		glVertex3f(selectionRec.origin.x,selectionRec.origin.y+selectionRec.size.height, 1.0);
+		glColor3f(1.0,0.0,0.0);
+		glVertex3f(selectionRec.origin.x,selectionRec.origin.y, 1.0);
+		glEnd();
+	}
+	
 }
 
 -(void)drawLabels
@@ -1574,6 +1593,36 @@ static void drawFrame()
 
 }
 
+-(void)mouseDown:(NSEvent*)theEvent
+{
+	//need to get the currentPoint in data coordinates
+    NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
+    GLint view[4];
+    GLdouble p[16];
+    GLdouble m[16];
+    [[self openGLContext] makeCurrentContext];
+    glGetDoublev (GL_MODELVIEW_MATRIX, m);
+    glGetDoublev (GL_PROJECTION_MATRIX,p);
+    glGetIntegerv( GL_VIEWPORT, view );
+    double objXNear,objXFar,objYNear,objYFar,objZNear,objZFar;
+    float *_vertices = (float*)[vertices bytes];
+    //get the position of the points in the original data space
+    //note that since window coordinates are using lower left as (0,0), openGL uses upper left
+    GLfloat depth[2];
+    //get the z-component
+    glReadPixels(currentPoint.x, /*height-*/currentPoint.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, depth);
+    //get a ray
+    gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[1], m, p, view, &objXNear, &objYNear, &objZNear);
+    gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[0], m, p, view, &objXFar, &objYFar, &objZFar);
+	if([theEvent modifierFlags] & (NSCommandKeyMask | NSShiftKeyMask))
+	{
+		//create a rectangle starting at currentPoint and with zero size for now
+		selectionRec = NSMakeRect(objXNear,objYNear,0,0);
+		drawRect = YES;
+	}
+
+}
+
 -(void)mouseUp:(NSEvent *)theEvent
 {
     NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
@@ -1620,6 +1669,11 @@ static void drawFrame()
 		pickedPoint[0] = objXNear;
 		pickedPoint[1] = objYNear;
 		pickedPoint[2] = objZNear;
+		if([theEvent modifierFlags] & NSShiftKeyMask)
+		{
+			//reset the rectangle
+			drawRect = NO;
+		}
     
 		//once we have the ray, we can look for intersections
 		//since we are only interested in points, we can simply check whether the point +/- its radius encompasses the line 
@@ -1792,30 +1846,66 @@ static void drawFrame()
 
 -(void)mouseDragged:(NSEvent *)theEvent
 {
-	//shift the origin by some amount
 	BOOL needDisplay = NO;
-	if( [theEvent deltaX] < -1 )
+	//are we dragging while holding down Command? If so, we are performing a multiple select
+	if([theEvent modifierFlags] & NSCommandKeyMask)
 	{
-		originx+=0.1*scale;
-		needDisplay = YES;
+		//need to get the currentPoint in data coordinates
+		NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
+		GLint view[4];
+		GLdouble p[16];
+		GLdouble m[16];
+		[[self openGLContext] makeCurrentContext];
+		glGetDoublev (GL_MODELVIEW_MATRIX, m);
+		glGetDoublev (GL_PROJECTION_MATRIX,p);
+		glGetIntegerv( GL_VIEWPORT, view );
+		double objXNear,objXFar,objYNear,objYFar,objZNear,objZFar;
+		float *_vertices = (float*)[vertices bytes];
+		//get the position of the points in the original data space
+		//note that since window coordinates are using lower left as (0,0), openGL uses upper left
+		GLfloat depth[2];
+		//get the z-component
+		glReadPixels(currentPoint.x, /*height-*/currentPoint.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, depth);
+		//get a ray
+		gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[1], m, p, view, &objXNear, &objYNear, &objZNear);
+		gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[0], m, p, view, &objXFar, &objYFar, &objZFar);
+		if( [theEvent modifierFlags] & NSShiftKeyMask)
+		{
+			if(drawRect)
+			{
+				selectionRec.size.width = objXNear-selectionRec.origin.x;
+				selectionRec.size.height = objYNear-selectionRec.origin.y;
+			}
+			needDisplay = YES;
+		}
+		
 	}
-	else if( [theEvent deltaX] > 1 )
+	else
 	{
-		originx-=0.1*scale;
-		needDisplay = YES;
+		//shift the origin by some amount
+		if( [theEvent deltaX] < -1 )
+		{
+			originx+=0.1*scale;
+			needDisplay = YES;
+		}
+		else if( [theEvent deltaX] > 1 )
+		{
+			originx-=0.1*scale;
+			needDisplay = YES;
 
-	}
-	if( [theEvent deltaY] < -1 )
-	{
-		originy-=0.1*scale;
-		needDisplay = YES;
+		}
+		if( [theEvent deltaY] < -1 )
+		{
+			originy-=0.1*scale;
+			needDisplay = YES;
 
-	}
-	else if( [theEvent deltaY] > 1 )
-	{
-		originy+=0.1*scale;
-		needDisplay = YES;
+		}
+		else if( [theEvent deltaY] > 1 )
+		{
+			originy+=0.1*scale;
+			needDisplay = YES;
 
+		}
 	}
 	[self setNeedsDisplay:needDisplay];
 			  
