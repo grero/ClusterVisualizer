@@ -1169,21 +1169,6 @@ static void drawFrame()
     glDrawElements(GL_POINTS, nindices, GL_UNSIGNED_INT,(void*)0);
     //glDrawRangeElement
 	//allow drawing of square
-	if(drawRect)
-	{
-		glBegin(GL_LINE_STRIP);
-		glColor3f(1.0,0.0,0.0);
-		glVertex3f(selectionRec.origin.x,selectionRec.origin.y, 1.0);
-		glColor3f(1.0,0.0,0.0);
-		glVertex3f(selectionRec.origin.x+selectionRec.size.width,selectionRec.origin.y, 1.0);
-		glColor3f(1.0,0.0,0.0);
-		glVertex3f(selectionRec.origin.x+selectionRec.size.width,selectionRec.origin.y+selectionRec.size.height, 1.0);
-		glColor3f(1.0,0.0,0.0);
-		glVertex3f(selectionRec.origin.x,selectionRec.origin.y+selectionRec.size.height, 1.0);
-		glColor3f(1.0,0.0,0.0);
-		glVertex3f(selectionRec.origin.x,selectionRec.origin.y, 1.0);
-		glEnd();
-	}
 	
 }
 
@@ -1331,6 +1316,27 @@ static void drawFrame()
 		glColor3f(1.0, 0.0, 0.0);
 		glEnd();
 		[self drawAnObject];
+		if(drawRect)
+		{
+			glMatrixMode(GL_PROJECTION);
+			glLoadIdentity();
+			glOrtho(-2*scale, 2*scale, -2*scale, 2*scale, -10, 10);
+			glMatrixMode(GL_MODELVIEW);
+			glLoadIdentity();
+			glBegin(GL_LINE_STRIP);
+			glColor3f(1.0,0.0,0.0);
+			glVertex3f(selectionRec.origin.x,selectionRec.origin.y, 1.0);
+			glColor3f(1.0,0.0,0.0);
+			glVertex3f(selectionRec.origin.x+selectionRec.size.width,selectionRec.origin.y, 1.0);
+			glColor3f(1.0,0.0,0.0);
+			glVertex3f(selectionRec.origin.x+selectionRec.size.width,selectionRec.origin.y+selectionRec.size.height, 1.0);
+			glColor3f(1.0,0.0,0.0);
+			glVertex3f(selectionRec.origin.x,selectionRec.origin.y+selectionRec.size.height, 1.0);
+			glColor3f(1.0,0.0,0.0);
+			glVertex3f(selectionRec.origin.x,selectionRec.origin.y, 1.0);
+			glEnd();
+		}
+
 		//drawAnObject();
 
     }
@@ -1617,7 +1623,8 @@ static void drawFrame()
 	if([theEvent modifierFlags] & (NSCommandKeyMask | NSShiftKeyMask))
 	{
 		//create a rectangle starting at currentPoint and with zero size for now
-		selectionRec = NSMakeRect(objXNear,objYNear,0,0);
+	    selectionRec = NSMakeRect(objXNear,objYNear,0,0);
+		//selectionRec = NSMakeRect(currentPoint.x,currentPoint.y,0,0);
 		drawRect = YES;
 	}
 
@@ -1644,7 +1651,7 @@ static void drawFrame()
     gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[1], m, p, view, &objXNear, &objYNear, &objZNear);
     gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[0], m, p, view, &objXFar, &objYFar, &objZFar);
 
-    if([theEvent modifierFlags] & NSCommandKeyMask)
+    if([theEvent modifierFlags] & ( NSCommandKeyMask | NSShiftKeyMask))
     {
         //only select points if Command key is pressed
         //if we are also pressing the shift button, append highlights
@@ -1669,66 +1676,93 @@ static void drawFrame()
 		pickedPoint[0] = objXNear;
 		pickedPoint[1] = objYNear;
 		pickedPoint[2] = objZNear;
-		if([theEvent modifierFlags] & NSShiftKeyMask)
+		NSUInteger i,k,cidx;
+        float vX,vY,vZ;
+		double dmin = INFINITY;
+		unsigned int wfidx = nindices;
+		NSMutableIndexSet *foundIndices = [NSMutableIndexSet indexSet];
+		//if([theEvent modifierFlags] & NSShiftKeyMask)
+		if(drawRect)
 		{
 			//reset the rectangle
 			drawRect = NO;
-		}
-    
-		//once we have the ray, we can look for intersections
-		//since we are only interested in points, we can simply check whether the point +/- its radius encompasses the line 
-		//line given by x0 + ray[0](x-x0), y0 + ray[1](y-y0), z0 + ray[2](z-z0)
-		//for each object, decompose the vector from the near point to the object into components parallel and orthogonal to the ray. Then check whether the length of the orthogonal component is smaller than the radius of the object. If it is, we have intersection
-		//
-		double dmin = INFINITY;
-		unsigned int wfidx = nindices;
-		NSUInteger i,k,cidx;
-        cidx = wfidx;
-		double dT = INFINITY;
-        //go through each index currently drawn
-        //[indexset enumerateIndexesUsingBlock:^(NSUInteger k, BOOL *stop)
-        k = [indexset firstIndex];
-        i = 0;
-        float vX,vY,vZ;
-        while(k != NSNotFound )
-        //for(i=0;i<nindices;i++)
-		{
-			double a = 0;
-            vX = _vertices[k*cols+draw_dims[0]];
-            vY = _vertices[k*cols+draw_dims[1]];
-            vZ = _vertices[k*cols+draw_dims[2]];
-			//component along ray
-			//k = indices[i];
-            //Eureka! also care about which dimensions we are drawing,i.e. the ordering could change
-			a+=ray[0]*(vX - objXNear);
-			a+=ray[1]*(vY - objYNear);
-			a+=ray[2]*(vZ - objZNear);
-
-			double v[3];
-			double rv = 0;
-			v[0] = (vX-objXNear)-a*ray[0];
-			rv+=v[0]*v[0];
-			v[1] = (vY-objYNear)-a*ray[1];
-			rv+=v[1]*v[1];
-			v[2] = (vZ-objZNear)-a*ray[2];
-			rv+=v[2]*v[2];
-
-			//this is the distance from the object to the ray
-			rv = sqrt(rv);
-			//check if it's the smallest so far, and that it's smaller than the threshold, dT
-			if( (rv<dmin) )
+			//grab all points contained (behind) within the rectangle
+			k = [indexset firstIndex];
+			i = 0;
+			while(k != NSNotFound )
 			{
-				dmin = rv;
-                cidx = k;
-				if( rv < dT)
+				//get the vertices
+				vX = _vertices[k*cols+draw_dims[0]];
+				vY = _vertices[k*cols+draw_dims[1]];
+				vZ = _vertices[k*cols+draw_dims[2]];
+				//check if they are within the rectangle
+				if( (vX >= selectionRec.origin.x) || (vX <= selectionRec.origin.x+selectionRec.size.width))
 				{
-						//again, the index to pass to the highlight function needs to be in cluster coordinates, not global coordinates
-						wfidx = i;	
-				}
-			}
-            k = [indexset indexGreaterThanIndex:k];
-            i+=1;
+					if( (vY >= selectionRec.origin.y) || (vY <= selectionRec.origin.y+selectionRec.size.height) )
+					{
+						[foundIndices addIndex: i];
 
+					}
+				}
+				i+=1;
+				k = [indexset indexGreaterThanIndex:k];
+
+			}
+		}
+		else
+		{
+    
+			//once we have the ray, we can look for intersections
+			//since we are only interested in points, we can simply check whether the point +/- its radius encompasses the line 
+			//line given by x0 + ray[0](x-x0), y0 + ray[1](y-y0), z0 + ray[2](z-z0)
+			//for each object, decompose the vector from the near point to the object into components parallel and orthogonal to the ray. Then check whether the length of the orthogonal component is smaller than the radius of the object. If it is, we have intersection
+			//
+			cidx = wfidx;
+			double dT = INFINITY;
+			//go through each index currently drawn
+			//[indexset enumerateIndexesUsingBlock:^(NSUInteger k, BOOL *stop)
+			k = [indexset firstIndex];
+			i = 0;
+			while(k != NSNotFound )
+			//for(i=0;i<nindices;i++)
+			{
+				double a = 0;
+				vX = _vertices[k*cols+draw_dims[0]];
+				vY = _vertices[k*cols+draw_dims[1]];
+				vZ = _vertices[k*cols+draw_dims[2]];
+				//component along ray
+				//k = indices[i];
+				//Eureka! also care about which dimensions we are drawing,i.e. the ordering could change
+				a+=ray[0]*(vX - objXNear);
+				a+=ray[1]*(vY - objYNear);
+				a+=ray[2]*(vZ - objZNear);
+
+				double v[3];
+				double rv = 0;
+				v[0] = (vX-objXNear)-a*ray[0];
+				rv+=v[0]*v[0];
+				v[1] = (vY-objYNear)-a*ray[1];
+				rv+=v[1]*v[1];
+				v[2] = (vZ-objZNear)-a*ray[2];
+				rv+=v[2]*v[2];
+
+				//this is the distance from the object to the ray
+				rv = sqrt(rv);
+				//check if it's the smallest so far, and that it's smaller than the threshold, dT
+				if( (rv<dmin) )
+				{
+					dmin = rv;
+					cidx = k;
+					if( rv < dT)
+					{
+							//again, the index to pass to the highlight function needs to be in cluster coordinates, not global coordinates
+							wfidx = i;	
+					}
+				}
+				k = [indexset indexGreaterThanIndex:k];
+				i+=1;
+
+			}
 		}
         Cluster *useCluster = nil;
         if ([selectedClusters count] ==1 )
@@ -1869,15 +1903,13 @@ static void drawFrame()
 		//get a ray
 		gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[1], m, p, view, &objXNear, &objYNear, &objZNear);
 		gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[0], m, p, view, &objXFar, &objYFar, &objZFar);
-		if( [theEvent modifierFlags] & NSShiftKeyMask)
+		if(drawRect)
 		{
-			if(drawRect)
-			{
-				selectionRec.size.width = objXNear-selectionRec.origin.x;
-				selectionRec.size.height = objYNear-selectionRec.origin.y;
-			}
-			needDisplay = YES;
+			selectionRec.size.width = objXNear-selectionRec.origin.x;
+			//selectionRec.size.width = currentPoint.x-selectionRec.origin.x;
+			selectionRec.size.height = objYNear-selectionRec.origin.y;
 		}
+		needDisplay = YES;
 		
 	}
 	else
