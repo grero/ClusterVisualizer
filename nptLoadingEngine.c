@@ -38,7 +38,7 @@
 nptHeader* getSpikeInfo(const char *fname, nptHeader *header)
 {
     FILE *f;
-    int hs,ns;
+    int hs,ns,conv,timepts;
     char chs;
     
     f = fopen(fname, "r");
@@ -60,8 +60,10 @@ nptHeader* getSpikeInfo(const char *fname, nptHeader *header)
     fread(&chs, sizeof(char), 1, f);
     //chs = CFSwapInt16LittleToHost(chs);
     header->channels = chs;
+	fread(&conv,sizeof(int),1,f);
+	fread(&timepts,sizeof(int),1,f);
+    header->timepts = timepts;
     fclose(f);
-    header->timepts = 32;
     return header;
 }
 
