@@ -619,6 +619,7 @@
     {
         [[[self fw] window] orderFront:self];
     }
+	//check if we are also auto-loading cluster
     //create a noise cluster with all points
     Cluster *firstCluster = [[Cluster alloc] init];
     [firstCluster setClusterId:[NSNumber numberWithInt:0]];
@@ -675,6 +676,33 @@
     
     //set the log file
     [self setLogFilePath:[directory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.log", filebase]]];
+	//check if are also laoding clusters
+	if( [[NSUserDefaults standardUserDefaults] boolForKey:@"autoLoadClusters"])
+	{
+		NSArray *_fileNames = [[NSFileManager defaultManager] directoryContentsAtPath: [self currentDir] ];
+		NSArray *_goodFiles = [_fileNames filteredArrayUsingPredicate: [NSPredicate predicateWithFormat: @"SELF MATCHES[cd] %@", 
+							 [currentBaseName stringByAppendingString:@".clu.*"]]];
+		if( [_goodFiles count] > 0)
+		{
+			//we found something
+			[self openClusterFile: [[self currentDir] stringByAppendingPathComponent: [_goodFiles firstObject]]];
+		}
+		else
+		{
+			//check one directory above
+			_fileNames = [[NSFileManager defaultManager] directoryContentsAtPath: [[self currentDir] stringByAppendingPathComponent:@"../"]];
+			_goodFiles = [_fileNames filteredArrayUsingPredicate: [NSPredicate predicateWithFormat: @"SELF MATCHES[cd] %@", 
+							 [currentBaseName stringByAppendingString:@".clu.*"]]];
+			if( [_goodFiles count] > 0)
+			{
+				[self openClusterFile: [[self currentDir] stringByAppendingString: [NSString stringWithFormat:@"/../%@",[_goodFiles firstObject]]]];
+			}
+			else
+			{
+				NSLog(@"Could not find cluster file");
+			}
+		}
+	}
 
 	[_pool drain];
 }
