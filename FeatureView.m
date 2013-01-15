@@ -1067,7 +1067,7 @@
 static void drawFrame()
 {
 	//finally connect the corners
-	glColor4f(0.5f,0.85f,0.35f,1.0f);
+	glColor4f(0.5f,0.85f,0.35f,0.5f);
 	glLineWidth(1.0);
 	int i;
 	float d = 0;
@@ -1295,12 +1295,12 @@ static void drawFrame()
     {
 		glLoadIdentity();
 		//draw lines to indicate the centroid; this should be removed
-		glBegin(GL_LINES);
-		glVertex3f(CM[draw_dims[0]], -2, CM[draw_dims[2]]);
-		glColor3f(1.0, 0.0, 0.0);
-		glVertex3f(CM[draw_dims[0]], 2, CM[draw_dims[2]]);
-		glColor3f(1.0, 0.0, 0.0);
-		glEnd();
+//		glBegin(GL_LINES);
+//		glVertex3f(CM[draw_dims[0]], -2, CM[draw_dims[2]]);
+//		glColor3f(1.0, 0.0, 0.0);
+//		glVertex3f(CM[draw_dims[0]], 2, CM[draw_dims[2]]);
+//		glColor3f(1.0, 0.0, 0.0);
+//		glEnd();
 
 		glTranslatef(CM[draw_dims[0]], CM[draw_dims[1]], CM[draw_dims[2]]);
 
@@ -1309,12 +1309,12 @@ static void drawFrame()
 		glTranslatef(-CM[draw_dims[0]], -CM[draw_dims[1]], -CM[draw_dims[2]]);
 		//glTranslatef(originx, originy, originz);
 		//test; draw a line parallel to the y-axis through the origin
-		glBegin(GL_LINES);
-		glVertex3f(CM[draw_dims[0]], -2, CM[draw_dims[2]]);
-		glColor3f(1.0, 0.0, 0.0);
-		glVertex3f(CM[draw_dims[0]], 2, CM[draw_dims[2]]);
-		glColor3f(1.0, 0.0, 0.0);
-		glEnd();
+//		glBegin(GL_LINES);
+//		glVertex3f(CM[draw_dims[0]], -2, CM[draw_dims[2]]);
+//		glColor3f(1.0, 0.0, 0.0);
+//		glVertex3f(CM[draw_dims[0]], 2, CM[draw_dims[2]]);
+//		glColor3f(1.0, 0.0, 0.0);
+//		glEnd();
 		[self drawAnObject];
 		if(drawRect)
 		{
