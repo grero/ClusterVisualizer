@@ -21,7 +21,7 @@
 -(void) awakeFromNib
 {
     minmax = calloc(6,sizeof(float));
-	selectionRec = NSMakeRect(0,0,-1,-1);
+	selectionRec = NSMakeRect(0,0,0,0);
 	drawRect = NO;
     minmax[0] = -1;
     minmax[1] = 1;
@@ -1620,13 +1620,13 @@ static void drawFrame()
     //get a ray
     gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[1], m, p, view, &objXNear, &objYNear, &objZNear);
     gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[0], m, p, view, &objXFar, &objYFar, &objZFar);
-	if([theEvent modifierFlags] & (NSCommandKeyMask | NSShiftKeyMask))
-	{
+	//if([theEvent modifierFlags] & (NSCommandKeyMask | NSShiftKeyMask))
+	//{
 		//create a rectangle starting at currentPoint and with zero size for now
-	    selectionRec = NSMakeRect(objXNear,objYNear,0,0);
+	 //   selectionRec = NSMakeRect(objXNear,objYNear,0,0);
 		//selectionRec = NSMakeRect(currentPoint.x,currentPoint.y,0,0);
-		drawRect = YES;
-	}
+//		drawRect = YES;
+//	}
 
 }
 
@@ -1679,13 +1679,11 @@ static void drawFrame()
 		NSUInteger i,k,cidx;
         float vX,vY,vZ;
 		double dmin = INFINITY;
-		unsigned int wfidx = nindices;
+		unsigned int *wfidx;
 		NSMutableIndexSet *foundIndices = [NSMutableIndexSet indexSet];
 		//if([theEvent modifierFlags] & NSShiftKeyMask)
 		if(drawRect)
 		{
-			//reset the rectangle
-			drawRect = NO;
 			//grab all points contained (behind) within the rectangle
 			k = [indexset firstIndex];
 			i = 0;
@@ -1696,18 +1694,23 @@ static void drawFrame()
 				vY = _vertices[k*cols+draw_dims[1]];
 				vZ = _vertices[k*cols+draw_dims[2]];
 				//check if they are within the rectangle
-				if( (vX >= selectionRec.origin.x) || (vX <= selectionRec.origin.x+selectionRec.size.width))
+				if( (vX >= selectionRec.origin.x) && (vX <= selectionRec.origin.x+selectionRec.size.width) ||
+				 (vX <= selectionRec.origin.x) && (vX >= selectionRec.origin.x+selectionRec.size.width))
 				{
-					if( (vY >= selectionRec.origin.y) || (vY <= selectionRec.origin.y+selectionRec.size.height) )
+					if( (vY >= selectionRec.origin.y) && (vY <= selectionRec.origin.y+selectionRec.size.height) ||
+					 (vY <= selectionRec.origin.y) && (vY >= selectionRec.origin.y+selectionRec.size.height) )
 					{
-						[foundIndices addIndex: i];
+						[foundIndices addIndex: k];
 
 					}
 				}
-				i+=1;
 				k = [indexset indexGreaterThanIndex:k];
 
 			}
+			//reset the rectangle
+			drawRect = NO;
+			selectionRec.size.width=0;
+			selectionRec.size.height=0;
 		}
 		else
 		{
@@ -1717,7 +1720,7 @@ static void drawFrame()
 			//line given by x0 + ray[0](x-x0), y0 + ray[1](y-y0), z0 + ray[2](z-z0)
 			//for each object, decompose the vector from the near point to the object into components parallel and orthogonal to the ray. Then check whether the length of the orthogonal component is smaller than the radius of the object. If it is, we have intersection
 			//
-			cidx = wfidx;
+			//cidx = wfidx;
 			double dT = INFINITY;
 			//go through each index currently drawn
 			//[indexset enumerateIndexesUsingBlock:^(NSUInteger k, BOOL *stop)
@@ -1752,19 +1755,23 @@ static void drawFrame()
 				if( (rv<dmin) )
 				{
 					dmin = rv;
-					cidx = k;
 					if( rv < dT)
 					{
 							//again, the index to pass to the highlight function needs to be in cluster coordinates, not global coordinates
 							wfidx = i;	
+							cidx = k;
+							//[foundIndices addIndex: k];
 					}
 				}
 				k = [indexset indexGreaterThanIndex:k];
 				i+=1;
 
 			}
+			[foundIndices addIndex: cidx];
 		}
         Cluster *useCluster = nil;
+		unsigned int offset = 0;
+		wfidx = malloc(([foundIndices count])*sizeof(unsigned int));
         if ([selectedClusters count] ==1 )
         {
             useCluster = [selectedClusters objectAtIndex:0];
@@ -1776,7 +1783,6 @@ static void drawFrame()
             //now figure out which cluster the select point was in
             NSUInteger q = 0;
             useCluster = [selectedClusters objectAtIndex:q];
-            unsigned int offset = 0;
             while( [[useCluster indices] containsIndex:cidx] == NO)
             {
                 offset+=[[useCluster npoints] unsignedIntValue];
@@ -1784,19 +1790,26 @@ static void drawFrame()
                 q+=1;
                 useCluster = [selectedClusters objectAtIndex:q];
             }            
-            //the brute force way; go through the cluster points to find the index
-            NSUInteger _npoints = [[useCluster npoints] unsignedIntValue];
-            unsigned int *_points = (unsigned int*)[[useCluster points] bytes];
-            unsigned int l = 0;
-            //loop through until we find it
-            while( (_points[l] != cidx ) && (l < _npoints ) )
-                l++;
-            wfidx = l;
-            wfidx+=offset;            
-        }
+		}
+		//the brute force way; go through the cluster points to find the index
+		NSUInteger _npoints = [[useCluster npoints] unsignedIntValue];
+		unsigned int *_points = (unsigned int*)[[useCluster points] bytes];
+		unsigned int l = 0;
+		//loop through until we find it
+		//here we should got through each of the indices
+		k = [foundIndices firstIndex];
+		i = 0;
+		while(k != NSNotFound )
+		{
+			while( (_points[l] != k ) && (l < _npoints ) )
+				l++;
+			wfidx[i] = l+offset;
+			k = [foundIndices indexGreaterThanIndex: k];
+			i+=1;
+		}
 
         //make sure we actually found a point first
-		if(wfidx < nindices)
+		if([foundIndices count]>0)
 		{
             //TODO: this will not work; highlighted points is in global, not cluster coordinates
             //NSMutableData *wfidxData = [NSMutableData dataWithBytes: &wfidx length: sizeof(unsigned int)];
@@ -1806,12 +1819,13 @@ static void drawFrame()
                 //TODO: only append if point is not already highlighted
                 if( [[self highlightedClusterPoints] containsIndex:(NSUInteger)wfidx]==NO )
                 {
-                    [wfidxData appendBytes:&wfidx length:sizeof(unsigned)];
+                    [wfidxData appendBytes:wfidx length:([foundIndices count])*sizeof(unsigned int)];
                 }
                 else
                 {
                     //the point has already been highlighted; a second click means we want to remove it
-                    [[self highlightedClusterPoints] removeIndex:wfidx];
+					for(i=0;i<[foundIndices count];i++)
+						[[self highlightedClusterPoints] removeIndex:wfidx[i]];
                 }
                 NSUInteger _count = [[self highlightedClusterPoints] count];
                 NSUInteger *hpc = malloc(_count*sizeof(NSUInteger));
@@ -1826,14 +1840,23 @@ static void drawFrame()
             }
             else
             {
-                [wfidxData appendBytes:&wfidx length:sizeof(unsigned)];
+                [wfidxData appendBytes:wfidx length:([foundIndices count])*sizeof(unsigned int)];
             }
 			[[self openGLContext] makeCurrentContext];
 			glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
 			float *color = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
-			
-			NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:wfidxData,[NSData dataWithBytes: color+3*wfidx length:3*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
+		 	float *_colors = malloc(3*([foundIndices count])*sizeof(float));
+			for(i=0;i<[foundIndices count];i++)
+			{
+				_colors[3*i] = color[3*wfidx[i]];
+				_colors[3*i+1] = color[3*wfidx[i]+1];
+				_colors[3*i+2] = color[3*wfidx[i]+2];
+			}
+			//we don't need wfidx any more
+			free(wfidx);
+			NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:wfidxData,[NSData dataWithBytes: _colors length:3*([foundIndices count])*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
 			glUnmapBuffer(GL_ARRAY_BUFFER);
+			free(_colors);
             //TODO: What if we want to select points from mutiple clusters?
 			[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:useCluster userInfo: params];
 			//[self highlightPoints:params];
@@ -1845,6 +1868,9 @@ static void drawFrame()
         
     }
      */
+	//reset rectangle
+	drawRect = NO;
+	[self setNeedsDisplay:YES];
 }
 
 -(void)scrollWheel:(NSEvent *)theEvent
@@ -1903,12 +1929,19 @@ static void drawFrame()
 		//get a ray
 		gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[1], m, p, view, &objXNear, &objYNear, &objZNear);
 		gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[0], m, p, view, &objXFar, &objYFar, &objZFar);
-		if(drawRect)
+		//if((selectionRec.size.width==0) && (selectionRec.size.height==0) && (drawRect==NO))
+		if(drawRect == NO)
+		{
+			selectionRec.origin.x = objXNear;
+			selectionRec.origin.y = objYNear;
+		}
+		else
 		{
 			selectionRec.size.width = objXNear-selectionRec.origin.x;
 			//selectionRec.size.width = currentPoint.x-selectionRec.origin.x;
 			selectionRec.size.height = objYNear-selectionRec.origin.y;
 		}
+		drawRect = YES;
 		needDisplay = YES;
 		
 	}
