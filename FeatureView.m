@@ -1278,6 +1278,29 @@ static void drawFrame()
     //use look at to define our viewing transform. Eye is positioned 4 units in the NEGATIVE z-direction (towards the viewer), and the origin is 2 units into the screen (z-0 is in the viewing plane, i.e. the screen
     gluLookAt(0, 0, 4.0, originx, originy, originz, 0, 1, 0);
 	glMatrixMode(GL_MODELVIEW);
+	if( isDragging )
+	{
+		//indicate that we are in selection mode by drawing a circle
+		glLoadIdentity();
+		//glTranslatef(CM[draw_dims[0]], CM[draw_dims[1]], CM[draw_dims[2]]);
+
+		//glRotatef(rotatey,0, 1, 0);
+		//glRotatef(rotatez, 0, 0,1);
+		//glTranslatef(-CM[draw_dims[0]], -CM[draw_dims[1]], -CM[draw_dims[2]]);
+		int q = 0;
+		float r,theta;
+		//scale invariant
+		r = 0.1*scale;
+		theta = 0;
+		glBegin(GL_LINE_LOOP);
+		for(q=0;q<50;q++)
+		{
+			theta = 2*M_PI/50*q;
+			glColor4f(1.0,1.0,1.0,1.0);
+			glVertex3f(pickedPoint[0] + r*cos(theta),pickedPoint[1] + r*sin(theta),pickedPoint[2]);
+		}
+		glEnd();
+	}
     if ([self showFrame] )
     {
         drawFrame();
@@ -1339,6 +1362,7 @@ static void drawFrame()
 //		glColor3f(1.0, 0.0, 0.0);
 //		glEnd();
 		[self drawAnObject];
+		/*
 		if(drawRect)
 		{
 			glMatrixMode(GL_PROJECTION);
@@ -1359,6 +1383,7 @@ static void drawFrame()
 			glVertex3f(selectionRec.origin.x,selectionRec.origin.y, 1.0);
 			glEnd();
 		}
+		*/
 
 		//drawAnObject();
 
@@ -1658,6 +1683,10 @@ static void drawFrame()
 
 -(void)mouseUp:(NSEvent *)theEvent
 {
+	//turn off dragging
+	isDragging = NO;
+	//show the cursor
+	[NSCursor unhide];
     NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
     GLint view[4];
     GLdouble p[16];
@@ -1936,15 +1965,28 @@ static void drawFrame()
 	//are we dragging while holding down Command? If so, we are performing a multiple select
 	if([theEvent modifierFlags] & NSCommandKeyMask)
 	{
+		//hide the cursor
+		if( isDragging == NO)
+		{
+			[NSCursor hide];
+			isDragging = YES;
+		}
 		//need to get the currentPoint in data coordinates
 		NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
+		//we are not really interested in data coordinates here; we just want to highlight whatever is behind
 		GLint view[4];
 		GLdouble p[16];
 		GLdouble m[16];
+		//make sure we haven the context
 		[[self openGLContext] makeCurrentContext];
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		//we only want the scaling, not the rotation, so replace the matrix with identity
+		glLoadIdentity();
 		glGetDoublev (GL_MODELVIEW_MATRIX, m);
 		glGetDoublev (GL_PROJECTION_MATRIX,p);
 		glGetIntegerv( GL_VIEWPORT, view );
+		glPopMatrix();
 		double objXNear,objXFar,objYNear,objYFar,objZNear,objZFar;
 		float *_vertices = (float*)[vertices bytes];
 		//get the position of the points in the original data space
@@ -1953,21 +1995,87 @@ static void drawFrame()
 		//get the z-component
 		glReadPixels(currentPoint.x, /*height-*/currentPoint.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, depth);
 		//get a ray
-		gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[1], m, p, view, &objXNear, &objYNear, &objZNear);
-		gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[0], m, p, view, &objXFar, &objYFar, &objZFar);
-		//if((selectionRec.size.width==0) && (selectionRec.size.height==0) && (drawRect==NO))
-		if(drawRect == NO)
+		gluUnProject(currentPoint.x, /*height-*/currentPoint.y, 0/*depth[0]*/, m, p, view, &objXNear, &objYNear, &objZNear);
+		gluUnProject(currentPoint.x, /*height-*/currentPoint.y, 1/*depth[1]*/, m, p, view, &objXFar, &objYFar, &objZFar);
+
+		pickedPoint[0] = objXNear;
+		pickedPoint[1] = objYNear;
+		pickedPoint[2] = objZNear;
+		//get the matrices for the rotated coordinate system
+		glGetDoublev (GL_MODELVIEW_MATRIX, m);
+		glGetDoublev (GL_PROJECTION_MATRIX,p);
+		glGetIntegerv( GL_VIEWPORT, view );
+
+		NSMutableIndexSet *foundIndices = [NSMutableIndexSet indexSet];
+		NSUInteger k,i;
+		double vX,vY,vZ,wVx,wVy,wVz,fq,dx,dy;
+
+		k = [indexset firstIndex];
+		i = 0;
+		fq = 0.1*[self bounds].size.width/4;
+		NSPoint dataPoint;
+		while(k != NSNotFound )
 		{
-			selectionRec.origin.x = objXNear;
-			selectionRec.origin.y = objYNear;
+			//get the vertices
+			vX = _vertices[k*cols+draw_dims[0]];
+			vY = _vertices[k*cols+draw_dims[1]];
+			vZ = _vertices[k*cols+draw_dims[2]];
+			//convert to window corrdiantes
+			gluProject(vX,vY,vZ,m,p,view,&wVx,&wVy,&wVz);
+			//convert to view coordinates
+			dataPoint = [self convertPoint: NSMakePoint(wVx,wVy) fromView: nil];
+			dataPoint = NSMakePoint(wVx,wVy);
+			//check if they are within the circle
+			dx = dataPoint.x-currentPoint.x;
+			dy = dataPoint.y-currentPoint.y;
+			if( sqrt(dx*dx + dy*dy) < fq )
+			{
+					[foundIndices addIndex: k];
+
+			}
+			k = [indexset indexGreaterThanIndex:k];
+		}
+		if( [[self highlightedClusterPoints] containsIndexes:foundIndices]==YES )
+		{
+			//remove
+			//[[self highlightedClusterPoints] removeIndexes: foundIndices];
 		}
 		else
 		{
-			selectionRec.size.width = objXNear-selectionRec.origin.x;
-			//selectionRec.size.width = currentPoint.x-selectionRec.origin.x;
-			selectionRec.size.height = objYNear-selectionRec.origin.y;
+			//add
+			[[self highlightedClusterPoints] addIndexes: foundIndices];
 		}
-		drawRect = YES;
+		//need to 
+		NSUInteger _count = [[self highlightedClusterPoints] count];
+		NSUInteger *hpc;
+		unsigned int *uihpc;
+		hpc = malloc(_count*sizeof(NSUInteger));
+	    uihpc = malloc(_count*sizeof(unsigned int));
+		[[self highlightedClusterPoints] getIndexes:hpc maxCount:_count inIndexRange:nil];
+		unsigned int f;
+		for(i=0;i<_count;i++)
+		{
+			f = (unsigned int)hpc[i];
+			uihpc[i] = f;
+		}
+		free(hpc);
+		//gap the colors
+		[[self openGLContext] makeCurrentContext];
+		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+		float *color = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+		float *_colors = malloc(3*_count*sizeof(float));
+		for(i=0;i<_count;i++)
+		{
+			_colors[3*i] = color[3*uihpc[i]];
+			_colors[3*i+1] = color[3*uihpc[i]+1];
+			_colors[3*i+2] = color[3*uihpc[i]+2];
+		}
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSData dataWithBytes: uihpc length: _count*sizeof(unsigned int)],
+											 [NSData dataWithBytes: _colors length:3*_count*sizeof(float)],nil] 
+														   forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
+		free(_colors);
+		[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:nil userInfo: params];
 		needDisplay = YES;
 		
 	}

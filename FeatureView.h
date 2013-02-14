@@ -52,7 +52,7 @@ static BOOL picked;
     NSOpenGLContext* _oglContext;
     NSOpenGLPixelFormat* _pixelFormat;
 	GLString *glabelX,*glabelY,*glabelZ;
-    BOOL drawAxesLabels,appendHighlights,showFrame,showFrame1,showFrame2,showFrame3,drawRect;
+    BOOL drawAxesLabels,appendHighlights,showFrame,showFrame1,showFrame2,showFrame3,drawRect,isDragging;
     Cluster *currentCluster;
     NSMutableArray *selectedClusters;
     NSData *vertices;
