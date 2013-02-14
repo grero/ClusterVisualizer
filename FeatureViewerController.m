@@ -103,6 +103,8 @@
 	[waveformsMenu addItemWithTitle:@"Apply threshold" action:@selector(applyThreshold) keyEquivalent:@"t"];
     [[self wfv] setMenu:waveformsMenu];
     //disable autoenable
+	//upate the cluster menu for the waveforsview
+	//
     [[NSApp mainMenu] setAutoenablesItems:NO];
     
 }

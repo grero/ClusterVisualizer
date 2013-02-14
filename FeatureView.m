@@ -12,7 +12,7 @@
 
 @synthesize indexset;
 @synthesize highlightedPoints,highlightedClusterPoints;
-@synthesize showFrame;
+@synthesize showFrame,showFrame1,showFrame2,showFrame3;
 
 -(BOOL) acceptsFirstResponder
 {
@@ -535,6 +535,10 @@
     float *_vertices = (float*)[vertices bytes];
     currentCluster = cluster;
     float *_color = (float*)[[cluster color] bytes];
+	if( _color == NULL )
+	{
+		return;
+	}
     if([selectedClusters containsObject:cluster] == NO)
     {
         [selectedClusters addObject: cluster];
@@ -942,6 +946,7 @@
     glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
     GLfloat *tmp_colors = glMapBuffer(GL_ARRAY_BUFFER,GL_WRITE_ONLY);
     int i;
+
     if( cluster_indices != NULL)
         for(i=0;i<length;i++)
         {
@@ -1277,6 +1282,24 @@ static void drawFrame()
     {
         drawFrame();
     }
+	else if( showFrame1 )
+	{
+		//draw a semi transparent plane for x 
+		glBegin(GL_QUADS);
+		glColor4f(0.5,0.5,0.5,0.5);
+		glVertex3f(1.01, -0.99, -.99);
+		glColor4f(0.5,0.5,0.5,0.5);
+		glVertex3f(1.01, -0.99, 1.01);
+		glColor4f(0.5,0.5,0.5,0.5);
+		glVertex3f(1.01, 1.01, 1.01);
+		glColor4f(0.5,0.5,0.5,0.5);
+		glVertex3f(1.01, 1.01, -0.99);
+		glEnd();
+	}
+	else if( showFrame2)
+	{
+
+	}
 	
 	/*This code is for testing mouse clicks
 	if(picked)
@@ -1476,6 +1499,9 @@ static void drawFrame()
     {
         [self setDrawLabels:[[[NSUserDefaults standardUserDefaults] objectForKey:@"showFeatureAxesLabels"] boolValue]];
         [self setShowFrame: [[[NSUserDefaults standardUserDefaults] objectForKey:@"showFeatureAxesFrame"] boolValue]];
+        [self setShowFrame1: [[[NSUserDefaults standardUserDefaults] objectForKey:@"showFeatureAxesFrame1"] boolValue]];
+        [self setShowFrame2: [[[NSUserDefaults standardUserDefaults] objectForKey:@"showFeatureAxesFrame2"] boolValue]];
+        [self setShowFrame3: [[[NSUserDefaults standardUserDefaults] objectForKey:@"showFeatureAxesFrame3"] boolValue]];
         [self setNeedsDisplay:YES];
     }
 }

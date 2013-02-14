@@ -52,7 +52,7 @@ static BOOL picked;
     NSOpenGLContext* _oglContext;
     NSOpenGLPixelFormat* _pixelFormat;
 	GLString *glabelX,*glabelY,*glabelZ;
-    BOOL drawAxesLabels,appendHighlights,showFrame,drawRect;
+    BOOL drawAxesLabels,appendHighlights,showFrame,showFrame1,showFrame2,showFrame3,drawRect;
     Cluster *currentCluster;
     NSMutableArray *selectedClusters;
     NSData *vertices;
@@ -66,7 +66,7 @@ static BOOL picked;
 @property (retain,readwrite) NSMutableIndexSet *indexset;
 @property (retain,readwrite) NSMutableData *highlightedPoints;
 @property (retain,readwrite) NSMutableIndexSet *highlightedClusterPoints;
-@property (assign,readwrite) BOOL showFrame;
+@property (assign,readwrite) BOOL showFrame,showFrame1,showFrame2,showFrame3;
 
 +(NSOpenGLPixelFormat*)defaultPixelFormat;
 -(id) initWithFrame:(NSRect)frameRect pixelFormat:(NSOpenGLPixelFormat*)format;
