@@ -639,13 +639,13 @@
 	//[firstCluster computeFeatureCovariance:[[self fw] getVertexData]];
 	//compute pca on the whole feature space
 		
-    [firstCluster makeActive];
     //create cluster color
     float *_ccolor = malloc(3*sizeof(float));
     _ccolor[0] = 1.0f;//use_colors[3*cids[i+1]];
     _ccolor[1] = 0.85f;//use_colors[3*cids[i+1]+1];
     _ccolor[2] = 0.35f;//use_colors[3*cids[i+1]+2];
     [firstCluster setColor: [NSData dataWithBytes:_ccolor length:3*sizeof(float)]];
+    [firstCluster makeActive];
     free(_ccolor);
     [selectClusterOption addItemWithTitle:@"Create cluster"];
     [selectClusterOption addItemWithTitle:@"Add points to cluster"];
@@ -963,6 +963,7 @@
 				[cluster setChannels: [NSData dataWithBytes: _chs length:nvalidChannels*sizeof(unsigned int)]];
 				//set color
 				float color[3];
+				srandom(i);
 				color[0] = ((float)rand())/RAND_MAX;
 				color[1] = ((float)rand())/RAND_MAX;
 				color[2] = ((float)rand())/RAND_MAX;
