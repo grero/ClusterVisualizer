@@ -9,6 +9,7 @@
 #import <OpenGL/glu.h>
 #import "Cluster.h"
 #import "GLString.h"
+#import <stdint.h>
 
 
 //static GLuint vertexBuffer;
@@ -59,6 +60,8 @@ static BOOL picked;
     GLuint vertexBuffer,indexBuffer,colorBuffer;
     //current cluster centroid
     float *CM;
+	uint16_t *cids;
+	uint32_t *clusterIdx;
 	NSRect selectionRec;
     
 }

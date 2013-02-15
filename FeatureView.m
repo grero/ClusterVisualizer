@@ -402,6 +402,30 @@
     //modifyColors(colors);
     //pushVertices();
     //notify that data has been loaded
+	//intialize clusters
+	if( cids == NULL)
+	{
+		cids = malloc(rows*sizeof(uint16_t));
+	}
+	else
+	{
+		cids = realloc(cids,rows*sizeof(uint16_t));
+	}
+	if( clusterIdx == NULL)
+	{
+		clusterIdx = malloc(rows*sizeof(uint32_t));
+	}
+	else
+	{
+		clusterIdx = realloc(clusterIdx,rows*sizeof(uint32_t));
+	}
+	//initalize
+	for(i=0;i<rows;i++)
+	{
+		cids[i] = 0;
+		clusterIdx[i] = i;
+	}
+		
     dataloaded = YES;
     [self setNeedsDisplay:YES];
     
@@ -2031,32 +2055,39 @@ static void drawFrame()
 			if( sqrt(dx*dx + dy*dy) < fq )
 			{
 					[foundIndices addIndex: k];
+					[highlightedClusterPoints addIndex: clusterIdx[k]];
 
 			}
 			k = [indexset indexGreaterThanIndex:k];
 		}
-		if( [[self highlightedClusterPoints] containsIndexes:foundIndices]==YES )
+		NSUInteger _count ;
+		if( highlightedPoints != nil)
 		{
-			//remove
-			//[[self highlightedClusterPoints] removeIndexes: foundIndices];
-		}
-		else
-		{
-			//add
-			[[self highlightedClusterPoints] addIndexes: foundIndices];
+			//pull in the already highlighted points
+			unsigned int *globalHighlights = (unsigned int*)[highlightedPoints bytes];
+			_count = [highlightedPoints length]/sizeof(unsigned int);
+			for(i=0;i<_count;i++)
+			{
+				[highlightedClusterPoints addIndex: clusterIdx[globalHighlights[i]]];
+				[foundIndices addIndex: globalHighlights[i]];
+			}
 		}
 		//need to 
-		NSUInteger _count = [[self highlightedClusterPoints] count];
-		NSUInteger *hpc;
+		_count = [[self highlightedClusterPoints] count];
+		//_count = [foundIndices count];
+		NSUInteger *hpc,*fidx;
 		unsigned int *uihpc;
 		hpc = malloc(_count*sizeof(NSUInteger));
 	    uihpc = malloc(_count*sizeof(unsigned int));
 		[[self highlightedClusterPoints] getIndexes:hpc maxCount:_count inIndexRange:nil];
-		unsigned int f;
+
+		_count = [foundIndices count];
+		fidx = malloc(_count*sizeof(NSUInteger));
+		[foundIndices getIndexes: fidx maxCount: [foundIndices count] inIndexRange: nil];
+		_count = [[self highlightedClusterPoints] count];
 		for(i=0;i<_count;i++)
 		{
-			f = (unsigned int)hpc[i];
-			uihpc[i] = f;
+			uihpc[i] =(unsigned int)hpc[i];
 		}
 		free(hpc);
 		//gap the colors
@@ -2064,17 +2095,20 @@ static void drawFrame()
 		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
 		float *color = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
 		float *_colors = malloc(3*_count*sizeof(float));
+		_count = [foundIndices count];
 		for(i=0;i<_count;i++)
 		{
-			_colors[3*i] = color[3*uihpc[i]];
-			_colors[3*i+1] = color[3*uihpc[i]+1];
-			_colors[3*i+2] = color[3*uihpc[i]+2];
+			_colors[3*i] = color[3*fidx[i]];
+			_colors[3*i+1] = color[3*fidx[i]+1];
+			_colors[3*i+2] = color[3*fidx[i]+2];
 		}
+		_count = [highlightedClusterPoints count];
 		glUnmapBuffer(GL_ARRAY_BUFFER);
 		NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSData dataWithBytes: uihpc length: _count*sizeof(unsigned int)],
 											 [NSData dataWithBytes: _colors length:3*_count*sizeof(float)],nil] 
 														   forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
 		free(_colors);
+		free(fidx);
 		[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:nil userInfo: params];
 		needDisplay = YES;
 		
@@ -2186,6 +2220,14 @@ static void drawFrame()
     //free(colors);
     //free(cids);
     free(use_colors);
+	if(cids != NULL)
+	{
+		free(cids);
+	}
+	if( clusterIdx != NULL )
+	{
+		free(clusterIdx);
+	}
    // free(indexset);
     [indexset release];
     [[NSNotificationCenter defaultCenter] removeObserver:self
