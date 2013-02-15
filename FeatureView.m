@@ -2094,8 +2094,8 @@ static void drawFrame()
 		[[self openGLContext] makeCurrentContext];
 		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
 		float *color = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
-		float *_colors = malloc(3*_count*sizeof(float));
 		_count = [foundIndices count];
+		float *_colors = malloc(3*_count*sizeof(float));
 		for(i=0;i<_count;i++)
 		{
 			_colors[3*i] = color[3*fidx[i]];
@@ -2105,7 +2105,7 @@ static void drawFrame()
 		_count = [highlightedClusterPoints count];
 		glUnmapBuffer(GL_ARRAY_BUFFER);
 		NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSData dataWithBytes: uihpc length: _count*sizeof(unsigned int)],
-											 [NSData dataWithBytes: _colors length:3*_count*sizeof(float)],nil] 
+											 [NSData dataWithBytes: _colors length:3*([foundIndices count])*sizeof(float)],nil] 
 														   forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
 		free(_colors);
 		free(fidx);

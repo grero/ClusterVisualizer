@@ -2875,6 +2875,7 @@
             //change colors in fw
             //first, remove highlights
             [[self fw] setHighlightedPoints:nil];
+			[[[self fw] highlightedClusterPoints] removeAllIndexes];
             [[self fw] setClusterColors: _color forIndices:_clusterPoints length:_npoints];
              free(_color);
             [newCluster makeValid];
