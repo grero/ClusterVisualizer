@@ -948,7 +948,8 @@
 					npoints[cids[i+offset]]+=1;
 				}
 			}
-
+			
+			NSUInteger *cpoints = malloc(rows*sizeof(NSUInteger));
 			for(i=0;i<maxCluster;i++)
 			{
 				Cluster *cluster = [[Cluster alloc] init];
@@ -981,6 +982,7 @@
 					{
 						points[k] = (unsigned int)j;
 						//mask[j] = 1;
+						cpoints[j]= k;
 						k+=1;
 						//set the colors at the same time
 						cluster_colors[3*j] = color[0];
@@ -1003,6 +1005,8 @@
 				//we have handed over ownership of cluster to tempArray, so release it
 				[cluster release];
 			}
+			[[self fw] setClusterIdx: cpoints count: rows];
+			free(cpoints);
 			free(cids);
 			free(npoints);
 			//free(cluster_colors);
@@ -3463,6 +3467,8 @@
     //make the new cluster the currently selected
     [self setSelectedClusters:[NSIndexSet indexSetWithIndex:nclusters]];
     selectedCluster = new_cluster;
+	//reset selection
+	[[[self fw] highlightedClusterPoints] removeAllIndexes];
 	//record in log
 	freopen([ logFilePath cStringUsingEncoding: NSASCIIStringEncoding],"a+",stderr);
 	NSLog(@"merged clusters %@ to form cluster %@", clusterNames, [new_cluster clusterId]);

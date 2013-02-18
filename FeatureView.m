@@ -405,19 +405,19 @@
 	//intialize clusters
 	if( cids == NULL)
 	{
-		cids = malloc(rows*sizeof(uint16_t));
+		cids = malloc(rows*sizeof(NSUInteger));
 	}
 	else
 	{
-		cids = realloc(cids,rows*sizeof(uint16_t));
+		cids = realloc(cids,rows*sizeof(NSUInteger));
 	}
 	if( clusterIdx == NULL)
 	{
-		clusterIdx = malloc(rows*sizeof(uint32_t));
+		clusterIdx = malloc(rows*sizeof(NSUInteger));
 	}
 	else
 	{
-		clusterIdx = realloc(clusterIdx,rows*sizeof(uint32_t));
+		clusterIdx = realloc(clusterIdx,rows*sizeof(NSUInteger));
 	}
 	//initalize
 	for(i=0;i<rows;i++)
@@ -2109,8 +2109,18 @@ static void drawFrame()
 														   forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
 		free(_colors);
 		free(fidx);
-		[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:nil userInfo: params];
-		needDisplay = YES;
+		//TODO:silly check to prevent errors; should figure out what's going on here
+		if([ foundIndices count] == [highlightedClusterPoints count] )
+		{
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:nil userInfo: params];
+			needDisplay = YES;
+		}
+		else
+		{
+			NSLog(@"Could not highlight points. [foundIndices count] = %d while [highlightedClusterPoints = %d", [foundIndices count],[highlightedClusterPoints count]);
+			//since something happened, reset
+			[highlightedClusterPoints removeAllIndexes];
+		}
 		
 	}
 	else
@@ -2208,6 +2218,18 @@ static void drawFrame()
     {
         [[NSNotificationCenter defaultCenter] postNotificationName:@"performClusterOption" object:self userInfo:params];
     }
+}
+-(void)setClusterIdx:(NSUInteger*)_clusterIdx count:(NSUInteger)_count
+{
+	if( clusterIdx == NULL )
+	{
+		clusterIdx = malloc(_count*sizeof(NSUInteger));
+	}
+	else
+	{
+		clusterIdx = realloc(clusterIdx,_count*sizeof(NSUInteger));
+	}
+	memcpy(clusterIdx,_clusterIdx,_count*sizeof(NSUInteger));
 }
 
 -(void)dealloc

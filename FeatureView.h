@@ -60,8 +60,7 @@ static BOOL picked;
     GLuint vertexBuffer,indexBuffer,colorBuffer;
     //current cluster centroid
     float *CM;
-	uint16_t *cids;
-	uint32_t *clusterIdx;
+	NSUInteger *cids, *clusterIdx;
 	NSRect selectionRec;
     
 }
@@ -106,6 +105,7 @@ static BOOL picked;
 //-(void) drawBox;
 -(NSData*)getVertexData;
 -(NSData*)getVertexDataForDims:(NSData*)dims;
+-(void)setClusterIdx:(NSUInteger*)_clusterIdx count:(NSUInteger)_count;
 //-(void) pushVertices;
 
 -(void)modifyVertices;
