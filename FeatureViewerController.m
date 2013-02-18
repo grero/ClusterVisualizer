@@ -544,20 +544,50 @@
      }*/
     params.rows = rows;
     params.cols = cols;
-    [[self dim1] setEditable:NO];
-    [[self dim1] selectItemAtIndex:0];
-    [[self dim2] setEditable:NO];
-    [[self dim2] selectItemAtIndex:1];
-    [[self dim3] setEditable:NO];
-    [[self dim3] selectItemAtIndex:2];
+	//make sure we receive setFeatures notification 
 	featureNames = [[NSMutableArray arrayWithArray:feature_names] retain];
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) 
+												 name:@"setFeatures" object:nil];
+    [[self dim1] setEditable:NO];
+	if( [feature_names containsObject: @"triggerValue1"])
+	{
+		[[self dim1] selectItemWithObjectValue:@"triggerValue1"];
+	}
+	else
+	{
+		[[self dim1] selectItemAtIndex: 0];
+	}
+	[[self dim1] setObjectValue:[[self dim1] objectValueOfSelectedItem]];
+	//notifiy of the change
+	[self changeDim1:[self dim1]];
+    [[self dim2] setEditable:NO];
+	if( [feature_names containsObject: @"wavePC11"])
+	{
+		[[self dim2] selectItemWithObjectValue:@"wavePC11"];
+	}
+	else
+	{
+		[[self dim2] selectItemAtIndex: 0];
+	}
+	[[self dim2] setObjectValue:[[self dim2] objectValueOfSelectedItem]];
+	[self changeDim2:[self dim2]];
+    [[self dim3] setEditable:NO];
+	if( [feature_names containsObject: @"wavePC21"])
+	{
+		[[self dim3] selectItemWithObjectValue:@"wavePC21"];
+	}
+	else
+	{
+		[[self dim3] selectItemAtIndex: 0];
+
+	}
+	[[self dim3] setObjectValue:[[self dim3] objectValueOfSelectedItem]];
+	[self changeDim3:[self dim3]];
 	//register featureview for notification about change in highlight
 	//feature view only received notification from waveforms view
 	//[[NSNotificationCenter defaultCenter] addObserver: fw selector:@selector(receiveNotification:) 
 	//											 name:@"highlight" object: [self wfv]];
 	
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) 
-												 name:@"setFeatures" object:nil];
 	
     
     if( [[NSUserDefaults standardUserDefaults] boolForKey:@"stimInfo"] ==YES)
