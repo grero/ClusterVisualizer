@@ -21,7 +21,7 @@
     NSInteger isTemplate;
     NSData *color;
     NSMutableIndexSet *indices;
-    NSInteger valid;
+    NSInteger valid,multiUnit;
     NSMutableArray *parents;
     NSColor *textColor;
     NSNumber *shortISIs;
@@ -42,7 +42,7 @@
 
 @property(retain,readwrite) NSString *name;
 @property(retain,readwrite) NSMutableData *points;
-@property(assign, readwrite) NSInteger active;
+@property(assign, readwrite) NSInteger active,multiUnit;
 @property(assign,readwrite) NSInteger isTemplate;
 @property(retain,readwrite) NSNumber *npoints,*totalNPoints;
 @property(retain,readwrite) NSMutableIndexSet *indices;
@@ -76,6 +76,8 @@
 
 -(void)makeInvalid;
 -(void)makeValid;
+-(void)makeMultiUnit;
+-(void)makeSingleUnit;
 -(void)computeFeatureMean:(NSData*)data;
 -(void)computeFeatureCovariance:(NSData*)data;
 -(void)computeISIs:(NSData*)timestamps;

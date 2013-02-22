@@ -21,7 +21,7 @@
 @synthesize npoints,totalNPoints;
 @synthesize color;
 @synthesize indices;
-@synthesize valid;
+@synthesize valid,multiUnit;
 @synthesize parents;
 @synthesize clusterId;
 @synthesize textColor;
@@ -91,6 +91,15 @@
 -(void)makeValid
 {
     [self setValid:1];
+}
+
+-(void)makeMultiUnit
+{
+	[self setMultiUnit:1];
+}
+-(void)makeSingleUnit
+{
+	[self setMultiUnit:0];
 }
 
 -(NSIndexSet*)indices
@@ -880,6 +889,7 @@
 	[coder encodeObject: isolationDistance forKey: @"isolationDistance"];
 	[coder encodeObject: shortISIs forKey: @"shortISIs"];
 	[coder encodeObject: lRatio forKey: @"lRatio"];
+	[coder encodeObject: multiUnit forKey:@"multiUnit"];
 }
 
 -(id)initWithCoder:(NSCoder*)coder
@@ -900,6 +910,7 @@
 	lRatio = [[coder decodeObjectForKey: @"lRatio"] retain];
 	shortISIs = [[coder decodeObjectForKey: @"shortISIs"] retain];
 	isolationDistance = [[coder decodeObjectForKey: @"isolationDistance"] retain];
+	multiUnit = [[coder deocdeObjectForKey: @"multiUnit"] retain];
 	if( isolationDistance == nil)
 	{
 		isolationDistance = [[NSNumber numberWithFloat: 0.0] retain];
