@@ -1160,7 +1160,7 @@
     
     
     //[selectClusterOption removeAllItems];
-    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Split among clusters",@"Screen waveforms",nil];
+    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Multi-unit",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Split among clusters",@"Screen waveforms",nil];
     
     //test
     //clusterOptionsMenu  = [[[NSMenu alloc] initWithTitle:@"Options"] autorelease];
@@ -2720,6 +2720,20 @@
     {
         [candidates makeObjectsPerformSelector:@selector(undoTemplate)];
     }
+	else if([ selection isEqualToString:@"Multi-unit"])
+	{
+		[candidates makeObjectsPerformSelector:@selector(makeMultiUnit)];
+		NSUInteger oidx = [selectClusterOption indexOfItemWithTitle: @"Multi-unit"];
+		[selectClusterOption removeItemAtIndex: oidx];
+		[selectClusterOption insertItemWithTitle: @"Single-unit" atIndex: oidx];
+	}
+	else if([ selection isEqualToString:@"Single-unit"])
+	{
+		[candidates makeObjectsPerformSelector:@selector(makeSingleUnit)];
+		NSUInteger oidx = [selectClusterOption indexOfItemWithTitle: @"Single-unit"];
+		[selectClusterOption removeItemAtIndex: oidx];
+		[selectClusterOption insertItemWithTitle: @"Single-unit" atIndex: oidx];
+	}
     else if ([selection isEqualToString:@"Compute XCorr"] )
     {
         NSDictionary *dict = [[candidates objectAtIndex:0] computeXCorr:[candidates objectAtIndex:1] timepoints:timestamps];
