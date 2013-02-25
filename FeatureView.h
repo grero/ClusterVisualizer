@@ -55,7 +55,7 @@ static BOOL picked;
 	GLString *glabelX,*glabelY,*glabelZ;
     BOOL drawAxesLabels,appendHighlights,showFrame,showFrame1,showFrame2,showFrame3,drawRect,isDragging;
     Cluster *currentCluster;
-    NSMutableArray *selectedClusters;
+    NSMutableArray *selectedClusters,*useClusters;
     NSData *vertices;
     GLuint vertexBuffer,indexBuffer,colorBuffer;
     //current cluster centroid
@@ -68,6 +68,7 @@ static BOOL picked;
 @property (retain,readwrite) NSMutableIndexSet *indexset;
 @property (retain,readwrite) NSMutableData *highlightedPoints;
 @property (retain,readwrite) NSMutableIndexSet *highlightedClusterPoints;
+@property (retain,readwrite) NSMutableArray *selectedClusters;
 @property (assign,readwrite) BOOL showFrame,showFrame1,showFrame2,showFrame3;
 
 +(NSOpenGLPixelFormat*)defaultPixelFormat;

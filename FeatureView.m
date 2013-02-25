@@ -13,6 +13,7 @@
 @synthesize indexset;
 @synthesize highlightedPoints,highlightedClusterPoints;
 @synthesize showFrame,showFrame1,showFrame2,showFrame3;
+@synthesize selectedClusters;
 
 -(BOOL) acceptsFirstResponder
 {
@@ -41,7 +42,7 @@
 	base_color[2] = 0.35f;
     drawAxesLabels = NO;
     appendHighlights = NO;
-    NSOpenGLPixelFormatAttribute attrs[] =
+    NSOpenGLPixelFormatAttribute atrs[] =
     {
         NSOpenGLPFAAllRenderers,YES,
         NSOpenGLPFAColorSize, 24,
@@ -1556,6 +1557,19 @@ static void drawFrame()
 }
 
 
+- (void)flagsChanged:(NSEvent *)theEvent
+{
+	if( [theEvent modifierFlags] & NSShiftKeyMask)
+	{
+		if( useClusters != nil)
+		{
+			[selectedClusters makeObjectsPerformSelector: @selector(makeInactive)];
+			[useClusters makeObjectsPerformSelector: @selector(makeActive)];
+			[useClusters removeAllObjects];
+			useClusters = nil;
+		}
+	}
+}
 
 - (void)keyDown:(NSEvent *)theEvent
 {
@@ -1730,8 +1744,8 @@ static void drawFrame()
     gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[1], m, p, view, &objXNear, &objYNear, &objZNear);
     gluUnProject(currentPoint.x, /*height-*/currentPoint.y, /*1*/depth[0], m, p, view, &objXFar, &objYFar, &objZFar);
 
-    if([theEvent modifierFlags] & ( NSCommandKeyMask | NSShiftKeyMask))
-    {
+    //if([theEvent modifierFlags] & ( NSCommandKeyMask | NSShiftKeyMask))
+    //{
         //only select points if Command key is pressed
         //if we are also pressing the shift button, append highlights
         //get current point in view coordinates
@@ -1870,6 +1884,26 @@ static void drawFrame()
                 useCluster = [selectedClusters objectAtIndex:q];
             }            
 		}
+			//if the option key was pressed, select cluster containing the clicked point
+		if( [theEvent modifierFlags] & ( NSAlternateKeyMask | NSShiftKeyMask ))
+		{
+			if( [theEvent modifierFlags ] & NSShiftKeyMask )
+			{
+				if( useClusters == nil )
+				{
+					useClusters = [[NSMutableArray arrayWithObject: useCluster] retain];
+				}
+				else
+				{
+					[useClusters  addObject: useCluster];
+				}
+			}
+			else
+			{
+				[selectedClusters makeObjectsPerformSelector: @selector(makeInactive)];
+				[useCluster makeActive];
+			}
+		}
 		//the brute force way; go through the cluster points to find the index
 		NSUInteger _npoints = [[useCluster npoints] unsignedIntValue];
 		unsigned int *_points = (unsigned int*)[[useCluster points] bytes];
@@ -1878,13 +1912,16 @@ static void drawFrame()
 		//here we should got through each of the indices
 		k = [foundIndices firstIndex];
 		i = 0;
-		while(k != NSNotFound )
+		if( _points != NULL)
 		{
-			while( (_points[l] != k ) && (l < _npoints ) )
-				l++;
-			wfidx[i] = l+offset;
-			k = [foundIndices indexGreaterThanIndex: k];
-			i+=1;
+			while(k != NSNotFound )
+			{
+				while( (_points[l] != k ) && (l < _npoints ) )
+					l++;
+				wfidx[i] = l+offset;
+				k = [foundIndices indexGreaterThanIndex: k];
+				i+=1;
+			}
 		}
 
         //make sure we actually found a point first
@@ -1940,7 +1977,7 @@ static void drawFrame()
 			[[NSNotificationCenter defaultCenter] postNotificationName:@"highlight" object:useCluster userInfo: params];
 			//[self highlightPoints:params];
 		}
-    }
+    //}
     /*
     else if( [[theEvent characters] isEqualToString:@"c"] )
     {

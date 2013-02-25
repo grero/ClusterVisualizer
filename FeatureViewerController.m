@@ -42,6 +42,8 @@
 	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
 												 name:@"showInput" object: nil];
 	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
+												 name:@"hideAllClusters" object: nil];
+	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
 												 name:@"highlight" object: nil];
 	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
 												 name:@"loadLargeWaveforms" object: nil];
@@ -1156,6 +1158,7 @@
         [self removeAllObjectsFromClusters];
     }
 	[self setClusters:tempArray];
+	[[self fw] setSelectedClusters: [NSMutableArray arrayWithArray: tempArray]];
     [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
     
     
@@ -2389,11 +2392,13 @@
     if([sender state] == 0 )
     {
         [Clusters makeObjectsPerformSelector:@selector(makeInactive)];
-         [fw hideAllClusters];
+        [fw hideAllClusters];
+		[[fw selectedClusters] removeAllObjects];
     }
     else {
         [Clusters makeObjectsPerformSelector:@selector(makeActive)];
         [fw showAllClusters];
+		[fw setSelectedClusters: [NSMutableArray arrayWithArray: Clusters]];
     }
    
     [[NSNotificationCenter defaultCenter] addObserver:self
