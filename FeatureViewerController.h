@@ -45,7 +45,8 @@
 	NSInteger nchannels,nvalidChannels;
     unsigned int *validChannels;
     //name of current cluster set
-    NSString *currentBaseName,*currentDir;
+    NSString *currentBaseName,*currentDir,*currentGroup,
+			 *currentHighpassFile;
     NSString *waveformsFile;
     NSOperationQueue *queue;
     NSTimer *archiveTimer, *cycleTimer;

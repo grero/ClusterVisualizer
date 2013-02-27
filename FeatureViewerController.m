@@ -202,6 +202,10 @@
 		NSRange range = [[path lastPathComponent] rangeOfString:@"_" options:NSBackwardsSearch];
 		filebase = [[path lastPathComponent] substringToIndex:range.location]; 
 		currentBaseName = [[NSString stringWithString:filebase] retain];
+		//the the group
+		range = [[path lastPathComponent] rangeOfString:@"waveforms"];
+		currentGroup = [[[path lastPathComponent] substringWithRange: NSMakeRange(range.location-4,4)] retain];
+		//attempt to locate the highpass file as well
 		//set the current directory of the process to the the one pointed to by the load dialog
 		[[NSFileManager defaultManager] changeCurrentDirectoryPath:directory];
 		//get all feature files, i.e. files ending in .fd from the FD directory
@@ -873,10 +877,6 @@
 		{
 			[self openFeatureFile:featurePath];
 		}
-		
-		
-		
-        
     }
 	//create a data object to hold the channels
 	unsigned int *_chs = malloc(nvalidChannels*sizeof(unsigned int));
@@ -1163,7 +1163,7 @@
     
     
     //[selectClusterOption removeAllItems];
-    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Multi-unit",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Split among clusters",@"Screen waveforms",nil];
+    NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Multi-unit",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Split among clusters",@"Screen waveforms",@"Resolve overlaps",nil];
     
     //test
     //clusterOptionsMenu  = [[[NSMenu alloc] initWithTitle:@"Options"] autorelease];
@@ -2261,6 +2261,7 @@
 		{
 			[self movePointsFromCluster: [self selectedCluster] toCluster:[Clusters objectAtIndex:0]];		
         }
+		
         
         else
         {
@@ -2829,6 +2830,7 @@
         NSRange _r = [baseName rangeOfString:@"waveforms"];
         
         group = [NSString stringWithFormat:@"group%@",[baseName substringWithRange:NSMakeRange(_r.location-4,4)]];
+		currentGroup = [[NSString stringWithString: group] retain];
         sessionName = [baseName substringWithRange:NSMakeRange(0,_r.location-5)];
         //}
         
@@ -3300,6 +3302,45 @@
     {
         [[self clusterNotesPanel] orderFront:self];
     }
+	else if( [selection isEqualToString: @"Resolve overlaps"])
+	{
+		//TODO: Interface with the matlab function hmm_decode, which runs an HMM decoder using the selected clusters as templates
+		//check that we have the matlab script
+		//first we need to save the clusters
+		[self saveClusters: self];
+		NSTask *hmmTask = [[NSTask alloc] init];
+		NSString *hmmPath = [@"~/Documents/research/code/hmmsort/run_hmm_decode.sh" stringByExpandingTildeInPath];
+		NSInteger result;
+		if( [[NSFileManager defaultManager] fileExistsAtPath:hmmPath] == NO )
+		{
+			NSOpenPanel *_openPanel = [NSOpenPanel openPanel];
+			[_openPanel setTitle: @"Please specify the path to the hmm script"];
+			result = [_openPanel runModal];
+			if( result == NSFileHandlingPanelOKButton)
+			{
+				hmmPath = [[[_openPanel URLs] objectAtIndex: 0] path];
+			}
+		}
+		if( currentHighpassFile == nil )
+		{
+			NSOpenPanel *_openPanel = [NSOpenPanel openPanel];
+			[_openPanel setTitle: @"Specify the path to the highpass file"];
+			result = [_openPanel runModal];
+			if( result == NSFileHandlingPanelOKButton)
+			{
+				currentHighpassFile = [[[[_openPanel URLs] objectAtIndex: 0] path] retain];
+			}
+		}
+
+		[hmmTask setCurrentDirectoryPath: currentDir];
+		[hmmTask setLaunchPath: hmmPath];
+		[hmmTask setArguments: [NSArray arrayWithObjects: @"/Applications/MATLAB_R2010a.app/",
+			@"patchLength",@"200000",
+			@"p",@"1e-10",@"Group", currentGroup, @"SourceFile",
+			currentHighpassFile,@"save",nil]];
+		//start the task
+		[hmmTask launch];
+	}
                                                                                  
 }
 
