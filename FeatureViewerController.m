@@ -3375,42 +3375,47 @@
             [clusterDescriptions addObject:[cluster description]];
         }
         clusterDescriptionString = [clusterDescriptions componentsJoinedByString:@"\n"];
-        NSSavePanel *savePanel = [NSSavePanel savePanel];
-		[savePanel setNameFieldStringValue:[NSString stringWithFormat: @"%@.cut",currentBaseName]];
-		
-		NSInteger result = [savePanel runModal];
-		if(result == NSFileHandlingPanelOKButton )
+		NSString *clusterFileName = [NSString stringWithFormat: @"%@.cut",currentBaseName];
+		//check if the file already exists; if so, open a dialog box to choose a new file name	
+		if( [[NSFileManager defaultManager] fileExistsAtPath: clusterFileName])
 		{
-            const char* fname = [[[savePanel URL] path] cStringUsingEncoding:NSASCIIStringEncoding];
-			//check that we can write to the file
-
-			NSString *ext = [[savePanel nameFieldStringValue] pathExtension];
-			int res = 0;
-			if([ext isEqualToString:@"cut"])
+			NSSavePanel *savePanel = [NSSavePanel savePanel];
+			[savePanel setNameFieldStringValue: clusterFileName];
+			
+			NSInteger result = [savePanel runModal];
+			if(result == NSFileHandlingPanelOKButton )
 			{
-				res = writeCutFile(fname, cluster_indices+1, params.rows);
+				clusterFileName = [[savePanel URL] path];
 			}
-			else
-			{
-				NSRange r = [[savePanel filename] rangeOfString:@"clu"];
-				if(r.location != NSNotFound )
-				{
-					res = writeCutFile(fname, cluster_indices, params.rows+1);
-				}
-			}
-
-			if( res < 0 )
-			{
-				NSAlert *_alert = [[NSAlert alloc] init];
-				[_alert setMessageText: @"Sorry, but you do not appear to have permission to write to this file"];
-				NSInteger response = [_alert runModal];
-				[_alert release];
-
-			}
-            //save cluster info to string
-            [clusterDescriptionString writeToFile:[[[savePanel URL] path] stringByReplacingOccurrencesOfString:ext withString:@"info"] atomically:YES encoding:NSASCIIStringEncoding error:nil];
-            
 		}
+		NSString *ext = [clusterFileName pathExtension];
+		const char *fname = [clusterFileName cStringUsingEncoding:NSASCIIStringEncoding];
+		int res = 0;
+		if([ext isEqualToString:@"cut"])
+		{
+			res = writeCutFile(fname, cluster_indices+1, params.rows);
+		}
+		else
+		{
+			NSRange r = [clusterFileName rangeOfString:@"clu"];
+			if(r.location != NSNotFound )
+			{
+				res = writeCutFile(fname, cluster_indices, params.rows+1);
+			}
+		}
+
+		//check that we can write to the file
+		if( res < 0 )
+		{
+			NSAlert *_alert = [[NSAlert alloc] init];
+			[_alert setMessageText: @"Sorry, but you do not appear to have permission to write to this file"];
+			NSInteger response = [_alert runModal];
+			[_alert release];
+
+		}
+		//save cluster info to string
+		[clusterDescriptionString writeToFile:[clusterFileName stringByReplacingOccurrencesOfString:ext withString:@"info"] atomically:YES encoding:NSASCIIStringEncoding error:nil];
+            
         free(cluster_indices);
         //[cidx_string writeToFile:[NSString stringWithFormat: @"%@.cut",currentBaseName] atomically:YES];
         //now write a file containing the template clusters
@@ -3424,14 +3429,24 @@
             [templateIds addObject:[NSString stringWithFormat: @"%d",[[template clusterId] intValue]]];
         }
         NSString *templateIdStr = [templateIds componentsJoinedByString:@"\n"];
-		[savePanel setNameFieldStringValue:[NSString stringWithFormat: @"%@.scu",currentBaseName]];
-		[savePanel beginWithCompletionHandler:^(NSInteger result) 
-		 {
-			 if(result == NSFileHandlingPanelOKButton )
+		NSString *templateClusterFile = [NSString stringWithFormat: @"%@.scu",currentBaseName];
+		//check if file exists
+		if( [[NSFileManager defaultManager] fileExistsAtPath:templateClusterFile])
+		{
+			NSSavePanel *savePanel = [NSSavePanel savePanel];
+			[savePanel setNameFieldStringValue:templateClusterFile];
+			[savePanel beginWithCompletionHandler:^(NSInteger result) 
 			 {
-				 [templateIdStr writeToFile: [[savePanel URL] path] atomically:YES];
-			 }
-		 }];
+				 if(result == NSFileHandlingPanelOKButton )
+				 {
+					 [templateIdStr writeToFile: [[savePanel URL] path] atomically:YES];
+				 }
+			 }];
+		}
+		else
+		{
+					 [templateIdStr writeToFile: templateClusterFile atomically:YES];
+		}
         //[templateIdStr writeToFile:[NSString stringWithFormat:@"%@.scu",currentBaseName] atomically:YES];
         
         //also store the data
