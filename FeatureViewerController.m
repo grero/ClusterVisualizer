@@ -38,7 +38,9 @@
     queue = [[[NSOperationQueue alloc] init] retain];
 	currentBaseName = NULL;
 	timestamps = NULL;
-    [self setFilterClustersPredicate:[NSPredicate predicateWithFormat: @"valid==YES"]];
+    [self setFilterClustersPredicate:[NSPredicate predicateWithFormat: @"SELF.valid==YES AND SELF.active==YES"]];
+	[clusterController setFilterPredicate: [self filterClustersPredicate]];
+	[clusterController setClearsFilterPredicateOnInsertion: NO];
 	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
 												 name:@"showInput" object: nil];
 	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
@@ -80,7 +82,7 @@
 										 
 									
 																					
-	[filterPredicates setRowTemplates: [NSArray arrayWithObjects:row,nil]];
+//	[filterPredicates setRowTemplates: [NSArray arrayWithObjects:row,nil]];
     
     //load the rasterview window
     
@@ -1160,8 +1162,9 @@
 	[self setClusters:tempArray];
 	[[self fw] setSelectedClusters: [NSMutableArray arrayWithArray: tempArray]];
     [self setIsValidCluster:[NSPredicate predicateWithFormat:@"valid==1"]];
-    
-    
+   
+	//apply filter
+	[clusterController setFilterPredicate: [self filterClustersPredicate]] ;
     //[selectClusterOption removeAllItems];
     NSMutableArray *options = [NSMutableArray arrayWithObjects:@"Show all",@"Hide all",@"Merge",@"Delete",@"Filter clusters",@"Remove waveforms",@"Make Template",@"Multi-unit",@"Undo Template",@"Compute XCorr",@"Compute Isolation Distance",@"Compute Isolation Info", @"Show raster",@"Save clusters",@"Assign to cluster",@"Split among clusters",@"Screen waveforms",@"Resolve overlaps",nil];
     
@@ -1935,6 +1938,8 @@
             [self setActiveCluster:nil];
         }
     }
+	[clusterController setFilterPredicate: [self filterClustersPredicate]] ;
+	[clusterController rearrangeObjects];
     
 }
 
@@ -1946,9 +1951,11 @@
     //[[Clusters filteredArrayUsingPredicate:[NSCompoundPredicate notPredicateWithSubpredicate: predicate]] makeObjectsPerformSelector:@selector(makeInactive)];
     //[allActive setState: 0];
     //Inactive those clusters for which the predicate is not true and which are already active
-    [[Clusters filteredArrayUsingPredicate:[NSCompoundPredicate andPredicateWithSubpredicates:[NSArray arrayWithObjects:                                                                                                [NSCompoundPredicate notPredicateWithSubpredicate:predicate],                                                                                               isActive,nil]]] makeObjectsPerformSelector:@selector(makeInactive)];
+    [[Clusters filteredArrayUsingPredicate:[NSCompoundPredicate andPredicateWithSubpredicates:[NSArray arrayWithObjects: 
+	[NSCompoundPredicate notPredicateWithSubpredicate:predicate], isActive,nil]]] makeObjectsPerformSelector:@selector(makeInactive)];
     //Activate those clusters for which the predicate is true and which are inactive
-    [[Clusters filteredArrayUsingPredicate: [NSCompoundPredicate andPredicateWithSubpredicates:[NSArray arrayWithObjects:                                                                                                 [NSCompoundPredicate notPredicateWithSubpredicate:isActive],                                                                                                 predicate,nil]]] makeObjectsPerformSelector:@selector(makeActive)];
+    [[Clusters filteredArrayUsingPredicate: [NSCompoundPredicate andPredicateWithSubpredicates:[NSArray arrayWithObjects: 
+	[NSCompoundPredicate notPredicateWithSubpredicate:isActive],predicate,nil]]] makeObjectsPerformSelector:@selector(makeActive)];
 }
 
 -(NSPredicate*)filterClustersPredicate
@@ -2407,6 +2414,7 @@
                                                  name:@"ClusterStateChanged" object:nil];
     
     //[Clusters makeObjectsPerformSelector:@selector(setActive:) withObject: state];
+	[clusterController rearrangeObjects];
     
 }
 
