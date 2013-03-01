@@ -3377,7 +3377,7 @@
         clusterDescriptionString = [clusterDescriptions componentsJoinedByString:@"\n"];
 		NSString *clusterFileName = [NSString stringWithFormat: @"%@.cut",currentBaseName];
 		//check if the file already exists; if so, open a dialog box to choose a new file name	
-		if( [[NSFileManager defaultManager] fileExistsAtPath: clusterFileName])
+		if( ([[NSFileManager defaultManager] fileExistsAtPath: clusterFileName]) || currentBaseName == NULL )
 		{
 			NSSavePanel *savePanel = [NSSavePanel savePanel];
 			[savePanel setNameFieldStringValue: clusterFileName];
@@ -3386,6 +3386,12 @@
 			if(result == NSFileHandlingPanelOKButton )
 			{
 				clusterFileName = [[savePanel URL] path];
+				if( currentBaseName == NULL )
+				{
+					NSRange range;
+					NSString *filebase = [[clusterFileName lastPathComponent] substringToIndex:range.location]; 
+					currentBaseName = [[NSString stringWithString:filebase] retain];
+				}
 			}
 		}
 		NSString *ext = [clusterFileName pathExtension];
