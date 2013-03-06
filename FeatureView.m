@@ -886,6 +886,7 @@
 			//
 			qidx = _points[i] >= offset ? _points[i]-offset : _points[i];
 			idx[i] = _clusterPoints[qidx];
+			//idx[i] = qidx;
 			//idx[i] = _points[i];
 		}
 	}
@@ -1565,6 +1566,7 @@ static void drawFrame()
 		{
 			[selectedClusters makeObjectsPerformSelector: @selector(makeInactive)];
 			[useClusters makeObjectsPerformSelector: @selector(makeActive)];
+			[selectedClusters addObjectsFromArray: useClusters];
 			[useClusters removeAllObjects];
 			useClusters = nil;
 		}
@@ -1722,9 +1724,14 @@ static void drawFrame()
 -(void)mouseUp:(NSEvent *)theEvent
 {
 	//turn off dragging
-	isDragging = NO;
-	//show the cursor
-	[NSCursor unhide];
+	if( isDragging )
+	{
+		isDragging = NO;
+		//show the cursor
+		[NSCursor unhide];
+		[self setNeedsDisplay:YES];
+		return;
+	}
     NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
     GLint view[4];
     GLdouble p[16];
@@ -1901,7 +1908,9 @@ static void drawFrame()
 			else
 			{
 				[selectedClusters makeObjectsPerformSelector: @selector(makeInactive)];
+				[selectedClusters removeAllObjects];
 				[useCluster makeActive];
+				[selectedClusters addObject: useCluster];
 			}
 		}
 		//the brute force way; go through the cluster points to find the index
