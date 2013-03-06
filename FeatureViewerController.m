@@ -96,7 +96,7 @@
     }
     */
     shouldShowRaster = NO;
-    shouldShowWaveforms = NO;
+    shouldShowWaveforms =YES;
     autoLoadWaveforms = YES;
     [selectClusterOption removeAllItems];
     //create the waveforms menu
@@ -1886,6 +1886,7 @@
         if( [[[self wfv] window] isVisible] )
         {
             //check if we are adding another set of waveforms from another cluster
+			/*
             if([[notification object] isEqual:selectedCluster]==NO)
             {
                 [[self wfv] setOverlay:YES];
@@ -1894,6 +1895,8 @@
             {
                 [[self wfv] setOverlay:NO];
             }
+			*/
+			[[self wfv] setOverlay:YES];
             [self loadWaveforms: [notification object]];
         }
         
