@@ -2041,6 +2041,10 @@ static void drawFrame()
 			[NSCursor hide];
 			isDragging = YES;
 		}
+		if( highlightedClusterPoints == nil)
+		{
+			[self setHighlightedClusterPoints: [NSMutableIndexSet indexSet]];
+		}
 		//need to get the currentPoint in data coordinates
 		NSPoint currentPoint = [self convertPoint: [theEvent locationInWindow] fromView:nil];
 		//we are not really interested in data coordinates here; we just want to highlight whatever is behind
