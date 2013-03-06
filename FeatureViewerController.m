@@ -686,6 +686,7 @@
     _ccolor[2] = 0.35f;//use_colors[3*cids[i+1]+2];
     [firstCluster setColor: [NSData dataWithBytes:_ccolor length:3*sizeof(float)]];
     [firstCluster makeActive];
+    [firstCluster makeValid];
     free(_ccolor);
     [selectClusterOption addItemWithTitle:@"Create cluster"];
     [selectClusterOption addItemWithTitle:@"Add points to cluster"];
@@ -708,6 +709,7 @@
     {
         [self setClusters:[NSMutableArray arrayWithObject:firstCluster]];
     }
+	[clusterController rearrangeObjects];
 	//release first cluster since we are done with it; it now belongs to Clusters
 	[firstCluster release];
     //enable the time slider on the main menu
@@ -2942,6 +2944,7 @@
             [[self fw] setClusterColors: _color forIndices:_clusterPoints length:_npoints];
              free(_color);
             [newCluster makeValid];
+			[newCluster makeActive];
             //add cluster to the list
             if([self Clusters] != nil )
             {
@@ -3396,7 +3399,7 @@
 				clusterFileName = [[savePanel URL] path];
 				if( currentBaseName == NULL )
 				{
-					NSRange range;
+					NSRange range = [[path lastPathComponent] rangeOfString:@"_" options:NSBackwardsSearch];
 					NSString *filebase = [[clusterFileName lastPathComponent] substringToIndex:range.location]; 
 					currentBaseName = [[NSString stringWithString:filebase] retain];
 				}
