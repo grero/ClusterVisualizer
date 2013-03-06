@@ -3399,7 +3399,7 @@
 				clusterFileName = [[savePanel URL] path];
 				if( currentBaseName == NULL )
 				{
-					NSRange range = [[path lastPathComponent] rangeOfString:@"_" options:NSBackwardsSearch];
+					NSRange range = [[[[savePanel URL] path] lastPathComponent] rangeOfString:@"_" options:NSBackwardsSearch];
 					NSString *filebase = [[clusterFileName lastPathComponent] substringToIndex:range.location]; 
 					currentBaseName = [[NSString stringWithString:filebase] retain];
 				}
