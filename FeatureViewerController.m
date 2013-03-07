@@ -1228,6 +1228,8 @@
     [[[self clusterMenu] itemWithTitle:@"Move points to cluster"] setSubmenu:moveToClusterMenu];
 
 	[[wfv window] orderOut: self];
+	//turn off overlay for the waveforms window such that we start from scratch next time we draw
+	[wfv setOverlay: NO];
 	//[self performComputation:@"Compute Feature Mean" usingSelector:@selector(computeFeatureMean:)];
     //[self performComputation:@"Compute Feature Covariance" usingSelector:@selector(computeFeatureCovariance:)];
 	//[allActive setState:1];
@@ -1861,6 +1863,8 @@
     {
         return;
     }
+	//get all active clusters
+	NSArray *candidates = [Clusters filteredArrayUsingPredicate: [NSPredicate predicateWithFormat: @"active == 1"]];
     if( [[notification object] active] )
     {
 		//reset the last operation
@@ -1892,7 +1896,8 @@
         if( [[[self wfv] window] isVisible] )
         {
             //check if we are adding another set of waveforms from another cluster
-            if([[notification object] isEqual:selectedCluster]==NO)
+			if([candidates count]> 1)
+            //if(( [[notification object] isEqual:selectedCluster]==NO) && (selectedCluster != nil) )
             {
                 [[self wfv] setOverlay:YES];
             }
@@ -1930,7 +1935,8 @@
             {
                 //TODO: this could be modified to show the waveforms of all selected clusters
                 [[self wfv] setOverlay:NO];
-                [self loadWaveforms: candidate];
+				[[self wfv] setNeedsDisplay: YES];
+                //[self loadWaveforms: candidate];
             }
         }
         else
@@ -2410,6 +2416,7 @@
         [Clusters makeObjectsPerformSelector:@selector(makeInactive)];
         [fw hideAllClusters];
 		[[fw selectedClusters] removeAllObjects];
+		[self setSelectedCluster: nil];
 		[[self wfv] setOverlay: NO];
     }
     else {
@@ -2429,6 +2436,7 @@
 
 - (IBAction) clusterThumbClicked: (id)sender
 {
+	//never gets called
     //check if we cli
 	[self loadWaveforms:[self activeCluster]];
 	[[wfv window] orderFront: self];
