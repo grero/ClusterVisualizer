@@ -241,7 +241,6 @@
                 
 				const char *filename = [[NSString pathWithComponents: [NSArray arrayWithObjects: directory,file,nil]] cStringUsingEncoding:NSASCIIStringEncoding];
 				H = *readFeatureHeader(filename, &H);
-				
 				tmp_data = malloc(H.rows*H.cols*sizeof(float));
 				tmp_data2 = malloc(H.rows*H.cols*sizeof(float));
 				//the feature file will in general have a channelValidity file; this tells me which channels were used
@@ -323,7 +322,7 @@
 		}
 		//need to reshape
 		//tmp_data = NSZoneMalloc([self zone], rows*cols*sizeof(float));
-		tmp_data = malloc(rows*cols*sizeof(float));
+		tmp_data = malloc((rows*(cols+1))*sizeof(float));
 		tmp_data2 = (float*)[data bytes];
 		for(i=0;i<rows;i++)
 		{
@@ -331,10 +330,15 @@
 			{
 				for(j=0;j<H.rows;j++)
 				{
-					tmp_data[i*cols+k*H.rows+j] = tmp_data2[k*rows*H.rows + i*H.rows+j];
+					tmp_data[i*(cols+1)+k*H.rows+j] = tmp_data2[k*rows*H.rows + i*H.rows+j];
 				}
 			}
+			//scale time between -1 and 1
+			tmp_data[i*(cols+1)+cols] = 2*((float)i)/rows-1;
 		}
+		//make space for time
+		cols+=1;
+		[feature_names addObject: [NSString stringWithFormat:@"Time"]];
 		//free(temp_data);
 	}
 	
@@ -398,7 +402,7 @@
 	NSRange range;
 	range.location = 0;
 	range.length = rows*cols*sizeof(float);
-	
+	//add time as a dimension	
 	//scale data
     float max,min,l;
     if( [[NSUserDefaults standardUserDefaults] integerForKey:@"autoScaleAxes"] == 0 )
@@ -452,6 +456,8 @@
 	 */
     if(tmp_data != NULL)
     {
+		//increase the length of data to account for the extra time axis
+		[data setLength: rows*cols*sizeof(float)];
         [data replaceBytesInRange:range withBytes:tmp_data length: rows*cols*sizeof(float)];
          
         free(tmp_data);
@@ -1886,7 +1892,6 @@
         if( [[[self wfv] window] isVisible] )
         {
             //check if we are adding another set of waveforms from another cluster
-			/*
             if([[notification object] isEqual:selectedCluster]==NO)
             {
                 [[self wfv] setOverlay:YES];
@@ -1895,8 +1900,6 @@
             {
                 [[self wfv] setOverlay:NO];
             }
-			*/
-			[[self wfv] setOverlay:YES];
             [self loadWaveforms: [notification object]];
         }
         
@@ -2407,6 +2410,7 @@
         [Clusters makeObjectsPerformSelector:@selector(makeInactive)];
         [fw hideAllClusters];
 		[[fw selectedClusters] removeAllObjects];
+		[[self wfv] setOverlay: NO];
     }
     else {
         [Clusters makeObjectsPerformSelector:@selector(makeActive)];
