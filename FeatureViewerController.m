@@ -20,7 +20,7 @@
 //@synthesize filterClustersPredicate;
 @synthesize clustersSortDescriptor;
 @synthesize clustersSortDescriptors;
-@synthesize waveformsFile,currentDir,logFilePath,lastOperation;
+@synthesize waveformsFile,currentDir,logFilePath,lastOperation,currentBaseName;
 @synthesize activeCluster,selectedCluster;
 //@synthesize selectedClusters;
 //@synthesize selectedWaveform;
@@ -36,7 +36,7 @@
     //[self setClusters:[NSMutableArray array]];
     dataloaded = NO;
     queue = [[[NSOperationQueue alloc] init] retain];
-	currentBaseName = NULL;
+	//currentBaseName = NULL;
 	timestamps = NULL;
     [self setFilterClustersPredicate:[NSPredicate predicateWithFormat: @"SELF.valid==YES AND SELF.active==YES"]];
 	[clusterController setFilterPredicate: [self filterClustersPredicate]];
@@ -203,7 +203,9 @@
 		//find the last occurrence of "_"
 		NSRange range = [[path lastPathComponent] rangeOfString:@"_" options:NSBackwardsSearch];
 		filebase = [[path lastPathComponent] substringToIndex:range.location]; 
-		currentBaseName = [[NSString stringWithString:filebase] retain];
+		//currentBaseName = [[NSString stringWithString:filebase] retain];
+		[self setCurrentBaseName: [NSString stringWithString:filebase]];
+		NSLog(@"currentBaseName = %@", currentBaseName);
 		//the the group
 		range = [[path lastPathComponent] rangeOfString:@"waveforms"];
 		currentGroup = [[[path lastPathComponent] substringWithRange: NSMakeRange(range.location-4,4)] retain];
@@ -942,21 +944,26 @@
 			 H = *readFeatureHeader("../../test2.hdf5", &H);
 			 int rows = H.rows;
 			 */
-			int *cids = malloc((rows+1)*sizeof(int));
+			int *cids = calloc((rows+1),sizeof(int));
 			//cids = readClusterIds(fname, cids);
 			NSArray *lines = [[NSString stringWithContentsOfFile:path encoding: NSASCIIStringEncoding error: NULL] componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
 			//iteratae through lines
 			NSEnumerator *lines_enum = [lines objectEnumerator];
 			id line;
 			NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-			int cidx = 0;
+			int cidx,v;
+			cidx =  0;
 			while ( (line = [lines_enum nextObject] ) )
 			{
 				NSNumber *q = [formatter numberFromString:line];
 				//if line is not a string, q is nil
 				if( q )
 				{
-					cids[cidx] = [q intValue];
+					v = [q intValue];
+					if( v >= 0)
+					{
+						cids[cidx] = v;
+					}
 					cidx+=1;
 				}
 				
@@ -3401,6 +3408,7 @@
             [clusterDescriptions addObject:[cluster description]];
         }
         clusterDescriptionString = [clusterDescriptions componentsJoinedByString:@"\n"];
+		NSLog(@"currentBaseName = %@", currentBaseName);
 		NSString *clusterFileName = [NSString stringWithFormat: @"%@.cut",currentBaseName];
 		//check if the file already exists; if so, open a dialog box to choose a new file name	
 		if( ([[NSFileManager defaultManager] fileExistsAtPath: clusterFileName]) || currentBaseName == NULL )
