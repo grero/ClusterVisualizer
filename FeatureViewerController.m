@@ -730,8 +730,15 @@
 	if( [[NSUserDefaults standardUserDefaults] boolForKey:@"autoLoadClusters"])
 	{
 		NSArray *_fileNames = [[NSFileManager defaultManager] directoryContentsAtPath: [self currentDir] ];
+		//try looking for a cut file first
 		NSArray *_goodFiles = [_fileNames filteredArrayUsingPredicate: [NSPredicate predicateWithFormat: @"SELF MATCHES[cd] %@", 
-							 [currentBaseName stringByAppendingString:@".clu.*"]]];
+							 [currentBaseName stringByAppendingString:@".cut"]]];
+	
+		if( [_goodFiles count] == 0)
+		{
+			NSArray *_goodFiles = [_fileNames filteredArrayUsingPredicate: [NSPredicate predicateWithFormat: @"SELF MATCHES[cd] %@", 
+								 [currentBaseName stringByAppendingString:@".clu.*"]]];
+		}
 		if( [_goodFiles count] > 0)
 		{
 			//we found something
