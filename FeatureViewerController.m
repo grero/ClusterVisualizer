@@ -703,6 +703,7 @@
 	[selectClusterOption addItemWithTitle: @"Find correlated waverforms"];
 	[selectClusterOption addItemWithTitle:@"Show cluster notes"];
 	[selectClusterOption addItemWithTitle: @"Find best projection"];
+	[selectClusterOption addItemWithTitle: @"Multi-unit"];
     [clusterMenu addItemWithTitle:@"Create cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     [clusterMenu addItemWithTitle:@"Add points to cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     [clusterMenu addItemWithTitle:@"Move points to cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
@@ -727,6 +728,8 @@
     //set the log file
     [self setLogFilePath:[directory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.log", filebase]]];
 	//check if are also laoding clusters
+	NSLog(@"CurrentDir = %@", currentDir);
+	NSLog(@"CurrentBaesName = %@", currentBaseName);
 	if( [[NSUserDefaults standardUserDefaults] boolForKey:@"autoLoadClusters"])
 	{
 		NSArray *_fileNames = [[NSFileManager defaultManager] directoryContentsAtPath: [self currentDir] ];
@@ -736,8 +739,8 @@
 	
 		if( [_goodFiles count] == 0)
 		{
-			NSArray *_goodFiles = [_fileNames filteredArrayUsingPredicate: [NSPredicate predicateWithFormat: @"SELF MATCHES[cd] %@", 
-								 [currentBaseName stringByAppendingString:@".clu.*"]]];
+			_goodFiles = [_fileNames filteredArrayUsingPredicate: [NSPredicate predicateWithFormat: @"SELF BEGINSWITH[cd] %@", 
+								 [currentBaseName stringByAppendingString:@".clu"]]];
 		}
 		if( [_goodFiles count] > 0)
 		{
@@ -748,8 +751,8 @@
 		{
 			//check one directory above
 			_fileNames = [[NSFileManager defaultManager] directoryContentsAtPath: [[self currentDir] stringByAppendingPathComponent:@"../"]];
-			_goodFiles = [_fileNames filteredArrayUsingPredicate: [NSPredicate predicateWithFormat: @"SELF MATCHES[cd] %@", 
-							 [currentBaseName stringByAppendingString:@".clu.*"]]];
+			_goodFiles = [_fileNames filteredArrayUsingPredicate: [NSPredicate predicateWithFormat: @"SELF BEGINSWITH[cd] %@", 
+							 [currentBaseName stringByAppendingString:@".clu"]]];
 			if( [_goodFiles count] > 0)
 			{
 				[self openClusterFile: [[self currentDir] stringByAppendingString: [NSString stringWithFormat:@"/../%@",[_goodFiles firstObject]]]];
@@ -2482,6 +2485,7 @@
 	{
 		[self setActiveCluster:[candidates objectAtIndex:0]];
 	}
+	NSLog(@"Performing cluster option %@", selection);
     if( [selection isEqualToString:@"Merge"] )
     {
 		/*
@@ -2937,6 +2941,7 @@
         //use the currently selected points to create a new cluster
         NSData *clusterPoints = [[self fw] highlightedPoints];
         //only do this if we actually have highlighted some points
+		NSLog(@"Creating cluster");
         if( (clusterPoints != nil) && ([clusterPoints length] != 0) )
         {
             unsigned int nclusters = [Clusters count];
@@ -2983,6 +2988,7 @@
             {
                 [self setClusters:[NSMutableArray arrayWithObject: newCluster]];
             }
+			[clusterController rearrangeObjects];
             //also add this cluster to the list of clusters in the menu
             if( [[[self clusterMenu] itemWithTitle:@"Add points to cluster"] hasSubmenu] == NO )
             {
