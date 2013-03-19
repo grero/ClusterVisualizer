@@ -110,6 +110,7 @@
 	//upate the cluster menu for the waveforsview
 	//
     [[NSApp mainMenu] setAutoenablesItems:NO];
+	NSLog(@"Finished laoding NIB");
     
 }
 
@@ -708,6 +709,7 @@
     [clusterMenu addItemWithTitle:@"Add points to cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     [clusterMenu addItemWithTitle:@"Move points to cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
     [clusterMenu addItemWithTitle:@"Remove points from cluster" action:@selector(performClusterOption:) keyEquivalent:@""];
+	NSLog(@"Finished adding menu items");
     //before we create the cluster, hide all existing clusters
     [[self fw] hideAllClusters];
     if([ self Clusters] != nil )
@@ -763,6 +765,9 @@
 			}
 		}
 	}
+	//allow object to receive performClusterOptions
+	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
+												 name:@"performClusterOption" object: nil];
 
 	[_pool drain];
 }
@@ -1270,6 +1275,9 @@
     [selectClusterOption addItemsWithTitles:options];
     //once we have loaded the clusters, start up a timer that will ensure that data gets arhived automatically every 5 minutes
     archiveTimer = [[NSTimer scheduledTimerWithTimeInterval:120 target:self selector:@selector(archiveClusters:) userInfo:nil repeats: YES] retain];
+	//allow object to receive performClusterOptions
+	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
+												 name:@"performClusterOption" object: nil];
 	[_pool drain];
 }
 
