@@ -220,6 +220,10 @@
     prevOffset = 0;
     //nWfIndices *= wavesize;
     chs = channels;
+	if( wfMinmax == NULL )
+        wfMinmax = calloc(6,sizeof(float));
+	if( chMinMax == NULL)
+        chMinMax = NSZoneCalloc([self zone], 2*chs, sizeof(float));
     if([self overlay] )
     {
         prevOffset = nWfVertices;
@@ -232,8 +236,6 @@
     {
         nWfVertices = (nwaves+3)*wavesize;
         //reset min/max only if we are not doing overlay
-        wfMinmax = calloc(6,sizeof(float));
-        chMinMax = NSZoneCalloc([self zone], 2*chs, sizeof(float));
         num_spikes = nwaves;
         orig_num_spikes = nwaves;
     }   
