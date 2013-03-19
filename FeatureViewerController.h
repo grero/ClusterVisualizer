@@ -154,7 +154,7 @@
 @property (retain, readwrite) NSPredicate *filterClustersPredicate;
 @property (retain, readwrite) NSSortDescriptor *clustersSortDescriptor;
 @property (retain, readwrite) NSMutableArray *clustersSortDescriptors;
-@property (retain, readwrite) NSString *waveformsFile,*currentDir,*logFilePath,*lastOperation;
+@property (retain, readwrite) NSString *waveformsFile,*currentDir,*logFilePath,*lastOperation,*currentBaseName;
 @property (assign,readwrite) Cluster *activeCluster, *selectedCluster;
 @property (assign,readwrite) NSIndexSet *selectedClusters;
 @property (retain,readwrite) NSString *selectedWaveform;
