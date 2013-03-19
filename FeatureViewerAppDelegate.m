@@ -30,6 +30,7 @@
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
     //check the extension of the file to determine how to open it
+	//should wait for the application to load first...
     if( [[filename pathExtension] isEqualToString:@"bin"] )
     {
         //open waveforms.bin file
