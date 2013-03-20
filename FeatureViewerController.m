@@ -660,6 +660,8 @@
 	//only reset clusters if data has already been loaded
     if( ([self Clusters] != nil) && (dataloaded == YES ) )
     {
+		//don't send notifcation about cluster state changed
+		[[NSNotificationCenter defaultCenter] removeObserver:self name:@"ClusterStateChanged" object: nil];
         [self removeAllObjectsFromClusters];
     }
     dataloaded = YES;
@@ -768,6 +770,9 @@
 	//allow object to receive performClusterOptions
 	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
 												 name:@"performClusterOption" object: nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(ClusterStateChanged:)
+                                                 name:@"ClusterStateChanged" object:nil];
 
 	[_pool drain];
 }
