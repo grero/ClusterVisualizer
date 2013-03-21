@@ -17,11 +17,15 @@
 #endif
 {
     NSWindow *window;
+	NSArray *filesToOpen;
+	BOOL isRunning;
     IBOutlet FeatureViewerController *controller;
 }
 
 
 @property (assign) IBOutlet NSWindow *window;
 @property (assign) IBOutlet FeatureViewerController *controller;
+@property (readwrite,retain) NSArray *filesToOpen;
+@property (assign) BOOL isRunning;
 
 @end

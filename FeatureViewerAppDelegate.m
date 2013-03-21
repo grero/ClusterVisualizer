@@ -12,12 +12,19 @@
 
 @synthesize window;
 @synthesize controller;
+@synthesize filesToOpen;
+@synthesize isRunning;
 
 
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
 	// Insert code here to initialize your application
 	[NSBundle loadNibNamed: @"RasterWindow" owner: controller];
+	if( [[self filesToOpen] count] > 0)
+	{
+		[controller openFeatureFile:[[self filesToOpen] objectAtIndex:0]];
+	}
+	[self setIsRunning: YES];
 }
 
 - (void)application:(NSApplication*)theApplication openFiles:(NSArray*)filenames
@@ -34,39 +41,89 @@
     if( [[filename pathExtension] isEqualToString:@"bin"] )
     {
         //open waveforms.bin file
-        [controller openWaveformsFile:filename];
+		if( [self isRunning])
+		{
+        	[controller openWaveformsFile:filename];
+		}
+		else
+		{
+			[self setFilesToOpen: [NSArray arrayWithObject: filename]];
+		}
         return YES;
     }
     else if( [[filename pathExtension] isEqualToString:@"fd"] )
     {
         //open feature file
-        [controller openFeatureFile:filename];
+		if( [self isRunning])
+		{
+        	[controller openFeatureFile:filename];
+		}
+		else
+		{
+			[self setFilesToOpen: [NSArray arrayWithObject: filename]];
+		}
         return YES;
     }
     else if( [[filename pathExtension] isEqualToString:@"fv"] )
     {
-        [controller openClusterFile:filename];
+		if( [self isRunning])
+		{
+        	[controller openClusterFile:filename];
+		}
+		else
+		{
+			[self setFilesToOpen: [NSArray arrayWithObject: filename]];
+		}
         return YES;
     }
 	else if( [[filename pathExtension] isEqualToString:@"cut"] )
     {
-        [controller openClusterFile:filename];
+
+		if( [self isRunning])
+		{
+        	[controller openClusterFile:filename];
+		}
+		else
+		{
+			[self setFilesToOpen: [NSArray arrayWithObject: filename]];
+		}
         return YES;
     }
     else if( [[filename componentsSeparatedByString:@"."] containsObject:@"clu"] )
     {
-        [controller openClusterFile:filename];
+		if( [self isRunning])
+		{
+        	[controller openClusterFile:filename];
+		}
+		else
+		{
+			[self setFilesToOpen: [NSArray arrayWithObject: filename]];
+		}
         return YES;
     }
 	else if( [[filename componentsSeparatedByString:@"."] containsObject:@"overlap"] )
     {
-        [controller openClusterFile:filename];
+		if( [self isRunning])
+		{
+        	[controller openClusterFile:filename];
+		}
+		else
+		{
+			[self setFilesToOpen: [NSArray arrayWithObject: filename]];
+		}
         return YES;
     }
 	else if( [[filename componentsSeparatedByString:@"."] containsObject:@"fet"] )
 	{
 		//NSLog(@"filename: %@",filename);
-		[controller openFeatureFile:filename];
+		if( [self isRunning])
+		{
+			[controller openFeatureFile:filename];
+		}
+		else
+		{
+			[self setFilesToOpen: [NSArray arrayWithObject: filename]];
+		}
 		return YES;
 	}
     else{
