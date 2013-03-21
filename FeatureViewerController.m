@@ -773,7 +773,8 @@
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(ClusterStateChanged:)
                                                  name:@"ClusterStateChanged" object:nil];
-
+	dataloaded = YES;
+	NSLog(@"Data loaded %d", dataloaded);
 	[_pool drain];
 }
 
@@ -1193,6 +1194,7 @@
     if( ([self Clusters] != nil) && (dataloaded == YES ) )
     {
         [self removeAllObjectsFromClusters];
+		[[self fw] hideAllClusters];
     }
 	[self setClusters:tempArray];
 	[[self fw] setSelectedClusters: [NSMutableArray arrayWithArray: tempArray]];
@@ -3450,7 +3452,7 @@
 				{
 					NSRange range = [[[[savePanel URL] path] lastPathComponent] rangeOfString:@"_" options:NSBackwardsSearch];
 					NSString *filebase = [[clusterFileName lastPathComponent] substringToIndex:range.location]; 
-					currentBaseName = [[NSString stringWithString:filebase] retain];
+					[self setCurrentBaseName: filebase];
 				}
 			}
 		}
