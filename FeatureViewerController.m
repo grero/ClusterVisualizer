@@ -240,6 +240,11 @@
 					continue;
 				}
                 NSString *fn = [[[[file lastPathComponent] componentsSeparatedByString:@"_"] lastObject] stringByDeletingPathExtension];
+				//if feature name is valley and we are already using triggervalue, skip it
+				if( [fn isEqualToString: @"valley"])
+				{
+					continue;
+				}
                 [progressPanel setTitle:[NSString stringWithFormat:@"Loading feature %@", fn]];
                 
 				const char *filename = [[NSString pathWithComponents: [NSArray arrayWithObjects: directory,file,nil]] cStringUsingEncoding:NSASCIIStringEncoding];
