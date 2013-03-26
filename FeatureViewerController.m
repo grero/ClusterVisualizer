@@ -473,6 +473,10 @@
         [fw createVertices:data withRows:rows andColumns:cols];
     }
 	//[fw loadVertices: [openPanel URL]];
+	//remove existing elements first
+	[[self dim1] removeAllItems];
+	[[self dim2] removeAllItems];
+	[[self dim3] removeAllItems];
 	[[self dim1] addItemsWithObjectValues:feature_names];
 	[[self dim2] addItemsWithObjectValues:feature_names];
 	[[self dim3] addItemsWithObjectValues:feature_names];
@@ -4095,7 +4099,7 @@
 	NSUInteger firstIndex = [indexes firstIndex];
     //get active clusters
     //NSArray *candidates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"active == YES"]];
-
+	//TODO: Make this work for multiple selection as well
 	if( firstIndex < [Clusters count] )
 	{
 		//TODO: This does not work if the clusters were sorted in the NSCollectionView, since the index is valid for the sorted and not
