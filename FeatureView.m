@@ -37,6 +37,8 @@
 	originy = 0.0;
 	originz = -2.0;
 	scale = 1.0;
+	scalex = 1.0;
+	scaley = 1.0;
     base_color[0] = 1.0f;
 	base_color[1] = 0.85f;
 	base_color[2] = 0.35f;
@@ -626,10 +628,10 @@
 			
 			cluster_minmax[4] = MIN(cluster_minmax[4],_vertices[points[j]*cols + draw_dims[2]]);
 			cluster_minmax[5] = MAX(cluster_minmax[5],_vertices[points[j]*cols + draw_dims[2]]);
-			
-
         }
-        
+		//set the scale accordingly
+       	scalex = 1.0/(cluster_minmax[1] - cluster_minmax[0]);
+       	scaley = 1.0/(cluster_minmax[3] - cluster_minmax[2]);
         //colors
                 /*
 		scale = 1.0;
@@ -1300,7 +1302,7 @@ static void drawFrame()
     glLoadIdentity();
 	//glFrustum(-1*scale, 1*scale, -1*scale,1*scale, 1, 4);
     //define an orthographic projection, spanning -10 to 10 in the z-direction
-	glOrtho(-2*scale, 2*scale, -2*scale, 2*scale, -10, 10);
+	glOrtho(-2*scalex, 2*scalex, -2*scaley, 2*scaley, -10, 10);
     //use look at to define our viewing transform. Eye is positioned 4 units in the NEGATIVE z-direction (towards the viewer), and the origin is 2 units into the screen (z-0 is in the viewing plane, i.e. the screen
     gluLookAt(0, 0, 4.0, originx, originy, originz, 0, 1, 0);
 	glMatrixMode(GL_MODELVIEW);
@@ -1510,19 +1512,22 @@ static void drawFrame()
 
 -(void)zoomIn
 {
-	scale = scale*0.9;
+	scalex = scalex*0.9;
+	scaley = scaley*0.9;
 	[self changeZoom];
 }
 
 -(void)zoomOut
 {
-	scale = scale*1.1;
+	scalex = scalex*1.1;
+	scaley = scaley*1.1;
 	[self changeZoom];
 }
 
 -(void)resetZoom
 {
-	scale = 1.0;
+	scalex = 1.0;
+	scaley = 1.0;
 	[self changeZoom];
 
 }
@@ -1532,7 +1537,7 @@ static void drawFrame()
 	//to be called after zoom factor has changed
 	glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-	glFrustum(-1*scale, 1*scale, -1*scale,1*scale, 1, 6);
+	glFrustum(-1*scalex, 1*scalex, -1*scalex,1*scaley, 1, 6);
     //always look at the origin
 	gluLookAt(0, 0, 2.0, originx, originy, originz-2, 0, 1, 0);
 	
@@ -2024,7 +2029,8 @@ static void drawFrame()
 	{
         float f = [event magnification];
         //convert from addititive to multiplicative
-        scale*=(1-f);
+        scalex*=(1-f);
+        scaley*=(1-f);
         [self changeZoom];
     }
 }

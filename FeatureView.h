@@ -31,7 +31,7 @@ int ndraw_dims;
 int rows;
 int cols;
 static float *minmax;
-static float scale;
+static float scale,scalex,scaley;
 static float rotatex,rotatey,rotatez;
 static float originx,originy,originz;
 
