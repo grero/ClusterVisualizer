@@ -1274,6 +1274,7 @@
     if(_allActive == 1)
         [allActive setState:1];
 	[[self fw] showAllClusters];
+	//check if we are doing isolation distance
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(ClusterStateChanged:)
                                                  name:@"ClusterStateChanged" object:nil];
@@ -1294,6 +1295,15 @@
 	//allow object to receive performClusterOptions
 	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
 												 name:@"performClusterOption" object: nil];
+	if( [[NSUserDefaults standardUserDefaults] boolForKey:@"doIsolationDistance"])
+	{
+
+        [self performComputation:@"Compute Isolation Distance" usingSelector:@selector(computeIsolationDistance:)];
+		//sort the clusters
+        NSMutableArray *descriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"isolationDistance" ascending:NO]];
+        [self setClustersSortDescriptors: descriptors];
+
+	}
 	[_pool drain];
 }
 
