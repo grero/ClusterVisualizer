@@ -17,7 +17,7 @@
 
 @synthesize highlightWaves;
 @synthesize highlightedChannels;
-@synthesize shouldDrawLabels;//,drawMean,drawStd;
+@synthesize shouldDrawLabels,drawWaves;//,drawMean,drawStd;
 @synthesize overlay;
 @synthesize wfMean, wfStd;
 @synthesize globalIndices,firstIndex;
@@ -28,6 +28,7 @@
     shouldDrawLabels = NO;
     drawMean = YES;
     drawStd = YES;
+	drawWaves = YES;
     //register for defaults updates
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name: NSUserDefaultsDidChangeNotification object:nil];
 }
@@ -158,6 +159,7 @@
     //setup the dispatch queue
     queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     numSpikesAtLeastMean = nwaves;
+
     //define blocks to handle down-sampled data
     
     void (^warp)(float *input,size_t n, float *output);
@@ -978,9 +980,15 @@
     glBindBuffer(GL_ARRAY_BUFFER, wfColorBuffer);
     glEnableClientState(GL_COLOR_ARRAY);
     glColorPointer(3, GL_FLOAT, 0, (void*)0);
-   
-    glDrawArrays(GL_LINES, 0, nWfVertices);
-    glDrawArrays(GL_LINES, 1, nWfVertices-1);
+  	if( drawWaves ) 
+	{
+		glDrawArrays(GL_LINES, 0, nWfVertices);
+		glDrawArrays(GL_LINES, 1, nWfVertices-1);
+	}
+	else
+	{
+		//only draw the last three
+	}
     //glDrawRangeElement
 }
 

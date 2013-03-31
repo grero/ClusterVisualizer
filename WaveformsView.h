@@ -48,7 +48,7 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color,unsigned int n);
 	NSMutableArray *highlightedChannels;
 	//data to hold information on which waveforms are active
 	NSMutableIndexSet *waveformIndices,*globalIndices;
-    BOOL shouldDrawLabels, drawMean, drawStd;
+    BOOL shouldDrawLabels, drawMean, drawStd,drawWaves;
     NSUInteger numSpikesAtLeastMean;
     NSMutableData *wfMean, *wfStd;
     NSUInteger firstIndex;
@@ -58,11 +58,12 @@ static void wfModifyColors(GLfloat *color_data, GLfloat *color,unsigned int n);
 	GLfloat threshold;
 	NSPoint currentPoint;
 	unsigned int channels,timepts;
+	NSUInteger *waveformsPerCluster;
 }
 
 @property (retain,readwrite) NSMutableData *highlightWaves;
 @property (retain,readwrite) NSMutableArray *highlightedChannels;
-@property (assign,readwrite) BOOL shouldDrawLabels, drawMean, drawStd,overlay;
+@property (assign,readwrite) BOOL shouldDrawLabels, drawMean, drawStd,overlay,drawWaves;
 @property (assign,readwrite) NSUInteger firstIndex;
 @property (retain,readwrite) NSMutableIndexSet *globalIndices;
 @property (readonly) NSMutableData *wfMean, *wfStd;
