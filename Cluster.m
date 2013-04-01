@@ -47,6 +47,7 @@
 		shortISIs = [[NSNumber numberWithInt: 0] retain];
         lRatio = [[NSNumber numberWithFloat:0.0] retain];
         isolationDistance = [[NSNumber numberWithFloat:0.0] retain];
+        isolationInfo = [[NSNumber numberWithFloat:0.0] retain];
 	}
 	return self;
 }
@@ -703,6 +704,7 @@
     free(dmin_bg);
     free(vd);
     [self setIsolationInfo: [NSNumber numberWithDouble: d]];
+	[self updateDescription];
 }
 
 -(NSDictionary*)computeXCorr:(Cluster*)cluster timepoints:(NSData*)timepts
@@ -887,6 +889,7 @@
 	[coder encodeObject: cov forKey:@"featureCov"];
 	[coder encodeObject: covi forKey:@"featureCovi"];
 	[coder encodeObject: isolationDistance forKey: @"isolationDistance"];
+	[coder encodeObject: isolationInfo forKey: @"isolationInfo"];
 	[coder encodeObject: shortISIs forKey: @"shortISIs"];
 	[coder encodeObject: lRatio forKey: @"lRatio"];
 	[coder encodeObject: multiUnit forKey:@"multiUnit"];
@@ -910,6 +913,7 @@
 	lRatio = [[coder decodeObjectForKey: @"lRatio"] retain];
 	shortISIs = [[coder decodeObjectForKey: @"shortISIs"] retain];
 	isolationDistance = [[coder decodeObjectForKey: @"isolationDistance"] retain];
+	isolationInfo = [[coder decodeObjectForKey: @"isolationInfo"] retain];
 	multiUnit = [[coder deocdeObjectForKey: @"multiUnit"] retain];
 	if( isolationDistance == nil)
 	{
@@ -938,8 +942,9 @@
 
 -(void)updateDescription
 {
-	NSArray *components = [NSArray arrayWithObjects:[npoints stringValue],[shortISIs stringValue],[lRatio stringValue],[isolationDistance stringValue],[clusterId stringValue],nil];
-	NSArray *keys = [NSArray arrayWithObjects:@"#points", @"shortISI",@"L-ratio",@"IsoDist",@"clusterId",nil];
+	NSArray *components = [NSArray arrayWithObjects:[npoints stringValue],[shortISIs stringValue],[lRatio stringValue],[isolationDistance stringValue],
+			[isolationInfo stringValue],[clusterId stringValue],nil];
+	NSArray *keys = [NSArray arrayWithObjects:@"#points", @"shortISI",@"L-ratio",@"IsoDist",@"IsoInfo",@"clusterId",nil];
 	NSDictionary *descr = [NSDictionary dictionaryWithObjects: components forKeys: keys];
 	[self setDescription:[descr description]];
 }
