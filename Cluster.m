@@ -447,8 +447,8 @@
         for(l=0;l<cols;l++)
         {
             //unbiased
+            _sq[i*cols+l]/=([[self indices] count]);
             _sq[i*cols+l]-=_mean[i]*_mean[l];
-            _sq[i*cols+l]/=([[self indices] count]-1);
         }
     }
     [self setCov:[NSData dataWithBytes:_sq length:cols*cols*sizeof(double)]];
