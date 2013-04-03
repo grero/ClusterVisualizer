@@ -630,8 +630,8 @@
 			cluster_minmax[5] = MAX(cluster_minmax[5],_vertices[points[j]*cols + draw_dims[2]]);
         }
 		//set the scale accordingly
-       	scalex = 1.0/(cluster_minmax[1] - cluster_minmax[0]);
-       	scaley = 1.0/(cluster_minmax[3] - cluster_minmax[2]);
+       	//scalex = 1.0/(cluster_minmax[1] - cluster_minmax[0]);
+       	//scaley = 1.0/(cluster_minmax[3] - cluster_minmax[2]);
         //colors
                 /*
 		scale = 1.0;
@@ -1913,6 +1913,7 @@ static void drawFrame()
 			else
 			{
 				[selectedClusters makeObjectsPerformSelector: @selector(makeInactive)];
+//				[selectedClusters makeObjectsPerformSelector: @selector(makeInvalid)];
 				[selectedClusters removeAllObjects];
 				[useCluster makeActive];
 				[selectedClusters addObject: useCluster];
