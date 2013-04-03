@@ -41,7 +41,7 @@
 	NSMutableArray *featureNames;
 	uint8_t *channelValidity;
     header params;
-    BOOL dataloaded,autoLoadWaveforms, shouldShowRaster, shouldShowWaveforms;
+    BOOL dataloaded,autoLoadWaveforms, shouldShowRaster, shouldShowWaveforms,clustersLoaded;
 	NSInteger nchannels,nvalidChannels;
     unsigned int *validChannels;
     //name of current cluster set

@@ -39,10 +39,7 @@
     queue = [[[NSOperationQueue alloc] init] retain];
 	//currentBaseName = NULL;
 	timestamps = NULL;
-    [self setFilterClustersPredicate:[NSPredicate predicateWithFormat: @"SELF.valid==YES AND SELF.active==YES"]];
     //[self setFilterClustersPredicate:[NSPredicate predicateWithFormat: @"SELF.valid==YES"]];
-	[clusterController setFilterPredicate: [self filterClustersPredicate]];
-	[clusterController setClearsFilterPredicateOnInsertion: NO];
 	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
 												 name:@"showInput" object: nil];
 	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
@@ -79,12 +76,15 @@
 	//set up predicates for filter
 	NSPredicateEditorRowTemplate *row = [[[NSPredicateEditorRowTemplate alloc] initWithLeftExpressions: [NSArray arrayWithObjects:[NSExpression expressionForKeyPath:@"valid"],[NSExpression expressionForKeyPath: @"active"],nil] rightExpressions:
 										  [NSArray arrayWithObjects:[NSExpression expressionForConstantValue: [NSNumber numberWithInt:1]],[NSExpression expressionForConstantValue:[NSNumber numberWithInt:1]],nil] modifier: NSDirectPredicateModifier operators:
-										  [NSArray arrayWithObjects:[NSNumber numberWithInt: NSEqualToPredicateOperatorType],[NSNumber numberWithInt: NSNotEqualToPredicateOperatorType],nil] options:
+										  [NSArray arrayWithObjects:[NSNumber numberWithInt: NSEqualToPredicateOperatorType],[NSNumber numberWithInt: NSEqualToPredicateOperatorType],nil] options:
 										 NSCaseInsensitivePredicateOption] autorelease];
 										 
 									
 																					
-//	[filterPredicates setRowTemplates: [NSArray arrayWithObjects:row,nil]];
+	//[filterPredicates setRowTemplates: [NSArray arrayWithObjects:row,row,nil]];
+    [self setFilterClustersPredicate:[NSPredicate predicateWithFormat: @"SELF.valid==YES AND SELF.active==YES"]];
+	[clusterController setFilterPredicate: [self filterClustersPredicate]];
+	[clusterController setClearsFilterPredicateOnInsertion: NO];
     
     //load the rasterview window
     
