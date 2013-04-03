@@ -749,8 +749,15 @@
 	if( [[NSUserDefaults standardUserDefaults] boolForKey:@"autoLoadClusters"])
 	{
 		NSArray *_fileNames = [[NSFileManager defaultManager] directoryContentsAtPath: [self currentDir] ];
-		//try looking for a cut file first
+		//try looking for .fv file first
 		NSArray *_goodFiles = [_fileNames filteredArrayUsingPredicate: [NSPredicate predicateWithFormat: @"SELF MATCHES[cd] %@", 
+							 [currentBaseName stringByAppendingString:@".fv"]]];
+		if( [_goodFiles count] > 0)
+		{
+			[self openClusterFile: [[self currentDir] stringByAppendingPathComponent: [_goodFiles firstObject]]];
+		}
+		//try looking for a cut file first
+		_goodFiles = [_fileNames filteredArrayUsingPredicate: [NSPredicate predicateWithFormat: @"SELF MATCHES[cd] %@", 
 							 [currentBaseName stringByAppendingString:@".cut"]]];
 	
 		if( [_goodFiles count] == 0)
