@@ -914,7 +914,7 @@
 	shortISIs = [[coder decodeObjectForKey: @"shortISIs"] retain];
 	isolationDistance = [[coder decodeObjectForKey: @"isolationDistance"] retain];
 	isolationInfo = [[coder decodeObjectForKey: @"isolationInfo"] retain];
-	multiUnit = [[coder deocdeObjectForKey: @"multiUnit"] retain];
+	multiUnit = [[coder decodeObjectForKey: @"multiUnit"] retain];
 	if( isolationDistance == nil)
 	{
 		isolationDistance = [[NSNumber numberWithFloat: 0.0] retain];
