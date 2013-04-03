@@ -31,6 +31,7 @@
 @synthesize stimInfo;
 @synthesize clusterMenu,waveformsMenu,clusterNotesPanel;
 @synthesize descriptor;
+
 -(void)awakeFromNib
 {
     //[self setClusters:[NSMutableArray array]];
@@ -39,6 +40,7 @@
 	//currentBaseName = NULL;
 	timestamps = NULL;
     [self setFilterClustersPredicate:[NSPredicate predicateWithFormat: @"SELF.valid==YES AND SELF.active==YES"]];
+    //[self setFilterClustersPredicate:[NSPredicate predicateWithFormat: @"SELF.valid==YES"]];
 	[clusterController setFilterPredicate: [self filterClustersPredicate]];
 	[clusterController setClearsFilterPredicateOnInsertion: NO];
 	[[NSNotificationCenter defaultCenter] addObserver: self selector:@selector(receiveNotification:) 
@@ -95,6 +97,7 @@
         [defaults setBool:YES forKey:@"autoLoadWaveforms"];
     }
     */
+	clustersLoaded = NO;
     shouldShowRaster = NO;
     shouldShowWaveforms =YES;
     autoLoadWaveforms = YES;
@@ -1304,6 +1307,7 @@
         [self setClustersSortDescriptors: descriptors];
 
 	}
+	clustersLoaded = YES;
 	[_pool drain];
 }
 
@@ -4105,6 +4109,7 @@
 -(void)setSelectedClusters:(NSIndexSet *)indexes
 {
 	//this should be called when a cluster is selected (by clicking on the thumbnail).Draw the waveforms of (the first) selected cluster
+	//TODO: This also gets called when the clusters are being added. Need to find a way to make it respond only after the clusters have been loaded
     //TODO: what happens if we right-click? nothing
 	NSUInteger firstIndex = [indexes firstIndex];
     //get active clusters
@@ -4170,6 +4175,20 @@
 		[_index addIndexes: indexes];
 		selectedClusters = [[[NSIndexSet alloc] initWithIndexSet: _index] retain];
         [self setSelectedCluster:firstCluster];
+		/*
+		if( clustersLoaded )
+		{
+			//hide all other clusters
+			
+			NSMutableIndexSet *otherClusters = [NSMutableIndexSet indexSetWithIndexesInRange: NSMakeRange(0,[Clusters count])];
+			[otherClusters removeIndexes: indexes];
+			[Clusters enumerateObjectsAtIndexes: otherClusters options: NSEnumerationConcurrent  usingBlock: ^(id obj,NSUInteger idx, BOOL *stop)
+			{
+				[obj makeInactive];
+				[obj makeInvalid];
+			}
+			];
+		}*/
 	}
 	
 }
