@@ -115,6 +115,7 @@
 -(void)addPointsToCluster:(Cluster*)cluster;
 //
 -(void)loadStimInfo;
+-(IBAction)closeFilterClusterWindow:(id)sender;
 -(IBAction)archiveClusters:(id)sender;
 - (IBAction) loadFeatureFile: (id)sender;
 - (IBAction) loadClusterIds: (id)sender;

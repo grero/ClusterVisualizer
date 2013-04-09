@@ -83,6 +83,7 @@
 																					
 	//[filterPredicates setRowTemplates: [NSArray arrayWithObjects:row,row,nil]];
     [self setFilterClustersPredicate:[NSPredicate predicateWithFormat: @"SELF.valid==YES AND SELF.active==YES"]];
+	//filterClustersPredicate = [[NSPredicate predicateWithFormat: @"SELF.valid==YES AND SELF.active==YES"] retain];
 	[clusterController setFilterPredicate: [self filterClustersPredicate]];
 	[clusterController setClearsFilterPredicateOnInsertion: NO];
     
@@ -2021,9 +2022,10 @@
 
 -(void)setFilterClustersPredicate:(NSPredicate *)predicate
 {
-    filterClustersPredicate = [predicate retain];
     //[fw hideAllClusters];
-    NSPredicate *isActive = [NSPredicate predicateWithFormat:@"active==YES"];
+    NSPredicate *isActive = [NSPredicate predicateWithFormat:@"active==YES and valid==YES"];
+	//we want to compound the new predicate with the basic active and valid predicate
+	filterClustersPredicate = [[NSCompoundPredicate andPredicateWithSubpredicates:[NSArray arrayWithObjects: isActive, predicate,nil]] retain];
     //[[Clusters filteredArrayUsingPredicate:[NSCompoundPredicate notPredicateWithSubpredicate: predicate]] makeObjectsPerformSelector:@selector(makeInactive)];
     //[allActive setState: 0];
     //Inactive those clusters for which the predicate is not true and which are already active
@@ -2037,6 +2039,14 @@
 -(NSPredicate*)filterClustersPredicate
 {
     return filterClustersPredicate;
+}
+
+-(IBAction)closeFilterClusterWindow:(id)sender
+{
+	//reset the predicate
+	NSPredicate *predicate = [NSPredicate predicateWithFormat: @"active == YES AND valid==YES"];
+	[self setFilterClustersPredicate: predicate];
+	[sender orderOut: self];
 }
 
 - (IBAction) changeDim1: (id)sender
@@ -3620,12 +3630,17 @@
 		[new_cluster addPoints: [cl points]];
 		//make the cluster inactive
 		[cl makeInactive];
+		//make the cluster invalid; this means it will effectively disappear from the view
+		[cl makeInvalid];
 		//update the mean
 		_clmean = (float*)[[cl mean] bytes];
 		_clnpoints = [[cl npoints] unsignedIntValue];
-		for(i=0;i<cols;i++)
+		if(_clmean != NULL )
 		{
-			_mean[i]+=_clmean[i]*_clnpoints;
+			for(i=0;i<cols;i++)
+			{
+				_mean[i]+=_clmean[i]*_clnpoints;
+			}
 		}
 		//add to clusterNames
 		[clusterNames appendFormat: @"%@ ", [cl clusterId]];
@@ -3638,6 +3653,7 @@
 		_mean[i] /=_clnpoints; 
 	}
 	[new_cluster setMean: [NSData dataWithBytes: _mean length: cols*sizeof(float)]];
+	[new_cluster setFeatureDims: cols];
 	free(_mean);
 	//compute covariance matrix; this could also be done incrementally
 	[new_cluster computeFeatureCovariance:[[self fw] getVertexData]];
