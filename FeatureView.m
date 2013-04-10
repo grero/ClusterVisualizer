@@ -837,7 +837,13 @@
 	NSUInteger* _clusterPoints;
     unsigned int _nclusterPoints = 0;
     unsigned int offset = 0;
-	if( cluster != nil )
+	//TODO: The second check should go away
+	if( cluster == nil )
+	{
+		//TODO: this is just a transition; test if we got a valid cluster through userInfo instead
+		cluster = (Cluster*)[params objectForKey: @"cluster"];
+	}
+	if( (cluster != nil ) && ([cluster isKindOfClass: [Cluster class]]))
 	{
 		color = [cluster color];
         _nclusterPoints = [[cluster npoints] unsignedIntValue];
@@ -1888,7 +1894,7 @@ static void drawFrame()
             //now figure out which cluster the select point was in
             NSUInteger q = 0;
             useCluster = [selectedClusters objectAtIndex:q];
-            while( [[useCluster indices] containsIndex:cidx] == NO)
+            while( ([[useCluster indices] containsIndex:cidx] == NO) && (q < [selectedClusters count]))
             {
                 offset+=[[useCluster npoints] unsignedIntValue];
                 
@@ -1985,7 +1991,7 @@ static void drawFrame()
 			}
 			//we don't need wfidx any more
 			free(wfidx);
-			NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:wfidxData,[NSData dataWithBytes: _colors length:3*([foundIndices count])*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
+			NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:wfidxData,[NSData dataWithBytes: _colors length:3*([foundIndices count])*sizeof(float)],useCluster,nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",@"cluster",nil]];
 			glUnmapBuffer(GL_ARRAY_BUFFER);
 			free(_colors);
             //TODO: What if we want to select points from mutiple clusters?
