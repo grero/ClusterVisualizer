@@ -896,7 +896,7 @@
 			qidx = _points[i] >= offset ? _points[i]-offset : _points[i];
 			//check that we are not outside the bounds
 			//TODO: this shouldn't be necessary
-			idx[i] = qidx > _clusterPoints[_nclusterPoints-1] ? qidx : _clusterPoints[qidx];
+			idx[i] = qidx >= _nclusterPoints ? qidx : _clusterPoints[qidx];
 			//idx[i] = qidx;
 			//idx[i] = _points[i];
 		}
@@ -1929,6 +1929,8 @@ static void drawFrame()
 				[useCluster makeActive];
 				[selectedClusters addObject: useCluster];
 			}
+			//if we option and/or shift was pressed, are only interested in the cluster
+			return;
 		}
 		//the brute force way; go through the cluster points to find the index
 		NSUInteger _npoints = [[useCluster npoints] unsignedIntValue];
