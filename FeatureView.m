@@ -797,6 +797,7 @@
 
 -(void) showAllClusters
 {
+	//since we are showing everything, make sure no selected clusters
     nindices = rows;
 	[[self openGLContext] makeCurrentContext];
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -837,7 +838,13 @@
 	NSUInteger* _clusterPoints;
     unsigned int _nclusterPoints = 0;
     unsigned int offset = 0;
-	if( cluster != nil )
+	//TODO: The second check should go away
+	if( cluster == nil )
+	{
+		//TODO: this is just a transition; test if we got a valid cluster through userInfo instead
+		cluster = (Cluster*)[params objectForKey: @"cluster"];
+	}
+	if( (cluster != nil ) && ([cluster isKindOfClass: [Cluster class]]))
 	{
 		color = [cluster color];
         _nclusterPoints = [[cluster npoints] unsignedIntValue];
@@ -871,7 +878,7 @@
 	else 
 	{
 		color = [NSData dataWithBytes:base_color length:3*sizeof(GLfloat)];
-		//if no cluster is given, just use an index
+		//if no cluster is given, just use an index. No!
 		_clusterPoints = NULL;	
 	}
         //get the indices to redraw
@@ -887,7 +894,9 @@
 			//need to check that this does not cause a negative inded
 			//
 			qidx = _points[i] >= offset ? _points[i]-offset : _points[i];
-			idx[i] = _clusterPoints[qidx];
+			//check that we are not outside the bounds
+			//TODO: this shouldn't be necessary
+			idx[i] = qidx >= _nclusterPoints ? qidx : _clusterPoints[qidx];
 			//idx[i] = qidx;
 			//idx[i] = _points[i];
 		}
@@ -1548,7 +1557,9 @@ static void drawFrame()
 {
     if([[notification name] isEqualToString:@"highlight"])
     {
+		//check if there is an object
         if([[self window] isVisible] )
+
             [self highlightPoints:[notification userInfo] inCluster: [notification object]];
     }
     else if( [[notification name] isEqualToString:NSUserDefaultsDidChangeNotification])
@@ -1888,7 +1899,7 @@ static void drawFrame()
             //now figure out which cluster the select point was in
             NSUInteger q = 0;
             useCluster = [selectedClusters objectAtIndex:q];
-            while( [[useCluster indices] containsIndex:cidx] == NO)
+            while( ([[useCluster indices] containsIndex:cidx] == NO) && (q < [selectedClusters count]))
             {
                 offset+=[[useCluster npoints] unsignedIntValue];
                 
@@ -1918,6 +1929,8 @@ static void drawFrame()
 				[useCluster makeActive];
 				[selectedClusters addObject: useCluster];
 			}
+			//if we option and/or shift was pressed, are only interested in the cluster
+			return;
 		}
 		//the brute force way; go through the cluster points to find the index
 		NSUInteger _npoints = [[useCluster npoints] unsignedIntValue];
@@ -1985,7 +1998,7 @@ static void drawFrame()
 			}
 			//we don't need wfidx any more
 			free(wfidx);
-			NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:wfidxData,[NSData dataWithBytes: _colors length:3*([foundIndices count])*sizeof(float)],nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",nil]];
+			NSDictionary *params = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:wfidxData,[NSData dataWithBytes: _colors length:3*([foundIndices count])*sizeof(float)],useCluster,nil] forKeys: [NSArray arrayWithObjects: @"points",@"color",@"cluster",nil]];
 			glUnmapBuffer(GL_ARRAY_BUFFER);
 			free(_colors);
             //TODO: What if we want to select points from mutiple clusters?

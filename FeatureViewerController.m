@@ -1285,6 +1285,8 @@
     if(_allActive == 1)
         [allActive setState:1];
 	[[self fw] showAllClusters];
+	//make sure we pass the Featureview the list of clusters
+	[[self fw ] setSelectedClusters: [NSMutableArray arrayWithArray:Clusters]];
 	//check if we are doing isolation distance
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(ClusterStateChanged:)
@@ -1316,6 +1318,8 @@
 
 	}
 	clustersLoaded = YES;
+	//make sure no clusters are selected initially
+	selectedCluster = nil;
 	[_pool drain];
 }
 
@@ -2224,6 +2228,15 @@
 			//no cluster selected
             if([[[self fw] window] isVisible] )
             {
+				//check if we have a cluster object in the userInfo
+				Cluster *_cluster = [[notification userInfo] objectForKey: @"cluster"];
+				//if we get a cluster, this is the currently selected cluster
+				if( _cluster != nil )
+				{
+					[self setSelectedCluster: _cluster];
+				}
+			   [[self fw] highlightPoints:[notification userInfo] inCluster:[self selectedCluster]];
+			   /*
                 //check if more than one cluster is selected
                 NSArray *candidates = [Clusters filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"active==YES"]];
                 if([candidates count]>0)
@@ -2243,6 +2256,7 @@
                 {
                     [[self fw] highlightPoints:[notification userInfo] inCluster:[self selectedCluster]];
                 }
+				*/
             }
 	//	}	
     }
@@ -4140,6 +4154,12 @@
 	//TODO: Make this work for multiple selection as well
 	if( firstIndex < [Clusters count] )
 	{
+		//if we have already loaded all clusters
+		if( clustersLoaded )
+		{
+			//start by hiding all clusters	
+			[[self fw] hideAllClusters];
+		}
 		//TODO: This does not work if the clusters were sorted in the NSCollectionView, since the index is valid for the sorted and not
 		//the original array
 		//Cluster *firstCluster = [Clusters objectAtIndex:firstIndex];
@@ -4198,20 +4218,7 @@
 		[_index addIndexes: indexes];
 		selectedClusters = [[[NSIndexSet alloc] initWithIndexSet: _index] retain];
         [self setSelectedCluster:firstCluster];
-		/*
-		if( clustersLoaded )
-		{
-			//hide all other clusters
-			
-			NSMutableIndexSet *otherClusters = [NSMutableIndexSet indexSetWithIndexesInRange: NSMakeRange(0,[Clusters count])];
-			[otherClusters removeIndexes: indexes];
-			[Clusters enumerateObjectsAtIndexes: otherClusters options: NSEnumerationConcurrent  usingBlock: ^(id obj,NSUInteger idx, BOOL *stop)
-			{
-				[obj makeInactive];
-				[obj makeInvalid];
-			}
-			];
-		}*/
+		
 	}
 	
 }
