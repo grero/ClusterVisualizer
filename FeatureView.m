@@ -797,6 +797,7 @@
 
 -(void) showAllClusters
 {
+	//since we are showing everything, make sure no selected clusters
     nindices = rows;
 	[[self openGLContext] makeCurrentContext];
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -877,7 +878,7 @@
 	else 
 	{
 		color = [NSData dataWithBytes:base_color length:3*sizeof(GLfloat)];
-		//if no cluster is given, just use an index
+		//if no cluster is given, just use an index. No!
 		_clusterPoints = NULL;	
 	}
         //get the indices to redraw
@@ -893,7 +894,9 @@
 			//need to check that this does not cause a negative inded
 			//
 			qidx = _points[i] >= offset ? _points[i]-offset : _points[i];
-			idx[i] = _clusterPoints[qidx];
+			//check that we are not outside the bounds
+			//TODO: this shouldn't be necessary
+			idx[i] = qidx > _clusterPoints[_nclusterPoints-1] ? qidx : _clusterPoints[qidx];
 			//idx[i] = qidx;
 			//idx[i] = _points[i];
 		}
@@ -1554,7 +1557,9 @@ static void drawFrame()
 {
     if([[notification name] isEqualToString:@"highlight"])
     {
+		//check if there is an object
         if([[self window] isVisible] )
+
             [self highlightPoints:[notification userInfo] inCluster: [notification object]];
     }
     else if( [[notification name] isEqualToString:NSUserDefaultsDidChangeNotification])
